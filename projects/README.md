@@ -6,4 +6,4 @@ Each subdirectory contains a standalone library or project.
 
 ## Structure
 
-(No projects yet)
+- **[eudi-srv-web-issuing-eudiw-py/](eudi-srv-web-issuing-eudiw-py/README.md)** - EUDIW Issuer (dentsusoken fork)
