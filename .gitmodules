@@ -3,7 +3,7 @@
 	url = https://github.com/dentsusoken/eudi-srv-web-issuing-eudiw-py
 [submodule "projects/eudi-srv-issuer-oidc-py"]
 	path = projects/eudi-srv-issuer-oidc-py
-	url = https://github.com/eu-digital-identity-wallet/eudi-srv-issuer-oidc-py
+	url = https://github.com/dentsusoken/eudi-srv-issuer-oidc-py
 [submodule "projects/eudi-srv-web-issuing-frontend-eudiw-py"]
 	path = projects/eudi-srv-web-issuing-frontend-eudiw-py
-	url = https://github.com/eu-digital-identity-wallet/eudi-srv-web-issuing-frontend-eudiw-py
+	url = https://github.com/dentsusoken/eudi-srv-web-issuing-frontend-eudiw-py
