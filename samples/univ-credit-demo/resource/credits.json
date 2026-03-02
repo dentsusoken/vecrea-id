@@ -1,0 +1,14 @@
+[
+    {
+        "credit_id": "1",
+        "name": "Credit 1",
+        "status": "ready",
+        "expire_at": 1718851200
+    },
+    {
+        "credit_id": "2",
+        "name": "Credit 2",
+        "status": "ready",
+        "expire_at": 1718851200
+    }
+]
