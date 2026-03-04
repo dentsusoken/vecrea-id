@@ -7,3 +7,9 @@
 [submodule "projects/eudi-srv-web-issuing-frontend-eudiw-py"]
 	path = projects/eudi-srv-web-issuing-frontend-eudiw-py
 	url = https://github.com/dentsusoken/eudi-srv-web-issuing-frontend-eudiw-py
+[submodule "projects/eudi-srv-verifier-endpoint"]
+	path = projects/eudi-srv-verifier-endpoint
+	url = https://github.com/dentsusoken/eudi-srv-verifier-endpoint
+[submodule "projects/eudi-web-verifier"]
+	path = projects/eudi-web-verifier
+	url = https://github.com/dentsusoken/eudi-web-verifier
