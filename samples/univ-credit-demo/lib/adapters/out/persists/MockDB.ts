@@ -1,5 +1,5 @@
 import json from '@/resource/credits.json';
-import { GetCreditList, UpdateCredit } from '@/lib/ports/out/persists';
+import { GetCreditById, GetCreditList, UpdateCredit } from '@/lib/ports/out/persists';
 import { CreditInfo } from '@/lib/domain';
 
 const map = new Map(
@@ -12,6 +12,8 @@ const map = new Map(
 export class MockDB {
   getCreditList: GetCreditList = async () =>
     Promise.resolve(Object.fromEntries(map.entries()));
+
+  getCreditById: GetCreditById = async (id) => Promise.resolve(map.get(id) ?? null);
 
   updateCredit: UpdateCredit = async (id, credit) => {
     map.set(id, credit);
