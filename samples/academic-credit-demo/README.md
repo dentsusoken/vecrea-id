@@ -27,7 +27,7 @@ Open http://localhost:3000 in your browser.
 ## Overview
 
 - A **OID4VCI** (OpenID for Verifiable Credential Issuance) web app that runs credential offers.
-- Offers academic credit credentials (e.g. `jp.ac.nii.academic_credit`) and lets you try the full flow of obtaining VCs via a wallet in a local environment.
+- Offers academic credit credentials (e.g. `com.dentsusoken.academic_credit`) and lets you try the full flow of obtaining VCs via a wallet in a local environment.
 
 ---
 

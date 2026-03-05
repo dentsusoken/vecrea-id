@@ -6,7 +6,7 @@ index bc71ac9..8d35126 100644
                  "eu.europa.ec.eudi.tax_residency_vc_sd_jwt",
                  "eu.europa.ec.eudi.employee_mdoc",
                  "eu.europa.ec.eudi.pid_mdoc_deferred",
-+                "jp.ac.nii.academic_credit",
++                "com.dentsusoken.academic_credit",
              ],
          },
          "PT": {

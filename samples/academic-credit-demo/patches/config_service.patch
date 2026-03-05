@@ -8,7 +8,7 @@ index b131b65..40304e1 100644
              "eu.europa.ec.eudi.age_verification_mdoc",
 -            "eu.europa.ec.eudi.age_verification_mdoc_passport"
 +            "eu.europa.ec.eudi.age_verification_mdoc_passport",
-+            "jp.ac.nii.academic_credit",
++            "com.dentsusoken.academic_credit",
          ],
      }
  

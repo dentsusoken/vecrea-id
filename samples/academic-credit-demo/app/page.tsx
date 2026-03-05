@@ -8,7 +8,7 @@ type GetCreditsResponse = {
   credits: CreditInfoList;
 };
 
-const CREDENTIAL_CONFIGURATION_ID = 'jp.ac.nii.academic_credit';
+const CREDENTIAL_CONFIGURATION_ID = 'com.dentsusoken.academic_credit';
 
 export default function Home() {
   const [credits, setCredits] = useState<CreditInfoList>({});

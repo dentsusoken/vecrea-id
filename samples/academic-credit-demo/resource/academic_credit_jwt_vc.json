@@ -1,7 +1,7 @@
 {
-  "jp.ac.nii.academic_credit": {
+  "com.dentsusoken.academic_credit": {
     "format": "dc+sd-jwt",
-    "scope": "jp.ac.nii.academic_credit",
+    "scope": "com.dentsusoken.academic_credit",
     "cryptographic_binding_methods_supported": [
       "jwk",
       "cose_key"
@@ -16,7 +16,7 @@
         ]
       }
     },
-    "vct": "urn:jp:ac:nii:academic_credit:1",
+    "vct": "urn:com:dentsusoken:academic_credit:1",
     "credential_metadata": {
       "display": [
         {
@@ -122,11 +122,11 @@
       ]
     },
     "issuer_config": {
-      "issuing_authority": "NII Academic Credit Issuer",
-      "organization_id": "NII",
+      "issuing_authority": "Academic Credit Issuer",
+      "organization_id": "Dentsu Suken",
       "validity": 90,
-      "organization_name": "NII Academic Credit Issuer",
-      "doctype": "jp.ac.nii.academic_credit.1"
+      "organization_name": "Dentsu Suken Academic Credit Issuer",
+      "doctype": "com.dentsusoken.academic_credit.1"
     }
   }
 }
