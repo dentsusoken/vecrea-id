@@ -1,14 +1,26 @@
 [
-    {
-        "credit_id": "1",
-        "name": "Credit 1",
-        "status": "ready",
-        "expire_at": 1718851200
-    },
-    {
-        "credit_id": "2",
-        "name": "Credit 2",
-        "status": "ready",
-        "expire_at": 1718851200
-    }
+  {
+    "credit_id": "CR-0001",
+    "student_id": "S20240001",
+    "course_code": "CS101",
+    "course_name": "Introduction to Programming",
+    "academic_term": "2024-Fall",
+    "grade": "A"
+  },
+  {
+    "credit_id": "CR-0002",
+    "student_id": "S20240001",
+    "course_code": "MA201",
+    "course_name": "Linear Algebra",
+    "academic_term": "2024-Fall",
+    "grade": "B"
+  },
+  {
+    "credit_id": "CR-0003",
+    "student_id": "S20240001",
+    "course_code": "PH110",
+    "course_name": "General Physics",
+    "academic_term": "2025-Spring",
+    "grade": "C"
+  }
 ]

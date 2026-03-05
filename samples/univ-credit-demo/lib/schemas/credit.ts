@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 export const creditSchema = z.object({
   credit_id: z.string().min(1),
-  name: z.string().min(1),
-  status: z.enum(['ready', 'issued']),
-  expire_at: z.number().int().nonnegative(),
+  student_id: z.string().min(1),
+  course_code: z.string().min(1),
+  course_name: z.string().min(1),
+  academic_term: z.string().min(1),
+  grade: z.enum(['A', 'B', 'C']),
 });
 
 export const updateCreditSchema = z
