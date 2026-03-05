@@ -8,7 +8,7 @@ OIDC_REPO="$REPO_ROOT/projects/eudi-srv-issuer-oidc-py"
 EUDIW_REPO="$REPO_ROOT/projects/eudi-srv-web-issuing-eudiw-py"
 FRONTEND_REPO="$REPO_ROOT/projects/eudi-srv-web-issuing-frontend-eudiw-py"
 
-echo "=== univ-credit-demo local setup ==="
+echo "=== academic-credit-demo local setup ==="
 echo "REPO_ROOT: $REPO_ROOT"
 echo ""
 
@@ -43,9 +43,9 @@ bash script/generate_local.sh
 echo ""
 
 # ---------------------------------------------------------------------------
-# 3. univ-credit-demo: patch_issuer.sh（eudiw 等へのパッチ適用）
+# 3. academic-credit-demo: patch_issuer.sh（eudiw 等へのパッチ適用）
 # ---------------------------------------------------------------------------
-echo "=== univ-credit-demo: patch_issuer.sh ==="
+echo "=== academic-credit-demo: patch_issuer.sh ==="
 bash "$SCRIPT_DIR/patch_issuer.sh"
 echo ""
 

@@ -1,4 +1,4 @@
-# univ-credit-demo
+# academic-credit-demo
 
 A web application that runs OID4VCI credential offers. This demo kicks off the flow to issue Verifiable Credentials (VCs) for academic credits earned by students.
 
@@ -8,7 +8,7 @@ A web application that runs OID4VCI credential offers. This demo kicks off the f
 
 ```bash
 # 1. Navigate to the demo directory
-cd samples/univ-credit-demo
+cd samples/academic-credit-demo
 
 # 2. One-time setup (run from repository root)
 bash ./scripts/setup_local.sh
@@ -94,7 +94,7 @@ Open the URL shown in the terminal (e.g. http://localhost:3000) in your browser.
 
 | Target | How to stop |
 |--------|-------------|
-| Issuer (Docker) | `bash samples/univ-credit-demo/scripts/stop_local_issuer.sh` |
+| Issuer (Docker) | `bash samples/academic-credit-demo/scripts/stop_local_issuer.sh` |
 | Next.js | **Ctrl+C** in the terminal where it is running |
 
 ---
@@ -104,7 +104,7 @@ Open the URL shown in the terminal (e.g. http://localhost:3000) in your browser.
 | Path | Description |
 |------|-------------|
 | `scripts/setup_local.sh` | One-time setup (submodules, certs, patches, resource copy) |
-| `scripts/patch_issuer.sh` | Apply univ-credit-demo patches to eudiw, etc. |
+| `scripts/patch_issuer.sh` | Apply academic-credit-demo patches to eudiw, etc. |
 | `scripts/start_local_issuer.sh` | Start Docker Compose with local profile (background) |
 | `scripts/stop_local_issuer.sh` | Stop Docker Compose local profile |
 | `patches/` | Patches applied to eudi-srv-web-issuing-eudiw-py, etc. |
