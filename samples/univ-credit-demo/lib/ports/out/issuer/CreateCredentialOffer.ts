@@ -1,5 +1,8 @@
 import { CredentialOffer } from '@/lib/domain';
 
 export interface CreateCredentialOffer {
-  (credentialConfigurationId: string): Promise<CredentialOffer>;
+  (
+    credentialConfigurationId: string,
+    extra?: Record<string, unknown>
+  ): Promise<CredentialOffer>;
 }

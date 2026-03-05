@@ -61,7 +61,8 @@ app.post(
     const input = c.req.valid('json');
     try {
       const offer = await creditApi.processCreateCredentialOffer(
-        input.credential_configuration_id
+        input.credential_configuration_id,
+        input.credit_id
       );
       return c.json(offer);
     } catch (error) {

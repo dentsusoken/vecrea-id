@@ -15,7 +15,10 @@ export class CreditApi {
     return await this.creditService.updateCredit(input);
   }
 
-  async processCreateCredentialOffer(credentialConfigurationId: string) {
-    return await this.creditService.createCredentialOffer(credentialConfigurationId);
+  async processCreateCredentialOffer(
+    credentialConfigurationId: string,
+    creditId: string
+  ) {
+    return await this.creditService.createCredentialOffer(credentialConfigurationId, creditId);
   }
 }

@@ -5,10 +5,11 @@ import { CreditService } from '@/lib/usecases';
 
 export const mockDi = () => {
   const mockDB = new MockDB();
-  const issuerBaseUrl = process.env.CREDENTIAL_ISSUER_BASE_URL ?? 'https://localhost:5000';
+  const issuerBaseUrl = process.env.CREDENTIAL_ISSUER_BASE_URL ?? 'https://localhost:5001';
   const credentialIssuerClient = new CredentialIssuerClient(issuerBaseUrl);
   const creditService = new CreditService(
     mockDB.getCreditList,
+    mockDB.getCreditById,
     mockDB.updateCredit,
     credentialIssuerClient.createCredentialOffer
   );

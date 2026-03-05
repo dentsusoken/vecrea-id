@@ -9,46 +9,68 @@ export class CredentialIssuerClient {
     this.issuerBaseUrl = issuerBaseUrl;
   }
 
-  createCredentialOffer: CreateCredentialOffer = async (credentialConfigurationId) => {
+  createCredentialOffer: CreateCredentialOffer = async (credentialConfigurationId, extra) => {
     const url = new URL('/credential_offer2', this.issuerBaseUrl);
-    url.searchParams.set('credential_configuration_id', credentialConfigurationId);
+    const payload: Record<string, unknown> = {
+      credential_configuration_id: credentialConfigurationId,
+    };
+    if (extra && Object.keys(extra).length > 0) {
+      payload.extra = extra;
+    }
 
     const data =
-      url.protocol === 'https:' ? await this.getJsonInsecure(url) : await this.getJson(url);
+      url.protocol === 'https:'
+        ? await this.postJsonInsecure(url, payload)
+        : await this.postJson(url, payload);
+
     return data as CredentialOffer;
   };
 
-  private async getJson(url: URL): Promise<unknown> {
-    const res = await fetch(url.toString(), { method: 'GET' });
+  private async postJson(url: URL, payload: Record<string, unknown>): Promise<unknown> {
+    const res = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
     if (!res.ok) {
       throw new Error(`Credential issuer error: ${res.status}`);
     }
     return await res.json();
   }
 
-  private async getJsonInsecure(url: URL): Promise<unknown> {
+  private async postJsonInsecure(
+    url: URL,
+    payload: Record<string, unknown>
+  ): Promise<unknown> {
     const allowInsecureTls =
       process.env.CREDENTIAL_ISSUER_INSECURE_TLS === 'true' ||
       url.hostname === 'localhost' ||
       url.hostname === '127.0.0.1';
     if (!allowInsecureTls) {
-      return await this.getJson(url);
+      return await this.postJson(url, payload);
     }
 
     return await new Promise((resolve, reject) => {
+      const body = JSON.stringify(payload);
       const req = https.request(
         {
           hostname: url.hostname,
           port: url.port ? Number(url.port) : 443,
           path: `${url.pathname}${url.search}`,
-          method: 'GET',
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'content-length': Buffer.byteLength(body),
+          },
           rejectUnauthorized: false,
         },
         (res) => {
-          let body = '';
+          let responseBody = '';
           res.setEncoding('utf8');
           res.on('data', (chunk) => {
-            body += chunk;
+            responseBody += chunk;
           });
           res.on('end', () => {
             const statusCode = res.statusCode ?? 500;
@@ -57,7 +79,7 @@ export class CredentialIssuerClient {
               return;
             }
             try {
-              resolve(JSON.parse(body));
+              resolve(JSON.parse(responseBody));
             } catch {
               reject(new Error('Credential issuer returned invalid JSON'));
             }
@@ -66,6 +88,7 @@ export class CredentialIssuerClient {
       );
 
       req.on('error', reject);
+      req.write(body);
       req.end();
     });
   }
