@@ -1,0 +1,23 @@
+diff --git a/app/dynamic_func.py b/app/dynamic_func.py
+index b223137..3ae4b74 100644
+--- a/app/dynamic_func.py
++++ b/app/dynamic_func.py
+@@ -97,6 +100,9 @@ def dynamic_formatter(format, doctype, form_data, device_publickey, session_id):
+ 
+ def formatter(data, un_distinguishing_sign, doctype, format):
+     today = datetime.date.today()
++    extra_claims = data.pop("__extra_claims__", {})
++    if not isinstance(extra_claims, dict):
++        extra_claims = {}
+ 
+     requested_credential, pdata = get_requested_credential(data, doctype, format, today)
+     doctype_config = requested_credential["issuer_config"]
+@@ -152,6 +158,8 @@ def formatter(data, un_distinguishing_sign, doctype, format):
+         attributes_req2,
+         issuer_claims,
+     )
++    if format == "dc+sd-jwt" and extra_claims:
++        pdata["extra_claims"] = extra_claims
+ 
+     return pdata, requested_credential
+

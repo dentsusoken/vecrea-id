@@ -1,0 +1,45 @@
+diff --git a/app/route_dynamic.py b/app/route_dynamic.py
+index e524adf..5db0e9c 100644
+--- a/app/route_dynamic.py
++++ b/app/route_dynamic.py
+@@ -716,6 +716,15 @@ def credentialCreation(credential_request, data, country, session_id):
+     credentials_supported = oidc_metadata["credential_configurations_supported"]
+ 
+     credential_response = {"credentials": []}
++    current_session = session_manager.get_session(session_id=session_id)
++    session_user_data = current_session.user_data if current_session else {}
++    
++    extra_claims = {}
++    if isinstance(session_user_data, dict):
++        maybe_extra = session_user_data.get("extra", {})
++        if isinstance(maybe_extra, dict):
++            extra_claims = maybe_extra
++            
+ 
+     for proof in credential_request["proofs"]:
+ 
+@@ -855,6 +864,8 @@ def credentialCreation(credential_request, data, country, session_id):
+                 "issuing_country": country,
+             }
+         )
++        if extra_claims:
++            form_data["__extra_claims__"] = extra_claims
+ 
+         pdata = dynamic_formatter(
+             format, doctype, form_data, device_publickey, session_id
+@@ -1227,7 +1238,14 @@ def Dynamic_form():
+ 
+     cleaned_data = form_formatter(form_data)
+ 
+-    session_manager.update_user_data(session_id=session_id, user_data=cleaned_data)
++    updated_user_data = dict(cleaned_data)
++    existing_user_data = current_session.user_data if current_session else {}
++    if isinstance(existing_user_data, dict):
++        existing_extra = existing_user_data.get("extra")
++        if isinstance(existing_extra, dict):
++            updated_user_data["extra"] = existing_extra
++
++    session_manager.update_user_data(session_id=session_id, user_data=updated_user_data)
+ 
+     presentation_data = presentation_formatter(cleaned_data=cleaned_data)
+ 

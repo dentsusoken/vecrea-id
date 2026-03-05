@@ -1,0 +1,14 @@
+diff --git a/app/app_config/config_service.py b/app/app_config/config_service.py
+index b131b65..40304e1 100644
+--- a/app/app_config/config_service.py
++++ b/app/app_config/config_service.py
+@@ -172,7 +172,8 @@ class ConfService:
+             "eu.europa.ec.eudi.employee_mdoc",
+             "eu.europa.ec.eudi.pid_mdoc_deferred",
+             "eu.europa.ec.eudi.age_verification_mdoc",
+-            "eu.europa.ec.eudi.age_verification_mdoc_passport"
++            "eu.europa.ec.eudi.age_verification_mdoc_passport",
++            "jp.ac.nii.academic_credit",
+         ],
+     }
+ 

@@ -1,0 +1,21 @@
+diff --git a/app/formatter_func.py b/app/formatter_func.py
+index 2370cb6..7427063 100644
+--- a/app/formatter_func.py
++++ b/app/formatter_func.py
+@@ -341,6 +341,16 @@ def sdjwtFormatter(PID, country):
+     datafinal.update(JWT_PID_DATA)
+ 
+     claims.update(datafinal)
++    extra_claims = pid_data.get("extra_claims", {})
++    if isinstance(extra_claims, dict):
++        reserved_claims = {"iss", "iat", "exp", "vct", "status"}
++        for key, value in extra_claims.items():
++            if key in reserved_claims or key in claims:
++                cfgservice.app_logger.warning(
++                    f"Skipping extra claim '{key}' due to reserved/conflicting key."
++                )
++                continue
++            claims[key] = value
+ 
+     with open(
+         cfgcountries.supported_countries[country]["pid_mdoc_cert"], "rb"
