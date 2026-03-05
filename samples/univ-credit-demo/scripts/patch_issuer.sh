@@ -4,17 +4,33 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "SCRIPT_DIR: $SCRIPT_DIR"
+# SCRIPT_DIR for reference (optional debug)
+# echo "SCRIPT_DIR: $SCRIPT_DIR"
 EUDIW_REPO="$SCRIPT_DIR/../../../projects/eudi-srv-web-issuing-eudiw-py"
 
 apply_patch() {
     local original="$1"
     local output="$2"
     local patchfile="$3"
-    if patch --output="$output" "$original" < "$patchfile" > /dev/null 2>&1; then
-        echo "  OK: $(basename "$output")"
+    local input_file
+    if [[ -f "$output" ]]; then
+        # output が既に存在する場合: output にパッチを当てて output を上書き
+        input_file="$output"
+        local output_tmp="${output}.patch_tmp"
+        if patch --output="$output_tmp" "$input_file" < "$patchfile" > /dev/null 2>&1; then
+            mv "$output_tmp" "$output"
+            echo "  OK: $(basename "$output") (re-patched existing file)"
+        else
+            rm -f "$output_tmp"
+            echo "  CONFLICT: $(basename "$patchfile") - manual resolution needed"
+        fi
     else
-        echo "  CONFLICT: $(basename "$patchfile") - manual resolution needed"
+        # output が無い場合: original にパッチを当てて output を生成
+        if patch --output="$output" "$original" < "$patchfile" > /dev/null 2>&1; then
+            echo "  OK: $(basename "$output")"
+        else
+            echo "  CONFLICT: $(basename "$patchfile") - manual resolution needed"
+        fi
     fi
 }
 
