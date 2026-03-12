@@ -1,0 +1,26 @@
+[
+  {
+    "id": "student1",
+    "email": "taro.yamada@aaa-university.jp",
+    "firstName": "Taro",
+    "lastName": "Yamada",
+    "enrollment_year": "2022",
+    "university": "aaa"
+  },
+  {
+    "id": "student2",
+    "email": "hanako.suzuki@bbb-university.jp",
+    "firstName": "Hanako",
+    "lastName": "Suzuki",
+    "enrollment_year": "2023",
+    "university": "bbb"
+  },
+  {
+    "id": "student3",
+    "email": "kenji.tanaka@ccc-university.jp",
+    "firstName": "Kenji",
+    "lastName": "Tanaka",
+    "enrollment_year": "2024",
+    "university": "ccc"
+  }
+]
