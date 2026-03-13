@@ -8,7 +8,21 @@ type GetCreditsResponse = {
   credits: CreditInfoList;
 };
 
-const CREDENTIAL_CONFIGURATION_ID = 'com.dentsusoken.academic_credit';
+const SEASON_CODE: Record<string, string> = {
+  Spring: '01',
+  Summer: '02',
+  Fall: '03',
+  Winter: '04',
+};
+
+function getCredentialConfigurationId(academicTerm: string): string {
+  const [year, season] = academicTerm.split('-');
+  const seasonCode = season ? SEASON_CODE[season] : undefined;
+  if (!year || !seasonCode) {
+    throw new Error(`Invalid academic term: ${academicTerm}`);
+  }
+  return `com.dentsusoken.academic_credit.${year}.${season.toLowerCase()}`;
+}
 
 export default function Home() {
   const [credits, setCredits] = useState<CreditInfoList>({});
@@ -55,7 +69,7 @@ export default function Home() {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          credential_configuration_id: CREDENTIAL_CONFIGURATION_ID,
+          credential_configuration_id: getCredentialConfigurationId(credit.academic_term),
           credit_id: credit.credit_id,
         }),
       });

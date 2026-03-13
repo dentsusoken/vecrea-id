@@ -1,7 +1,7 @@
 {
-  "com.dentsusoken.academic_credit": {
+  "com.dentsusoken.academic_credit.2024.fall": {
     "format": "dc+sd-jwt",
-    "scope": "com.dentsusoken.academic_credit",
+    "scope": "com.dentsusoken.academic_credit.2024.fall",
     "cryptographic_binding_methods_supported": [
       "jwk",
       "cose_key"
@@ -16,7 +16,7 @@
         ]
       }
     },
-    "vct": "urn:com:dentsusoken:academic_credit:1",
+    "vct": "urn:com:dentsusoken:academic_credit:2024:03",
     "credential_metadata": {
       "display": [
         {
@@ -126,7 +126,7 @@
       "organization_id": "Dentsu Suken",
       "validity": 90,
       "organization_name": "Dentsu Suken Academic Credit Issuer",
-      "doctype": "com.dentsusoken.academic_credit.1"
+      "doctype": "com.dentsusoken.academic_credit.2024.fall.1"
     }
   }
 }
