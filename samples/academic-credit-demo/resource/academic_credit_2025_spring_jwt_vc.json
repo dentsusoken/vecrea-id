@@ -1,0 +1,132 @@
+{
+  "com.dentsusoken.academic_credit.2025.spring": {
+    "format": "dc+sd-jwt",
+    "scope": "com.dentsusoken.academic_credit.2025.spring",
+    "cryptographic_binding_methods_supported": [
+      "jwk",
+      "cose_key"
+    ],
+    "credential_signing_alg_values_supported": [
+      "ES256"
+    ],
+    "proof_types_supported": {
+      "jwt": {
+        "proof_signing_alg_values_supported": [
+          "ES256"
+        ]
+      }
+    },
+    "vct": "urn:com:dentsusoken:academic_credit:2025:01",
+    "credential_metadata": {
+      "display": [
+        {
+          "name": "Academic Credit (SD-JWT VC)",
+          "locale": "en",
+          "logo": {
+            "uri": "https://examplestate.com/public/pid.png",
+            "alt_text": "A square figure of an academic credit"
+          }
+        }
+      ],
+      "claims": [
+        {
+          "path": [
+            "credit_id"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Credit ID",
+              "locale": "en"
+            }
+          ]
+        },
+        {
+          "path": [
+            "student_id"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Student ID",
+              "locale": "en"
+            }
+          ]
+        },
+        {
+          "path": [
+            "course_code"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Course Code",
+              "locale": "en"
+            }
+          ]
+        },
+        {
+          "path": [
+            "course_name"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Course Name",
+              "locale": "en"
+            }
+          ]
+        },
+        {
+          "path": [
+            "academic_term"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Academic Term",
+              "locale": "en"
+            }
+          ]
+        },
+        {
+          "path": [
+            "grade"
+          ],
+          "mandatory": false,
+          "value_type": "string",
+          "source": "user",
+          "selective_disclosure": false,
+          "display": [
+            {
+              "name": "Grade",
+              "locale": "en"
+            }
+          ]
+        }
+      ]
+    },
+    "issuer_config": {
+      "issuing_authority": "Academic Credit Issuer",
+      "organization_id": "Dentsu Suken",
+      "validity": 90,
+      "organization_name": "Dentsu Suken Academic Credit Issuer",
+      "doctype": "com.dentsusoken.academic_credit.2025.spring.1"
+    }
+  }
+}

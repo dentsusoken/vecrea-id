@@ -61,12 +61,14 @@ echo ""
 # 5. academic_credit_jwt_vc.json を credentials_supported にコピー
 # ---------------------------------------------------------------------------
 CRED_SUPPORTED="$EUDIW_REPO/app/metadata_config/credentials_supported"
-SRC_JSON="$SCRIPT_DIR/../resource/academic_credit_jwt_vc.json"
+SRC_DIR="$SCRIPT_DIR/../resource"
 
-echo "=== Copying academic_credit_jwt_vc.json ==="
+echo "=== Copying academic_credit_jwt_vc.json files ==="
 mkdir -p "$CRED_SUPPORTED"
-cp "$SRC_JSON" "$CRED_SUPPORTED/academic_credit_jwt_vc.json"
-echo "  OK: $CRED_SUPPORTED/academic_credit_jwt_vc.json"
+cp "$SRC_DIR/academic_credit_2024_fall_jwt_vc.json" "$CRED_SUPPORTED/academic_credit_2024_fall_jwt_vc.json"
+echo "  OK: $CRED_SUPPORTED/academic_credit_2024_fall_jwt_vc.json"
+cp "$SRC_DIR/academic_credit_2025_spring_jwt_vc.json" "$CRED_SUPPORTED/academic_credit_2025_spring_jwt_vc.json"
+echo "  OK: $CRED_SUPPORTED/academic_credit_2025_spring_jwt_vc.json"
 echo ""
 
 echo "Done! Local demo setup complete."

@@ -2,11 +2,12 @@ diff --git a/docker-compose.yml b/docker-compose.yml
 index ab3144d..eec5b71 100644
 --- a/docker-compose.yml
 +++ b/docker-compose.yml
-@@ -29,10 +29,15 @@ services:
+@@ -29,10 +29,16 @@ services:
        - ../eudi-srv-issuer-oidc-py/script/certs/tls/localhost+2.pem:/certs/tls/localhost+2.pem:ro
        - ../eudi-srv-issuer-oidc-py/script/certs/tls/localhost+2-key.pem:/certs/tls/localhost+2-key.pem:ro
        - /tmp/log_dev:/tmp/log_dev
-+      - ./app/metadata_config/credentials_supported/academic_credit_jwt_vc.json:/app/app/metadata_config/credentials_supported/academic_credit_jwt_vc.json:ro
++      - ./app/metadata_config/credentials_supported/academic_credit_2024_fall_jwt_vc.json:/app/app/metadata_config/credentials_supported/academic_credit_2024_fall_jwt_vc.json:ro
++      - ./app/metadata_config/credentials_supported/academic_credit_2025_spring_jwt_vc.json:/app/app/metadata_config/credentials_supported/academic_credit_2025_spring_jwt_vc.json:ro
        - ./app/metadata_config/metadata_config_local.json:/app/app/metadata_config/metadata_config.json:ro
        - ./app/metadata_config/openid-configuration_local.json:/app/app/metadata_config/openid-configuration.json:ro
        - ./app/route_oidc_local.py:/app/app/route_oidc.py:ro
