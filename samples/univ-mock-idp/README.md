@@ -15,15 +15,15 @@ npm install
 npm run dev
 ```
 
-The server starts at http://localhost:4000.
+The mock IdP starts at http://localhost:4000.
 
 ---
 
 ## Overview
 
 - An **Express + TypeScript** server that acts as a SAML 2.0 IdP.
-- Accepts a SAMLRequest from the SP (Issuer backend), shows a user selection screen (3 universities × 3 students), and POSTs a signed SAMLResponse to the SP's ACS URL.
-- Intended for local development only — no real authentication is performed.
+- Accepts a SAMLRequest from the SP (Issuer backend), shows an email/password login form, and POSTs a signed SAMLResponse to the SP's ACS URL.
+- Intended for local development only — credentials are validated against the static list in `config/users.json`.
 
 ---
 
@@ -65,7 +65,7 @@ npm install   # first time only
 npm run dev
 ```
 
-The server starts at http://localhost:4000. The SSO endpoint is http://localhost:4000/sso.
+The mock IdP starts at http://localhost:4000 (SSO endpoint: `http://localhost:4000/sso`), but **do not access it directly**. The authentication flow starts from the Issuer backend at `http://localhost:5001/saml/login`, which redirects here automatically.
 
 ### 3. Stopping
 
@@ -77,11 +77,11 @@ The server starts at http://localhost:4000. The SSO endpoint is http://localhost
 
 The following users are defined in `config/users.json`:
 
-| Name | University | Enrollment Year |
-|------|-----------|----------------|
-| Taro Yamada | AAA University | 2022 |
-| Hanako Suzuki | BBB University | 2023 |
-| Kenji Tanaka | CCC University | 2024 |
+| Name | Email | Password | University | Enrollment Year |
+|------|-------|----------|-----------|----------------|
+| Taro Yamada | taro.yamada@aaa-university.jp | password1 | AAA University | 2022 |
+| Hanako Suzuki | hanako.suzuki@bbb-university.jp | password2 | BBB University | 2023 |
+| Kenji Tanaka | kenji.tanaka@ccc-university.jp | password3 | CCC University | 2024 |
 
 ---
 
@@ -105,4 +105,4 @@ The following users are defined in `config/users.json`:
 > The SAML signing keys are generated locally and are not shared. If `setup.sh` is re-run, the `SAML_IDP_CERT` value changes and must be updated in the Issuer backend's `.env.local`.
 
 > [!WARNING]
-> This IdP is for local development only. It skips real authentication and must not be used in production.
+> This IdP is for local development only. Credentials are checked only against the static `config/users.json` and must not be used in production.

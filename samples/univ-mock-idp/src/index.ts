@@ -37,6 +37,7 @@ const idp = IdentityProvider({
 interface User {
   id: string;
   email: string;
+  password: string;
   firstName: string;
   lastName: string;
   enrollment_year: string;
@@ -79,33 +80,37 @@ app.get('/sso', (req, res) => {
     return;
   }
 
-  const userOptions = users.map(u =>
-    `<option value="${u.id}">${u.firstName} ${u.lastName} (${u.university.toUpperCase()} University / enrolled ${u.enrollment_year})</option>`
-  ).join('\n');
+  const errorHtml = req.query.error === '1'
+    ? `<p style="color:red;">Invalid email or password.</p>`
+    : '';
 
   res.send(`<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Mock SAML IdP</title>
   <style>
     body { font-family: sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
-    select, button { width: 100%; padding: 10px; font-size: 15px; margin-top: 6px; box-sizing: border-box; }
+    input[type="email"], input[type="password"], button { width: 100%; padding: 10px; font-size: 17px; margin-top: 6px; box-sizing: border-box; }
     button { background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 16px; }
+    label { display: block; margin-top: 12px; font-size: 14px; }
   </style>
 </head>
 <body>
   <h2>Mock SAML IdP</h2>
-  <p>Select a user to sign in.</p>
+  <p>Enter your credentials to sign in.</p>
+  ${errorHtml}
   <form method="POST" action="/login">
     <input type="hidden" name="requestId" value="${requestId}" />
     <input type="hidden" name="acsUrl" value="${acsUrl}" />
     <input type="hidden" name="spEntityId" value="${spEntityId}" />
     <input type="hidden" name="relayState" value="${relayState}" />
-    <label>User
-      <select name="userId">
-        ${userOptions}
-      </select>
+    <label>Email
+      <input type="email" name="email" required autofocus />
+    </label>
+    <label>Password
+      <input type="password" name="password" required />
     </label>
     <button type="submit">Sign In</button>
   </form>
@@ -115,11 +120,42 @@ app.get('/sso', (req, res) => {
 
 // POST /login - SAMLResponse を生成して SP の ACS URL に POST
 app.post('/login', async (req, res) => {
-  const { requestId, acsUrl, spEntityId, relayState, userId } = req.body;
-  const user = users.find(u => u.id === userId);
+  const { requestId, acsUrl, spEntityId, relayState, email, password } = req.body;
+  const user = users.find(u => u.email === email && u.password === password);
 
   if (!user) {
-    res.status(400).send('User not found');
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Mock SAML IdP</title>
+  <style>
+    body { font-family: sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
+    input[type="email"], input[type="password"], button { width: 100%; padding: 10px; font-size: 17px; margin-top: 6px; box-sizing: border-box; }
+    button { background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 16px; }
+    label { display: block; margin-top: 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h2>Mock SAML IdP</h2>
+  <p>Enter your credentials to sign in.</p>
+  <p style="color:red;">Invalid email or password.</p>
+  <form method="POST" action="/login">
+    <input type="hidden" name="requestId" value="${requestId}" />
+    <input type="hidden" name="acsUrl" value="${acsUrl}" />
+    <input type="hidden" name="spEntityId" value="${spEntityId}" />
+    <input type="hidden" name="relayState" value="${relayState}" />
+    <label>Email
+      <input type="email" name="email" required autofocus />
+    </label>
+    <label>Password
+      <input type="password" name="password" required />
+    </label>
+    <button type="submit">Sign In</button>
+  </form>
+</body>
+</html>`);
     return;
   }
 
