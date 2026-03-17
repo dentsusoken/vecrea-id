@@ -13,6 +13,8 @@ apply_patch() {
     local output="$2"
     local patchfile="$3"
     local input_file
+    # Docker が存在しないバインドマウントをディレクトリとして作成することがあるため削除する
+    [[ -d "$output" ]] && rmdir "$output" 2>/dev/null || true
     if [[ -f "$output" ]]; then
         # output が既に存在する場合: output にパッチを当てて output を上書き
         input_file="$output"
