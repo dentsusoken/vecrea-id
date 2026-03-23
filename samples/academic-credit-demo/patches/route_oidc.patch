@@ -1,68 +1,14 @@
---- app/route_oidc_local.py	2026-03-17 16:17:41
-+++ /tmp/route_oidc_local_backup.py	2026-03-17 15:38:35
-@@ -235,6 +235,9 @@
-             if cred["vct"] not in credentials_requested:
-                 credentials_requested.append(vct2id(cred["vct"]))
- 
-+    existing_session = session_manager.get_session(session_id=session_id)
-+    existing_user_data = existing_session.user_data if existing_session else None
-+
-     session_manager.add_session(
-         session_id=session_id,
-         jws_token=token,
-@@ -242,6 +245,7 @@
-         authorization_details=authorization_details,
-         credentials_requested=credentials_requested,
-         frontend_id=frontend_id,
-+        user_data=existing_user_data,
-     )
- 
-     for cred in credentials_requested:
-@@ -1164,18 +1168,27 @@
-     )
- 
- 
--@oidc.route("/credential_offer2", methods=["GET"])
-+@oidc.route("/credential_offer2", methods=["GET", "POST"])
- def credentialOffer2():
-     session_id = generate_unique_id()
- 
--    credential_configuration_id = request.args.get(
--        "credential_configuration_id", "eu.europa.ec.eudi.pid_mdoc"
--    )
-+    extra = {}
- 
+--- app/route_oidc_local.py
++++ app/route_oidc_local.py
+@@ -1190,9 +1190,7 @@
+         session_manager.add_session(
+             session_id=session_id,
+             user_data={"extra": extra},
+         )
+
 -    credential_issuer = ConfFrontend.registered_frontends[cfgservice.default_frontend][
 -        "url"
 -    ]
-+    if request.method == "POST":
-+        body = request.get_json(silent=True) or {}
-+        credential_configuration_id = body.get(
-+            "credential_configuration_id", "eu.europa.ec.eudi.pid_mdoc"
-+        )
-+        extra = body.get("extra", {})
-+    else:
-+        credential_configuration_id = request.args.get(
-+            "credential_configuration_id", "eu.europa.ec.eudi.pid_mdoc"
-+        )
- 
-+    session_manager.add_session(session_id=session_id, user_data={"extra": extra})
-+
-+    credential_issuer = cfgservice.service_url[:-1]
-+
++    credential_issuer = cfgservice.service_url.rstrip("/")
+
      credential_offer = {
-         "credential_issuer": credential_issuer,
-         "credential_configuration_ids": [credential_configuration_id],
-@@ -1194,10 +1207,10 @@
-     cfgservice.app_logger.info(
-         f", Session ID: {session_id}, Credential offer successfully generated, uri: {uri}"
-     )
--    
--    return jsonify({"base64_img": qr_img_base64, "session_id": session_id})
- 
-+    return jsonify({"base64_img": qr_img_base64, "session_id": session_id, "uri": uri})
- 
-+
- @oidc.route("/credential_offer_create", methods=["GET"])
- def credentialOfferCreate():
-     session_id = generate_unique_id()

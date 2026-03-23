@@ -1,11 +1,9 @@
-diff --git a/app/app_config/config_countries.py b/app/app_config/config_countries.py
-index bc71ac9..8d35126 100644
---- a/app/app_config/config_countries.py
-+++ b/app/app_config/config_countries.py
-@@ -143,6 +143,8 @@ class ConfCountries:
-                 "eu.europa.ec.eudi.tax_residency_vc_sd_jwt",
-                 "eu.europa.ec.eudi.employee_mdoc",
-                 "eu.europa.ec.eudi.pid_mdoc_deferred",
+--- app/app_config/config_countries_local.py
++++ app/app_config/config_countries_local.py
+@@ -147,6 +147,8 @@
+                 "jp.ac.aaa-university.student_id",
+                 "jp.ac.bbb-university.student_id",
+                 "jp.ac.ccc-university.student_id",
 +                "com.dentsusoken.academic_credit.2024.fall",
 +                "com.dentsusoken.academic_credit.2025.spring",
              ],

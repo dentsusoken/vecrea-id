@@ -65,7 +65,7 @@ npm install   # first time only
 npm run dev
 ```
 
-The mock IdP starts at http://localhost:4000 (SSO endpoint: `http://localhost:4000/sso`), but **do not access it directly**. The authentication flow starts from the Issuer backend at `http://localhost:5001/saml/login`, which redirects here automatically.
+The mock IdP starts at http://localhost:4000 (SSO endpoint: `http://localhost:4000/sso`), but **do not access it directly**. The authentication flow starts from the Issuer backend at `https://localhost:5001/saml/login`, which redirects here automatically.
 
 ### 3. Stopping
 
