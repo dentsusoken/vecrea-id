@@ -1,5 +1,26 @@
 {
   "name": "cognito-user-import-functions",
   "version": "0.0.0",
-  "scripts": {}
+  "scripts": {
+    "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
+    "zip:parseUserInfoCsv": "mkdir -p ./dist && zip -j ./dist/parseUserInfoCsv.zip build/parseUserInfoCsv.js",
+    "build": "run-p build:*",    
+    "zip": "run-p zip:*",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1019.0",
+    "@aws-sdk/lib-dynamodb": "^3.1019.0",
+    "papaparse": "^5.5.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/papaparse": "^5.5.2",
+    "aws-sdk-client-mock": "^4.1.0",
+    "aws-sdk-client-mock-vitest": "^7.0.1",
+    "esbuild": "^0.27.4",
+    "npm-run-all2": "^8.0.4",
+    "vitest": "^4.1.2"
+  }
 }
