@@ -3,12 +3,15 @@
   "version": "0.0.0",
   "scripts": {
     "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
+    "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
     "zip:parseUserInfoCsv": "mkdir -p ./dist && zip -j ./dist/parseUserInfoCsv.zip build/parseUserInfoCsv.js",
-    "build": "run-p build:*",    
+    "zip:importVerifiedUsers": "mkdir -p ./dist && zip -j ./dist/importVerifiedUsers.zip build/importVerifiedUsers.js",
+    "build": "run-p build:*",
     "zip": "run-p zip:*",
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1019.0",
     "@aws-sdk/client-dynamodb": "^3.1019.0",
     "@aws-sdk/lib-dynamodb": "^3.1019.0",
     "papaparse": "^5.5.3",
