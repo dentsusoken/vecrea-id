@@ -30,7 +30,7 @@ const isVerifiedUser = (user: CognitoImportData) =>
  * Parses CSV with the first row as headers into an array of row objects.
  * @param csv Raw CSV text
  * @returns Row objects keyed by header names
- * @throws If PapaParse reports `errors` (serialized as JSON in the Error message)
+ * @throws If PapaParse reports `errors` (logged, then thrown as `Error` with JSON message)
  */
 function parseUserCsvRows(csv: string): Record<string, string>[] {
   const { data, errors } = papa.parse<Record<string, string>>(csv, {
@@ -38,6 +38,7 @@ function parseUserCsvRows(csv: string): Record<string, string>[] {
   });
 
   if (errors && errors.length > 0) {
+    console.error('[parseUserInfoCsv] parseUserCsvRows: PapaParse errors', errors);
     throw new Error(JSON.stringify(errors, null, 2));
   }
 
@@ -48,12 +49,16 @@ function parseUserCsvRows(csv: string): Record<string, string>[] {
  * Validates row data as an array of Cognito import records.
  * @param rows Same shape as rows returned from `parseUserCsvRows`
  * @returns Parsed `CognitoImportData[]`
- * @throws On validation failure (Zod error serialized as JSON in the Error message)
+ * @throws On validation failure (Zod error logged, then thrown as `Error` with JSON message)
  */
 function parseValidatedUsers(rows: Record<string, string>[]): CognitoImportData[] {
   const parsed = cognitoImportDataSchema.array().safeParse(rows);
 
   if (!parsed.success) {
+    console.error(
+      '[parseUserInfoCsv] parseValidatedUsers: validation failed',
+      parsed.error
+    );
     throw new Error(JSON.stringify(parsed.error, null, 2));
   }
 
@@ -80,7 +85,7 @@ function putCommandForUser(table: string, user: CognitoImportData) {
 
 /**
  * Puts all users in parallel. If any write fails, aggregates failures and throws.
- * @throws When any Put fails (array of username-prefixed messages serialized as JSON)
+ * @throws When any Put fails (failures logged, then thrown as `Error` with JSON message)
  */
 async function saveUserData(
   ddbClient: DynamoDBDocumentClient,
@@ -100,6 +105,10 @@ async function saveUserData(
   });
 
   if (failures.length > 0) {
+    console.error(
+      '[parseUserInfoCsv] saveUserData: DynamoDB Put failures',
+      failures
+    );
     throw new Error(JSON.stringify(failures, null, 2));
   }
 }
