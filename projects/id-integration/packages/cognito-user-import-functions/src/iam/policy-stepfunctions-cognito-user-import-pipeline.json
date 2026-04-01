@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InvokePipelineLambdas",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_PARSE_USER_INFO_CSV_NAME__",
+        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_IMPORT_VERIFIED_USERS_NAME__",
+        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_CHECK_IMPORT_STATUS_NAME__"
+      ]
+    }
+  ]
+}

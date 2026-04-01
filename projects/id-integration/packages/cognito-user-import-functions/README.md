@@ -2,6 +2,10 @@
 
 Package for bulk user import workflows into Amazon Cognito.
 
+## Documentation
+
+- [IAM roles and policies](docs/iam-roles-and-policies.md) — trust policies, Lambda / Step Functions / Cognito import logging roles, and JSON policy mapping
+
 ## AWS services
 
 - **AWS Lambda** — CSV parsing, verified-user import, job orchestration steps, status checks, and enqueueing unverified users
