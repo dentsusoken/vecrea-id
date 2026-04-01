@@ -8,7 +8,10 @@ import {
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handler } from '../importVerifiedUsers';
+import {
+  handler,
+  type ImportVerifiedUsersResult,
+} from '../importVerifiedUsers';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 const cognitoMock = mockClient(CognitoIdentityProviderClient);
@@ -20,7 +23,9 @@ const baseEvent = {
   CLOUD_WATCH_LOG_ROLE_ARN: 'arn:aws:iam::123456789012:role/CognitoIdpCognitoToCWLogs',
 };
 
-const noopCallback = (() => {}) as Callback<void>;
+const mockJobId = 'import-job-id';
+
+const noopCallback = (() => {}) as Callback<ImportVerifiedUsersResult>;
 const emptyContext = {} as Context;
 
 /** Minimal `data` payload that satisfies `cognitoImportDataSchema` (email required when `email_verified` is true). */
@@ -47,7 +52,7 @@ beforeEach(() => {
 
   cognitoMock.on(CreateUserImportJobCommand).resolves({
     UserImportJob: {
-      JobId: 'import-job-id',
+      JobId: mockJobId,
       PreSignedUrl: 'https://s3.example.com/presigned-put',
     },
   });
@@ -82,7 +87,7 @@ async function invoke(
 
 describe('importVerifiedUsers handler', () => {
   it('scans verified non-imported users, creates import job, uploads CSV, and starts the job', async () => {
-    await invoke();
+    await expect(invoke()).resolves.toEqual({ jobId: mockJobId });
 
     expect(ddbMock).toHaveReceivedCommandWith(ScanCommand, {
       TableName: baseEvent.DDB_TABLE,
@@ -114,14 +119,14 @@ describe('importVerifiedUsers handler', () => {
 
     expect(cognitoMock).toHaveReceivedCommandWith(StartUserImportJobCommand, {
       UserPoolId: baseEvent.COGNITO_USER_POOL_ID,
-      JobId: 'import-job-id',
+      JobId: mockJobId,
     });
   });
 
   it('still runs create/upload/start when no users are returned', async () => {
     ddbMock.on(ScanCommand).resolves({ Items: [] });
 
-    await invoke();
+    await expect(invoke()).resolves.toEqual({ jobId: mockJobId });
 
     expect(cognitoMock).toHaveReceivedCommandTimes(CreateUserImportJobCommand, 1);
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);

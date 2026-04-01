@@ -27,6 +27,9 @@ interface EventInput {
   CLOUD_WATCH_LOG_ROLE_ARN: string;
 }
 
+/** Payload returned on success (e.g. pass `jobId` to `checkImportStatus` or Step Functions). */
+export type ImportVerifiedUsersResult = { jobId: string };
+
 /**
  * Writes a structured log line, then rethrows so the Lambda invocation fails.
  * @param context Step label included in the log prefix (e.g. `loadVerifiedUsersForImport`).
@@ -126,7 +129,9 @@ async function createUploadableImportJob(
       throw new Error('Failed to retrieve Cognito User Import JobId.');
     }
     if (!PreSignedUrl) {
-      throw new Error('Failed to retrieve Cognito User Import Job PreSignedUrl.');
+      throw new Error(
+        'Failed to retrieve Cognito User Import Job PreSignedUrl.'
+      );
     }
 
     return { jobId: JobId, uploadUrl: PreSignedUrl };
@@ -191,8 +196,9 @@ async function startImportJob(
 /**
  * Orchestrates scan → CSV → create job → upload → start import for verified staging users.
  * @param event Must include `DDB_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_USER_IMPORT_JOB_BASE_NAME`, and `CLOUD_WATCH_LOG_ROLE_ARN`.
+ * @returns `{ jobId }` from `CreateUserImportJob` after the import job has been started.
  */
-export const handler: Handler<EventInput> = async (event) => {
+export const handler: Handler<EventInput, ImportVerifiedUsersResult> = async (event) => {
   const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
   const users = await loadVerifiedUsersForImport(ddbClient, event.DDB_TABLE);
   const csv = cognitoImportCsvFromUsers(users);
@@ -207,4 +213,6 @@ export const handler: Handler<EventInput> = async (event) => {
 
   await putCsvToPresignedUrl(uploadUrl, csv);
   await startImportJob(cognitoClient, event.COGNITO_USER_POOL_ID, jobId);
+
+  return { jobId };
 };
