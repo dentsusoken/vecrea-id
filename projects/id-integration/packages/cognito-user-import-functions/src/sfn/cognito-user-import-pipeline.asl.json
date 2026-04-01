@@ -1,0 +1,130 @@
+{
+  "Comment": "Cognito user CSV staging → DynamoDB parse → Cognito import job → poll job status until Succeeded or Failed. Replace all __PLACEHOLDER_*__ tokens before deploy. Parent starter must pass USER_INFO_CSV (CSV string).",
+  "StartAt": "EnrichConfig",
+  "States": {
+    "EnrichConfig": {
+      "Type": "Pass",
+      "Comment": "Merge CSV from execution input with manually configured resource IDs (not from CSV or Lambda outputs).",
+      "Parameters": {
+        "USER_INFO_CSV.$": "$.USER_INFO_CSV",
+        "DDB_TABLE": "__PLACEHOLDER_DDB_TABLE_NAME__",
+        "COGNITO_USER_POOL_ID": "__PLACEHOLDER_COGNITO_USER_POOL_ID__",
+        "COGNITO_USER_IMPORT_JOB_BASE_NAME": "__PLACEHOLDER_COGNITO_USER_IMPORT_JOB_BASE_NAME__",
+        "CLOUD_WATCH_LOG_ROLE_ARN": "__PLACEHOLDER_CLOUDWATCH_LOGS_ROLE_ARN__"
+      },
+      "Next": "ParseUserInfoCsv"
+    },
+    "ParseUserInfoCsv": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_PARSE_USER_INFO_CSV__",
+        "Payload": {
+          "USER_INFO_CSV.$": "$.USER_INFO_CSV",
+          "DDB_TABLE.$": "$.DDB_TABLE"
+        }
+      },
+      "ResultPath": null,
+      "Next": "ImportVerifiedUsers",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "ImportVerifiedUsers": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_IMPORT_VERIFIED_USERS__",
+        "Payload": {
+          "DDB_TABLE.$": "$.DDB_TABLE",
+          "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
+          "COGNITO_USER_IMPORT_JOB_BASE_NAME.$": "$.COGNITO_USER_IMPORT_JOB_BASE_NAME",
+          "CLOUD_WATCH_LOG_ROLE_ARN.$": "$.CLOUD_WATCH_LOG_ROLE_ARN"
+        }
+      },
+      "ResultPath": "$.importInvokeResult",
+      "Next": "CheckImportStatus",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckImportStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_CHECK_IMPORT_STATUS__",
+        "Payload": {
+          "DDB_TABLE.$": "$.DDB_TABLE",
+          "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
+          "COGNITO_USER_IMPORT_JOB_ID.$": "$.importInvokeResult.Payload.jobId"
+        }
+      },
+      "ResultPath": "$.checkInvokeResult",
+      "Next": "EvaluateImportStatus",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "EvaluateImportStatus": {
+      "Type": "Choice",
+      "Comment": "checkImportStatus handler returns Succeeded | Failed | Continute (legacy spelling).",
+      "Choices": [
+        {
+          "Variable": "$.checkInvokeResult.Payload",
+          "StringEquals": "Succeeded",
+          "Next": "ImportSucceeded"
+        },
+        {
+          "Variable": "$.checkInvokeResult.Payload",
+          "StringEquals": "Failed",
+          "Next": "ImportFailedTerminal"
+        }
+      ],
+      "Default": "WaitForImportPoll"
+    },
+    "WaitForImportPoll": {
+      "Type": "Wait",
+      "Seconds": 30,
+      "Comment": "Continute path: poll checkImportStatus again.",
+      "Next": "CheckImportStatus"
+    },
+    "ImportSucceeded": {
+      "Type": "Succeed"
+    },
+    "ImportFailedTerminal": {
+      "Type": "Fail",
+      "Error": "CognitoUserImportUnsuccessful",
+      "Cause": "DescribeUserImportJob reported Failed, Expired, or Stopped (mapped to Failed by checkImportStatus)."
+    }
+  }
+}
