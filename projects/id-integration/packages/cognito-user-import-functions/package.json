@@ -5,7 +5,7 @@
     "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv/index.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
     "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers/index.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
     "build:checkImportStatus": "esbuild --bundle --outfile=./build/checkImportStatus/index.js --platform=node --target=node20 ./src/functions/checkImportStatus.ts",
-    "build:startUserImportPipeline": "esbuild --bundle --outfile=./build/startUserImportPipeline/index.js --platform=node --target=node20 ./src/sfn/startUserImportPipeline.ts",
+    "build:startUserImportPipeline": "esbuild --bundle --outfile=./build/startUserImportPipeline/index.js --platform=node --target=node20 ./src/functions/startUserImportPipeline.ts",
     "zip:parseUserInfoCsv": "mkdir -p ./dist && rm -f ./dist/parseUserInfoCsv.zip && zip -j ./dist/parseUserInfoCsv.zip ./build/parseUserInfoCsv/index.js",
     "zip:importVerifiedUsers": "mkdir -p ./dist && rm -f ./dist/importVerifiedUsers.zip && zip -j ./dist/importVerifiedUsers.zip ./build/importVerifiedUsers/index.js",
     "zip:checkImportStatus": "mkdir -p ./dist && rm -f ./dist/checkImportStatus.zip && zip -j ./dist/checkImportStatus.zip ./build/checkImportStatus/index.js",
