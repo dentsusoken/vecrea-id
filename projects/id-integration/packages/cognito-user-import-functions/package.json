@@ -2,12 +2,14 @@
   "name": "cognito-user-import-functions",
   "version": "0.0.0",
   "scripts": {
-    "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
-    "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
-    "build:checkImportStatus": "esbuild --bundle --outfile=./build/checkImportStatus.js --platform=node --target=node20 ./src/functions/checkImportStatus.ts",
-    "zip:parseUserInfoCsv": "mkdir -p ./dist && zip -j ./dist/parseUserInfoCsv.zip build/parseUserInfoCsv.js",
-    "zip:importVerifiedUsers": "mkdir -p ./dist && zip -j ./dist/importVerifiedUsers.zip build/importVerifiedUsers.js",
-    "zip:checkImportStatus": "mkdir -p ./dist && zip -j ./dist/checkImportStatus.zip build/checkImportStatus.js",
+    "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv/index.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
+    "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers/index.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
+    "build:checkImportStatus": "esbuild --bundle --outfile=./build/checkImportStatus/index.js --platform=node --target=node20 ./src/functions/checkImportStatus.ts",
+    "build:startUserImportPipeline": "esbuild --bundle --outfile=./build/startUserImportPipeline/index.js --platform=node --target=node20 ./src/sfn/startUserImportPipeline.ts",
+    "zip:parseUserInfoCsv": "mkdir -p ./dist && rm -f ./dist/parseUserInfoCsv.zip && zip -j ./dist/parseUserInfoCsv.zip ./build/parseUserInfoCsv/index.js",
+    "zip:importVerifiedUsers": "mkdir -p ./dist && rm -f ./dist/importVerifiedUsers.zip && zip -j ./dist/importVerifiedUsers.zip ./build/importVerifiedUsers/index.js",
+    "zip:checkImportStatus": "mkdir -p ./dist && rm -f ./dist/checkImportStatus.zip && zip -j ./dist/checkImportStatus.zip ./build/checkImportStatus/index.js",
+    "zip:startUserImportPipeline": "mkdir -p ./dist && rm -f ./dist/startUserImportPipeline.zip && zip -j ./dist/startUserImportPipeline.zip ./build/startUserImportPipeline/index.js",
     "build": "run-p build:*",
     "zip": "run-p zip:*",
     "test": "vitest run"
@@ -15,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1019.0",
     "@aws-sdk/client-dynamodb": "^3.1019.0",
+    "@aws-sdk/client-sfn": "^3.1019.0",
     "@aws-sdk/lib-dynamodb": "^3.1019.0",
     "papaparse": "^5.5.3",
     "zod": "^4.3.6"
