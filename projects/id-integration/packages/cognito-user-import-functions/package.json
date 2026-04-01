@@ -14,7 +14,8 @@
     "zip:queueUnverifiedUsers": "mkdir -p ./dist && rm -f ./dist/queueUnverifiedUsers.zip && zip -j ./dist/queueUnverifiedUsers.zip ./build/queueUnverifiedUsers/index.js",
     "build": "run-p build:*",
     "zip": "run-p zip:*",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1016.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.5.0",
     "@types/papaparse": "^5.5.2",
     "aws-sdk-client-mock": "^4.1.0",
     "aws-sdk-client-mock-vitest": "^7.0.1",
