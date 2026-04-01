@@ -51,7 +51,7 @@ async function invoke(overrides: Partial<typeof baseEvent> = {}) {
 }
 
 describe('queueUnverifiedUsers handler', () => {
-  it('scans unverified non-imported users and sends one SQS message per item', async () => {
+  it('scans unverified non-imported users and sends one SQS message per item (Item.data only)', async () => {
     const item = unverifiedStagingItem('user-a');
 
     await expect(invoke()).resolves.toEqual({ queuedCount: 1 });
@@ -65,7 +65,7 @@ describe('queueUnverifiedUsers handler', () => {
     expect(sqsMock).toHaveReceivedCommandTimes(SendMessageCommand, 1);
     expect(sqsMock).toHaveReceivedCommandWith(SendMessageCommand, {
       QueueUrl: baseEvent.SQS_QUEUE_URL,
-      MessageBody: JSON.stringify(item),
+      MessageBody: JSON.stringify(item.data),
     });
   });
 
@@ -123,6 +123,23 @@ describe('queueUnverifiedUsers handler', () => {
       '[queueUnverifiedUsers] loadUnverifiedPendingItems',
       err
     );
+  });
+
+  it('rethrows when a staging item omits data', async () => {
+    ddbMock.on(ScanCommand).resolves({
+      Items: [{ id: 'broken', verified: false, imported: false }],
+    });
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await expect(invoke()).rejects.toThrow(
+      'Staging item missing required "data"'
+    );
+
+    expect(spy).toHaveBeenCalledWith(
+      '[queueUnverifiedUsers] messageBodyFromStagingItem',
+      expect.any(Error)
+    );
+    expect(sqsMock).toHaveReceivedCommandTimes(SendMessageCommand, 0);
   });
 
   it('throws a JSON aggregate error when any SQS send fails', async () => {

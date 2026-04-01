@@ -1,6 +1,6 @@
 /**
  * Lambda handler that scans DynamoDB for unverified, not-yet-imported staging users and
- * enqueues each item as one SQS message (full DynamoDB item shape in the body).
+ * enqueues each item as one SQS message (`Item.data` only — same Cognito shape as `parseUserInfoCsv`).
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -74,7 +74,21 @@ async function loadUnverifiedPendingItems(
 }
 
 /**
- * Sends one SQS message per staging item (JSON body = full item).
+ * JSON message body for SQS: staging row `data` (required; missing → log + throw).
+ */
+function messageBodyFromStagingItem(item: Record<string, unknown>): string {
+  const data = item['data'];
+  if (data === undefined || data === null) {
+    const err = new Error(
+      `Staging item missing required "data" (id=${String(item['id'])})`
+    );
+    logErrorAndRethrow('messageBodyFromStagingItem', err);
+  }
+  return JSON.stringify(data);
+}
+
+/**
+ * Sends one SQS message per staging item (JSON body = `item.data`).
  * @throws If any send fails (failures logged, then thrown as `Error` with JSON message).
  */
 async function sendMessagesToQueue(
@@ -87,7 +101,7 @@ async function sendMessagesToQueue(
       sqsClient.send(
         new SendMessageCommand({
           QueueUrl: queueUrl,
-          MessageBody: JSON.stringify(item),
+          MessageBody: messageBodyFromStagingItem(item),
         })
       )
     )
