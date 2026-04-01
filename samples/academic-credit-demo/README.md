@@ -44,6 +44,15 @@ Open https://localhost in your browser for the Verifier UI.
 | openssl | Generate Verifier keys and certificates |
 | keytool (JDK) | Generate JKS keystore for Verifier |
 | Node.js | Run the Next.js app (**pnpm** recommended; npm also works) |
+| [eudi-app-ios-wallet-ui](https://github.com/eu-digital-identity-wallet/eudi-app-ios-wallet-ui) | iOS Wallet app (must be cloned before running setup) |
+
+The `setup-certs.sh` script copies IACA certificates into the iOS Wallet app repository.
+By default it expects the wallet app at `$HOME/work/eudi-app-ios-wallet-ui`.
+Override with the `WALLET_DIR` environment variable if your clone is elsewhere:
+
+```bash
+WALLET_DIR=/path/to/eudi-app-ios-wallet-ui bash ./scripts/setup_local.sh
+```
 
 > [!NOTE]
 > For security reasons we recommend **pnpm** as the Node package manager. To install pnpm: run `corepack enable` then `corepack prepare pnpm@latest --activate`, or see the [pnpm docs](https://pnpm.io/installation).
