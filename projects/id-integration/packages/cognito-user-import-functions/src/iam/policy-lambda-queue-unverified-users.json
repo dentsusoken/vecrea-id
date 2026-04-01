@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:__REGION__:__ACCOUNT_ID__:log-group:/aws/lambda/*"
+    },
+    {
+      "Sid": "DynamoDBScanUnverifiedStagingRows",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan"
+      ],
+      "Resource": "arn:aws:dynamodb:__REGION__:__ACCOUNT_ID__:table/__DDB_STAGING_TABLE_NAME__"
+    },
+    {
+      "Sid": "SQSSendUnverifiedUserMessages",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": "arn:aws:sqs:__REGION__:__ACCOUNT_ID__:__SQS_UNVERIFIED_IMPORT_QUEUE_NAME__"
+    }
+  ]
+}

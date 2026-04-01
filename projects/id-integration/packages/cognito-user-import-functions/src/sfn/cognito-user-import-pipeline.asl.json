@@ -1,16 +1,17 @@
 {
-  "Comment": "Cognito user CSV staging → DynamoDB parse → Cognito import job → poll job status until Succeeded or Failed. Replace all __PLACEHOLDER_*__ tokens before deploy. Parent starter must pass USER_INFO_CSV (CSV string).",
+  "Comment": "CSV → DynamoDB parse → parallel: (verified Cognito import job + poll) AND (queue unverified for SQS/Lambda). Replace __PLACEHOLDER_*__ before deploy. Input: { USER_INFO_CSV }.",
   "StartAt": "EnrichConfig",
   "States": {
     "EnrichConfig": {
       "Type": "Pass",
-      "Comment": "Merge CSV from execution input with manually configured resource IDs (not from CSV or Lambda outputs).",
+      "Comment": "Merge CSV from execution input with resource IDs (DDB, Cognito, SQS for unverified pipeline). importUnVerifiedUsers runs from SQS, not this state machine.",
       "Parameters": {
         "USER_INFO_CSV.$": "$.USER_INFO_CSV",
         "DDB_TABLE": "__PLACEHOLDER_DDB_TABLE_NAME__",
         "COGNITO_USER_POOL_ID": "__PLACEHOLDER_COGNITO_USER_POOL_ID__",
         "COGNITO_USER_IMPORT_JOB_BASE_NAME": "__PLACEHOLDER_COGNITO_USER_IMPORT_JOB_BASE_NAME__",
-        "CLOUD_WATCH_LOG_ROLE_ARN": "__PLACEHOLDER_CLOUDWATCH_LOGS_ROLE_ARN__"
+        "CLOUD_WATCH_LOG_ROLE_ARN": "__PLACEHOLDER_CLOUDWATCH_LOGS_ROLE_ARN__",
+        "SQS_QUEUE_URL": "__PLACEHOLDER_SQS_QUEUE_URL__"
       },
       "Next": "ParseUserInfoCsv"
     },
@@ -25,7 +26,7 @@
         }
       },
       "ResultPath": null,
-      "Next": "ImportVerifiedUsers",
+      "Next": "VerifiedAndUnverifiedParallel",
       "Retry": [
         {
           "ErrorEquals": [
@@ -40,91 +41,138 @@
         }
       ]
     },
-    "ImportVerifiedUsers": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Parameters": {
-        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_IMPORT_VERIFIED_USERS__",
-        "Payload": {
-          "DDB_TABLE.$": "$.DDB_TABLE",
-          "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
-          "COGNITO_USER_IMPORT_JOB_BASE_NAME.$": "$.COGNITO_USER_IMPORT_JOB_BASE_NAME",
-          "CLOUD_WATCH_LOG_ROLE_ARN.$": "$.CLOUD_WATCH_LOG_ROLE_ARN"
-        }
-      },
-      "ResultPath": "$.importInvokeResult",
-      "Next": "CheckImportStatus",
-      "Retry": [
+    "VerifiedAndUnverifiedParallel": {
+      "Type": "Parallel",
+      "Comment": "Branch 0: bulk import verified users + poll. Branch 1: enqueue unverified staging rows to SQS (consumed by importUnVerifiedUsers Lambda).",
+      "Branches": [
         {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 2,
-          "MaxAttempts": 6,
-          "BackoffRate": 2
-        }
-      ]
-    },
-    "CheckImportStatus": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "Parameters": {
-        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_CHECK_IMPORT_STATUS__",
-        "Payload": {
-          "DDB_TABLE.$": "$.DDB_TABLE",
-          "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
-          "COGNITO_USER_IMPORT_JOB_ID.$": "$.importInvokeResult.Payload.jobId"
-        }
-      },
-      "ResultPath": "$.checkInvokeResult",
-      "Next": "EvaluateImportStatus",
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException"
-          ],
-          "IntervalSeconds": 2,
-          "MaxAttempts": 6,
-          "BackoffRate": 2
-        }
-      ]
-    },
-    "EvaluateImportStatus": {
-      "Type": "Choice",
-      "Comment": "checkImportStatus handler returns Succeeded | Failed | Continute (legacy spelling).",
-      "Choices": [
-        {
-          "Variable": "$.checkInvokeResult.Payload",
-          "StringEquals": "Succeeded",
-          "Next": "ImportSucceeded"
+          "StartAt": "ImportVerifiedUsers",
+          "States": {
+            "ImportVerifiedUsers": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_IMPORT_VERIFIED_USERS__",
+                "Payload": {
+                  "DDB_TABLE.$": "$.DDB_TABLE",
+                  "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
+                  "COGNITO_USER_IMPORT_JOB_BASE_NAME.$": "$.COGNITO_USER_IMPORT_JOB_BASE_NAME",
+                  "CLOUD_WATCH_LOG_ROLE_ARN.$": "$.CLOUD_WATCH_LOG_ROLE_ARN"
+                }
+              },
+              "ResultPath": "$.importInvokeResult",
+              "Next": "CheckImportStatus",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ]
+            },
+            "CheckImportStatus": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_CHECK_IMPORT_STATUS__",
+                "Payload": {
+                  "DDB_TABLE.$": "$.DDB_TABLE",
+                  "COGNITO_USER_POOL_ID.$": "$.COGNITO_USER_POOL_ID",
+                  "COGNITO_USER_IMPORT_JOB_ID.$": "$.importInvokeResult.Payload.jobId"
+                }
+              },
+              "ResultPath": "$.checkInvokeResult",
+              "Next": "EvaluateImportStatus",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ]
+            },
+            "EvaluateImportStatus": {
+              "Type": "Choice",
+              "Comment": "checkImportStatus handler returns Succeeded | Failed | Continute (legacy spelling).",
+              "Choices": [
+                {
+                  "Variable": "$.checkInvokeResult.Payload",
+                  "StringEquals": "Succeeded",
+                  "Next": "VerifiedBranchSucceeded"
+                },
+                {
+                  "Variable": "$.checkInvokeResult.Payload",
+                  "StringEquals": "Failed",
+                  "Next": "ImportFailedTerminal"
+                }
+              ],
+              "Default": "WaitForImportPoll"
+            },
+            "WaitForImportPoll": {
+              "Type": "Wait",
+              "Seconds": 30,
+              "Comment": "Continute path: poll checkImportStatus again.",
+              "Next": "CheckImportStatus"
+            },
+            "VerifiedBranchSucceeded": {
+              "Type": "Succeed"
+            },
+            "ImportFailedTerminal": {
+              "Type": "Fail",
+              "Error": "CognitoUserImportUnsuccessful",
+              "Cause": "DescribeUserImportJob reported Failed, Expired, or Stopped (mapped to Failed by checkImportStatus)."
+            }
+          }
         },
         {
-          "Variable": "$.checkInvokeResult.Payload",
-          "StringEquals": "Failed",
-          "Next": "ImportFailedTerminal"
+          "StartAt": "QueueUnverifiedUsers",
+          "States": {
+            "QueueUnverifiedUsers": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_QUEUE_UNVERIFIED_USERS__",
+                "Payload": {
+                  "DDB_TABLE.$": "$.DDB_TABLE",
+                  "SQS_QUEUE_URL.$": "$.SQS_QUEUE_URL"
+                }
+              },
+              "ResultPath": "$.queueUnverifiedInvokeResult",
+              "End": true,
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ]
+            }
+          }
         }
       ],
-      "Default": "WaitForImportPoll"
+      "Next": "PipelineSucceeded"
     },
-    "WaitForImportPoll": {
-      "Type": "Wait",
-      "Seconds": 30,
-      "Comment": "Continute path: poll checkImportStatus again.",
-      "Next": "CheckImportStatus"
-    },
-    "ImportSucceeded": {
-      "Type": "Succeed"
-    },
-    "ImportFailedTerminal": {
-      "Type": "Fail",
-      "Error": "CognitoUserImportUnsuccessful",
-      "Cause": "DescribeUserImportJob reported Failed, Expired, or Stopped (mapped to Failed by checkImportStatus)."
+    "PipelineSucceeded": {
+      "Type": "Succeed",
+      "Comment": "Verified import path completed successfully and unverified users were enqueued to SQS."
     }
   }
 }

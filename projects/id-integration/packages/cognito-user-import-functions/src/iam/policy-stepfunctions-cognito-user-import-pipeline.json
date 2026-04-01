@@ -10,7 +10,8 @@
       "Resource": [
         "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_PARSE_USER_INFO_CSV_NAME__",
         "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_IMPORT_VERIFIED_USERS_NAME__",
-        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_CHECK_IMPORT_STATUS_NAME__"
+        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_CHECK_IMPORT_STATUS_NAME__",
+        "arn:aws:lambda:__REGION__:__ACCOUNT_ID__:function:__LAMBDA_QUEUE_UNVERIFIED_USERS_NAME__"
       ]
     }
   ]
