@@ -4,8 +4,10 @@
   "scripts": {
     "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
     "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
+    "build:checkImportStatus": "esbuild --bundle --outfile=./build/checkImportStatus.js --platform=node --target=node20 ./src/functions/checkImportStatus.ts",
     "zip:parseUserInfoCsv": "mkdir -p ./dist && zip -j ./dist/parseUserInfoCsv.zip build/parseUserInfoCsv.js",
     "zip:importVerifiedUsers": "mkdir -p ./dist && zip -j ./dist/importVerifiedUsers.zip build/importVerifiedUsers.js",
+    "zip:checkImportStatus": "mkdir -p ./dist && zip -j ./dist/checkImportStatus.zip build/checkImportStatus.js",
     "build": "run-p build:*",
     "zip": "run-p zip:*",
     "test": "vitest run"
