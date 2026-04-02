@@ -14,8 +14,18 @@ import {
 import type { AttributeType } from '@aws-sdk/client-cognito-identity-provider';
 import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { Handler, SQSEvent } from 'aws-lambda';
+import { randomBytes } from 'node:crypto';
 import { cognitoImportDataSchema } from '../schemas';
 import type { CognitoImportData } from '../schemas';
+
+const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const DIGITS = '0123456789';
+/** Symbols commonly accepted by Cognito password policy (no whitespace). */
+const SYMBOLS = '!@#$%^&*()-_=+';
+const ALPHANUM_SYMBOL = LOWER + UPPER + DIGITS + SYMBOLS;
+
+const TEMP_PASSWORD_LENGTH = 20;
 
 /** Standard / meta columns not sent as Cognito `UserAttributes` on create. */
 const SKIP_ATTRIBUTE_NAMES = new Set([
@@ -64,6 +74,31 @@ function userToAttributes(user: CognitoImportData): AttributeType[] {
   return attributes;
 }
 
+/**
+ * Cryptographically random temporary password for `AdminCreateUser`.
+ * Includes upper, lower, digit, and symbol so typical pool policies (min length + character classes) are satisfied.
+ */
+function generateTemporaryPassword(): string {
+  const buf = randomBytes(TEMP_PASSWORD_LENGTH);
+  const chars: string[] = [
+    LOWER[buf[0]! % LOWER.length]!,
+    UPPER[buf[1]! % UPPER.length]!,
+    DIGITS[buf[2]! % DIGITS.length]!,
+    SYMBOLS[buf[3]! % SYMBOLS.length]!,
+  ];
+  for (let i = 4; i < TEMP_PASSWORD_LENGTH; i++) {
+    chars.push(ALPHANUM_SYMBOL[buf[i]! % ALPHANUM_SYMBOL.length]!);
+  }
+  const shuffle = randomBytes(TEMP_PASSWORD_LENGTH);
+  for (let i = TEMP_PASSWORD_LENGTH - 1; i > 0; i--) {
+    const j = shuffle[i]! % (i + 1);
+    const t = chars[i]!;
+    chars[i] = chars[j]!;
+    chars[j] = t;
+  }
+  return chars.join('');
+}
+
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
@@ -90,7 +125,7 @@ async function userExistsInPool(
 }
 
 /**
- * Creates a user with `AdminCreateUser`. Omits `TemporaryPassword` so Cognito generates one per pool policy.
+ * Creates a user with `AdminCreateUser` and a random `TemporaryPassword` (pool policy–friendly).
  * @see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
  */
 async function createUser(
@@ -104,6 +139,7 @@ async function createUser(
       Username: username,
       UserPoolId: userPoolId,
       UserAttributes: attributes,
+      TemporaryPassword: generateTemporaryPassword(),
       DesiredDeliveryMediums: ['EMAIL'],
     })
   );

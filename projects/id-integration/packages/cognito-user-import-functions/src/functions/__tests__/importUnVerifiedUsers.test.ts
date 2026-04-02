@@ -112,7 +112,7 @@ describe('importUnVerifiedUsers handler', () => {
     });
   });
 
-  it('when user missing, AdminCreateUser without TemporaryPassword then marks imported', async () => {
+  it('when user missing, AdminCreateUser with random TemporaryPassword then marks imported', async () => {
     cognitoMock.on(AdminGetUserCommand).rejects(
       new UserNotFoundException({
         message: 'User does not exist.',
@@ -134,7 +134,15 @@ describe('importUnVerifiedUsers handler', () => {
     });
 
     const createCalls = cognitoMock.commandCalls(AdminCreateUserCommand);
-    expect(createCalls[0]?.args[0].input).not.toHaveProperty('TemporaryPassword');
+    const tempPassword = createCalls[0]?.args[0].input.TemporaryPassword;
+    expect(tempPassword).toBeDefined();
+    expect(typeof tempPassword).toBe('string');
+    expect(tempPassword!.length).toBe(20);
+    expect(tempPassword).toMatch(/^[a-zA-Z0-9!@#$%^&*()\-_=+]{20}$/);
+    expect(tempPassword).toMatch(/[a-z]/);
+    expect(tempPassword).toMatch(/[A-Z]/);
+    expect(tempPassword).toMatch(/[0-9]/);
+    expect(tempPassword).toMatch(/[!@#$%^&*()\-_=+]/);
 
     expect(ddbMock).toHaveReceivedCommandTimes(UpdateCommand, 1);
     expect(ddbMock).toHaveReceivedCommandWith(UpdateCommand, {
