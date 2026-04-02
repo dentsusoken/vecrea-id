@@ -1,6 +1,7 @@
 /**
- * Lambda handler that scans DynamoDB for verified, not-yet-imported users, builds Cognito import CSV,
- * uploads it via the import job pre-signed URL, and starts the Cognito user import job.
+ * Step Functions task: scans DynamoDB for verified, not-yet-imported staging users, builds a Cognito bulk-import CSV,
+ * uploads to the pre-signed URL, and starts the user-import job. If there are no such rows, returns
+ * {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID} as `jobId` so `checkImportStatus` can skip Cognito polling.
  */
 
 import {
@@ -199,8 +200,10 @@ async function startImportJob(
 
 /**
  * Orchestrates scan → CSV → create job → upload → start import for verified staging users.
- * @param event Must include `DDB_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_USER_IMPORT_JOB_BASE_NAME`, and `CLOUD_WATCH_LOG_ROLE_ARN`.
- * @returns `{ jobId }` from `CreateUserImportJob` after the import job has been started, or {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID} when there is nothing to import.
+ *
+ * @param event - `DDB_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_USER_IMPORT_JOB_BASE_NAME`, `CLOUD_WATCH_LOG_ROLE_ARN`.
+ * @returns `{ jobId }` from `CreateUserImportJob` after `StartUserImportJob`, or {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID} when there is nothing to import.
+ * @throws On DynamoDB/Cognito/network errors during load, job creation, CSV upload, or start (after `console.error`).
  */
 export const handler: Handler<EventInput, ImportVerifiedUsersResult> = async (event) => {
   const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());

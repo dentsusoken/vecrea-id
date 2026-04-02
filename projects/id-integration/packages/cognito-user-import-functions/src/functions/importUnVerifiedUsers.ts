@@ -1,7 +1,10 @@
 /**
- * Lambda handler triggered by SQS: for each message (body = `CognitoImportData` JSON from
- * `queueUnverifiedUsers`), ensure the user exists in Cognito or create them, then mark the staging row
- * imported in DynamoDB. On create failure, records `error` / `errorMessage` on the staging item.
+ * SQS-triggered Lambda: each record body is JSON `CognitoImportData` (from `queueUnverifiedUsers` message bodies).
+ * For each user: if they already exist in the user pool, only marks DynamoDB `imported`; otherwise runs
+ * `AdminCreateUser` with a random `TemporaryPassword`, then marks `imported`. On create failure, writes
+ * `error` / `errorMessage` on the staging item.
+ *
+ * **Environment:** `COGNITO_USER_POOL_ID`, `DDB_TABLE` (required).
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -46,6 +49,7 @@ function logErrorAndRethrow(context: string, error: unknown): never {
   throw error;
 }
 
+/** @throws If the variable is missing or empty. */
 function requireEnv(name: 'COGNITO_USER_POOL_ID' | 'DDB_TABLE'): string {
   const value = process.env[name];
   if (value === undefined || value === '') {
@@ -54,6 +58,10 @@ function requireEnv(name: 'COGNITO_USER_POOL_ID' | 'DDB_TABLE'): string {
   return value;
 }
 
+/**
+ * Parses SQS `body` as JSON and validates with `cognitoImportDataSchema`.
+ * @throws On invalid JSON or Zod validation errors.
+ */
 function validateUserPayload(body: string | undefined): CognitoImportData {
   const parsed: unknown = body === undefined ? undefined : JSON.parse(body);
   return cognitoImportDataSchema.parse(parsed);
@@ -99,10 +107,15 @@ function generateTemporaryPassword(): string {
   return chars.join('');
 }
 
+/** Normalizes thrown values to `Error` for DynamoDB error attributes. */
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
+/**
+ * @returns `true` if `AdminGetUser` succeeds; `false` if {@link UserNotFoundException}.
+ * @throws Other Cognito errors (logged, then rethrown).
+ */
 async function userExistsInPool(
   cognitoClient: CognitoIdentityProviderClient,
   userPoolId: string,
@@ -145,6 +158,7 @@ async function createUser(
   );
 }
 
+/** Sets top-level `imported` to `true` for the staging row keyed by `cognito:username`. */
 async function updateSucceededImportStatus(
   ddbClient: DynamoDBDocumentClient,
   tableName: string,
@@ -160,6 +174,7 @@ async function updateSucceededImportStatus(
   );
 }
 
+/** Records Cognito failure details on the staging item for operator visibility. */
 async function updateFailedImportStatus(
   ddbClient: DynamoDBDocumentClient,
   tableName: string,
@@ -183,6 +198,10 @@ async function updateFailedImportStatus(
   );
 }
 
+/**
+ * Processes one SQS record (invokes Cognito and DynamoDB as needed).
+ * @throws Propagates failures from `userExistsInPool` when not `UserNotFoundException`.
+ */
 async function processRecord(
   record: SQSEvent['Records'][number],
   deps: {
@@ -211,6 +230,10 @@ async function processRecord(
   }
 }
 
+/**
+ * @param event - Standard SQS event; each `record.body` must be JSON `CognitoImportData`.
+ * @throws If required env vars are missing, or if any record fails outside the per-record `try/catch` around `AdminCreateUser`.
+ */
 export const handler: Handler<SQSEvent> = async (event) => {
   const userPoolId = requireEnv('COGNITO_USER_POOL_ID');
   const tableName = requireEnv('DDB_TABLE');

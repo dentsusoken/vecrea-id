@@ -1,6 +1,8 @@
 /**
- * Sample Lambda that starts the `cognito-user-import-pipeline` Step Functions execution
- * with `{ USER_INFO_CSV }` input (same shape as the state machine expects after the starter).
+ * Starts a `cognito-user-import-pipeline` Step Functions execution with input `{ USER_INFO_CSV }`
+ * (matches the state machine’s `EnrichConfig` expectation after the Pass state merges placeholders).
+ *
+ * **Environment:** `SFN_STATE_MACHINE_ARN` (required).
  */
 
 import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
@@ -25,6 +27,11 @@ export type StartUserImportPipelineResult = {
 
 const STATE_MACHINE_ARN = process.env.SFN_STATE_MACHINE_ARN;
 
+/**
+ * @param event - `USER_INFO_CSV` required; optional `executionName` for `StartExecution`.
+ * @returns `executionArn` and `startDate` from Step Functions.
+ * @throws If `SFN_STATE_MACHINE_ARN` is unset or `USER_INFO_CSV` is missing/ null.
+ */
 export const handler: Handler<
   StartUserImportPipelineEvent,
   StartUserImportPipelineResult

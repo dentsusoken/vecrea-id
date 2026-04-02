@@ -1,5 +1,6 @@
 /**
- * Lambda handler that parses Cognito user-export CSV and writes validated users to DynamoDB.
+ * Step Functions task (after `EnrichConfig`): parses a Cognito user-export style CSV string, validates each row
+ * with `cognitoImportDataSchema`, and writes staging items (`id`, `data`, `imported`, `verified`) to DynamoDB.
  */
 
 import papa from 'papaparse';
@@ -114,8 +115,8 @@ async function saveUserData(
 }
 
 /**
- * Parses and validates CSV, then puts each user row to the given table.
- * @param event Must include `USER_INFO_CSV` and `DDB_TABLE`
+ * @param event - `USER_INFO_CSV` (full CSV text) and `DDB_TABLE`.
+ * @throws On PapaParse errors, Zod validation failure, or any DynamoDB `PutItem` failure (errors logged then thrown as `Error` with JSON payload where applicable).
  */
 export const handler: Handler<EventInput> = async (event) => {
   const rows = parseUserCsvRows(event.USER_INFO_CSV);

@@ -1,6 +1,6 @@
 /**
- * Lambda handler that scans DynamoDB for unverified, not-yet-imported staging users and
- * enqueues each item as one SQS message (`Item.data` only — same Cognito shape as `parseUserInfoCsv`).
+ * Step Functions task (parallel branch): scans DynamoDB for `verified === false` and `imported === false`,
+ * and sends one SQS message per row. Message body is JSON of `Item.data` only (same shape as `CognitoImportData` for `importUnVerifiedUsers`).
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -74,7 +74,8 @@ async function loadUnverifiedPendingItems(
 }
 
 /**
- * JSON message body for SQS: staging row `data` (required; missing → log + throw).
+ * @returns JSON string of `item.data`.
+ * @throws If `data` is missing (after `console.error`).
  */
 function messageBodyFromStagingItem(item: Record<string, unknown>): string {
   const data = item['data'];
@@ -125,9 +126,9 @@ async function sendMessagesToQueue(
 }
 
 /**
- * Scans unverified staging rows and enqueues each as an SQS message.
- * @param event Must include `DDB_TABLE` and `SQS_QUEUE_URL`.
- * @returns `{ queuedCount }` — number of messages successfully sent.
+ * @param event - `DDB_TABLE`, `SQS_QUEUE_URL`.
+ * @returns `{ queuedCount }` — messages successfully sent (0 if scan returned no items).
+ * @throws On DynamoDB scan errors or any SQS `SendMessage` failure (after `console.error`).
  */
 export const handler: Handler<
   EventInput,

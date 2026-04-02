@@ -1,6 +1,9 @@
 /**
- * Lambda handler that reads Cognito user-import job status and, on success, marks matching
- * DynamoDB staging rows as imported.
+ * Lambda invoked by Step Functions after the `importVerifiedUsers` task: polls `DescribeUserImportJob`
+ * until the bulk import finishes, then marks verified staging rows as `imported` in DynamoDB.
+ *
+ * If `COGNITO_USER_IMPORT_JOB_ID` is {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID}, no Cognito call is made
+ * (nothing to import); returns `Succeeded` immediately.
  */
 
 import {
@@ -21,7 +24,12 @@ import { SKIP_USER_IMPORT_JOB_CHECK_JOB_ID } from '../constants/importVerifiedUs
 interface EventInput {
   /** DynamoDB staging table (same shape as `parseUserInfoCsv` items). */
   DDB_TABLE: string;
+  /** Target Cognito user pool ID. */
   COGNITO_USER_POOL_ID: string;
+  /**
+   * Job id from `importVerifiedUsers` `CreateUserImportJob`, or {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID}
+   * when there were no verified rows to import.
+   */
   COGNITO_USER_IMPORT_JOB_ID: string;
 }
 
@@ -62,7 +70,9 @@ async function describeUserImportJob(
   }
 }
 
-/** Normalized outcome returned by the handler (kept for downstream state machines). */
+/**
+ * Normalized outcome for Step Functions `Choice` states (legacy spelling `Continute` for in-progress).
+ */
 type ImportCheckOutcome = 'Succeeded' | 'Failed' | 'Continute';
 
 /**
@@ -90,6 +100,7 @@ const SCAN_VERIFIED_NOT_IMPORTED = {
   ExpressionAttributeValues: { ':verified': true, ':imported': false },
 } as const;
 
+/** Builds a paginated `ScanCommand` for verified, not-yet-imported staging items. */
 function scanVerifiedPendingImports(tableName: string) {
   return new ScanCommand({
     TableName: tableName,
@@ -140,9 +151,11 @@ async function markStagingRowsImported(
 }
 
 /**
- * Describes the import job; on `Succeeded`, marks still-pending verified staging rows as imported.
- * When `COGNITO_USER_IMPORT_JOB_ID` is {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID}, skips Cognito (no rows to import).
- * @returns `Succeeded`, `Failed`, or `Continute` (legacy spelling while the job is in progress).
+ * Polls Cognito import job status or short-circuits when the import was skipped.
+ *
+ * @param event - Staging table, pool id, and job id (or skip sentinel).
+ * @returns `Succeeded` | `Failed` | `Continute` for the state machine.
+ * @throws On missing `DescribeUserImportJob` result, DynamoDB errors, or other SDK failures (after `console.error`).
  */
 export const handler: Handler<EventInput, ImportCheckOutcome> = async (event) => {
   if (event.COGNITO_USER_IMPORT_JOB_ID === SKIP_USER_IMPORT_JOB_CHECK_JOB_ID) {
