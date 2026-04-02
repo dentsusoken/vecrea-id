@@ -12,6 +12,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import type { Handler } from 'aws-lambda';
 import papa from 'papaparse';
+import { SKIP_USER_IMPORT_JOB_CHECK_JOB_ID } from '../constants/importVerifiedUserImportJob';
 import { cognitoImportDataSchema } from '../schemas';
 import type { CognitoImportData } from '../schemas';
 
@@ -27,7 +28,10 @@ interface EventInput {
   CLOUD_WATCH_LOG_ROLE_ARN: string;
 }
 
-/** Payload returned on success (e.g. pass `jobId` to `checkImportStatus` or Step Functions). */
+/**
+ * Payload returned for Step Functions / `checkImportStatus`.
+ * When there are no verified users to import, `jobId` is {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID} (no Cognito job created).
+ */
 export type ImportVerifiedUsersResult = { jobId: string };
 
 /**
@@ -196,11 +200,16 @@ async function startImportJob(
 /**
  * Orchestrates scan → CSV → create job → upload → start import for verified staging users.
  * @param event Must include `DDB_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_USER_IMPORT_JOB_BASE_NAME`, and `CLOUD_WATCH_LOG_ROLE_ARN`.
- * @returns `{ jobId }` from `CreateUserImportJob` after the import job has been started.
+ * @returns `{ jobId }` from `CreateUserImportJob` after the import job has been started, or {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID} when there is nothing to import.
  */
 export const handler: Handler<EventInput, ImportVerifiedUsersResult> = async (event) => {
   const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
   const users = await loadVerifiedUsersForImport(ddbClient, event.DDB_TABLE);
+
+  if (users.length === 0) {
+    return { jobId: SKIP_USER_IMPORT_JOB_CHECK_JOB_ID };
+  }
+
   const csv = cognitoImportCsvFromUsers(users);
 
   const cognitoClient = new CognitoIdentityProviderClient();

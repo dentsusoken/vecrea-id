@@ -15,6 +15,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import type { Handler } from 'aws-lambda';
+import { SKIP_USER_IMPORT_JOB_CHECK_JOB_ID } from '../constants/importVerifiedUserImportJob';
 
 /** Lambda event: staging table, pool id, and the Cognito import job to describe. */
 interface EventInput {
@@ -140,9 +141,14 @@ async function markStagingRowsImported(
 
 /**
  * Describes the import job; on `Succeeded`, marks still-pending verified staging rows as imported.
+ * When `COGNITO_USER_IMPORT_JOB_ID` is {@link SKIP_USER_IMPORT_JOB_CHECK_JOB_ID}, skips Cognito (no rows to import).
  * @returns `Succeeded`, `Failed`, or `Continute` (legacy spelling while the job is in progress).
  */
 export const handler: Handler<EventInput, ImportCheckOutcome> = async (event) => {
+  if (event.COGNITO_USER_IMPORT_JOB_ID === SKIP_USER_IMPORT_JOB_CHECK_JOB_ID) {
+    return 'Succeeded';
+  }
+
   const cognitoClient = new CognitoIdentityProviderClient();
   const userImportJob = await describeUserImportJob(
     cognitoClient,

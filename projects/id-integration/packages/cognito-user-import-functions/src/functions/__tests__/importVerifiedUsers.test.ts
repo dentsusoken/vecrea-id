@@ -8,6 +8,7 @@ import {
 import { mockClient } from 'aws-sdk-client-mock';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SKIP_USER_IMPORT_JOB_CHECK_JOB_ID } from '../../constants/importVerifiedUserImportJob';
 import {
   handler,
   type ImportVerifiedUsersResult,
@@ -123,14 +124,16 @@ describe('importVerifiedUsers handler', () => {
     });
   });
 
-  it('still runs create/upload/start when no users are returned', async () => {
+  it('returns skip job id and does not call Cognito when no verified users are returned', async () => {
     ddbMock.on(ScanCommand).resolves({ Items: [] });
 
-    await expect(invoke()).resolves.toEqual({ jobId: mockJobId });
+    await expect(invoke()).resolves.toEqual({
+      jobId: SKIP_USER_IMPORT_JOB_CHECK_JOB_ID,
+    });
 
-    expect(cognitoMock).toHaveReceivedCommandTimes(CreateUserImportJobCommand, 1);
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-    expect(cognitoMock).toHaveReceivedCommandTimes(StartUserImportJobCommand, 1);
+    expect(cognitoMock).toHaveReceivedCommandTimes(CreateUserImportJobCommand, 0);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(0);
+    expect(cognitoMock).toHaveReceivedCommandTimes(StartUserImportJobCommand, 0);
   });
 
   it('throws when CSV upload returns a non-OK response', async () => {

@@ -12,6 +12,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SKIP_USER_IMPORT_JOB_CHECK_JOB_ID } from '../../constants/importVerifiedUserImportJob';
 import { handler } from '../checkImportStatus';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
@@ -78,6 +79,18 @@ async function invoke(overrides: Partial<typeof baseEvent> = {}) {
 }
 
 describe('checkImportStatus handler', () => {
+  it('returns Succeeded without DescribeUserImportJob when job id is skip sentinel (no verified import)', async () => {
+    await expect(
+      invoke({
+        COGNITO_USER_IMPORT_JOB_ID: SKIP_USER_IMPORT_JOB_CHECK_JOB_ID,
+      })
+    ).resolves.toBe('Succeeded');
+
+    expect(cognitoMock).toHaveReceivedCommandTimes(DescribeUserImportJobCommand, 0);
+    expect(ddbMock).toHaveReceivedCommandTimes(ScanCommand, 0);
+    expect(ddbMock).toHaveReceivedCommandTimes(UpdateCommand, 0);
+  });
+
   it('returns Succeeded and marks staging rows imported when Cognito job succeeded', async () => {
     stubDescribeJob('Succeeded');
 
