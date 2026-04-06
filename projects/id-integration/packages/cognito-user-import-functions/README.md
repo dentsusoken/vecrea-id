@@ -31,7 +31,7 @@ sequenceDiagram
     Parse->>Parse: Parse CSV, validate rows
     Parse->>DDB: PutItem rows (id, data, verified, imported)
     Parse-->>Sfn: Complete
-    Note over Pool,Migrate: User signs in; not in pool yet
+    Note over Pool,Migrate: User signs in — not in pool yet
     Pool->>Migrate: Migrate user Lambda trigger
     Migrate->>DDB: GetItem (staging key = username)
     Migrate->>Migrate: verifyPasswordHash vs data.password_hash
