@@ -106,13 +106,15 @@ describe('userMigrationTrigger handler', () => {
     expect(ddbMock).toHaveReceivedCommandTimes(GetCommand, 0);
   });
 
-  it('UserMigration_Authentication: loads staging user, sets userAttributes (PLAIN_TEXT password_hash)', async () => {
+  it('UserMigration_Authentication: loads staging user, sets userAttributes (PLAIN_TEXT password_hash in Item.data)', async () => {
     const password = 'plain-secret';
     ddbMock.on(GetCommand).resolves({
       Item: {
         id: 'alice',
-        password_hash: password,
-        data: stagingData('alice', 'alice@example.com'),
+        data: {
+          ...stagingData('alice', 'alice@example.com'),
+          password_hash: password,
+        },
       },
     });
 
@@ -173,8 +175,10 @@ describe('userMigrationTrigger handler', () => {
     ddbMock.on(GetCommand).resolves({
       Item: {
         id: 'alice',
-        password_hash: 'stored-hash',
-        data: stagingData('alice', 'a@b.com'),
+        data: {
+          ...stagingData('alice', 'a@b.com'),
+          password_hash: 'stored-hash',
+        },
       },
     });
 

@@ -60,6 +60,8 @@ export const cognitoImportDataSchema = z
     address: optionalString,
     updated_at: optionalString,
     'cognito:mfa_enabled': optionalString,
+    /** Staging / migration only (e.g. DynamoDB `Item.data`); not a Cognito CSV standard column for bulk import. */
+    password_hash: optionalString,
   })
   .strict()
   .superRefine((row, ctx) => {

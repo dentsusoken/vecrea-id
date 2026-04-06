@@ -1,7 +1,8 @@
 /**
  * Cognito **Migrate user** Lambda trigger: on `UserMigration_Authentication`, looks up the user in the DynamoDB
- * staging table, verifies `password_hash` with `verifyPasswordHash`, then returns `userAttributes` from the
- * validated `data` payload. `UserMigration_ForgotPassword` is passed through unchanged (no migration on that path).
+ * staging table, parses `Item.data` with `cognitoImportDataSchema`, verifies `data.password_hash` with
+ * `verifyPasswordHash`, then returns `userAttributes` from the validated user object (excluding skipped keys).
+ * `UserMigration_ForgotPassword` is passed through unchanged (no migration on that path).
  *
  * **Environment:** `DDB_TABLE` (required). `HASH_ALG` optional; when unset, verification uses `PLAIN_TEXT`. When set,
  * must be one of `HASH_ALGS` from `../passwordHash/hashAlgorithms`. `HASH_SALT` optional pepper or PBKDF2/scrypt salt.
@@ -28,7 +29,7 @@ import type { CognitoImportData } from '../schemas';
  * same way; the **Migrate user** trigger instead returns a `userAttributes` map that becomes the user profile (AWS
  * examples include `email_verified`). We therefore **do not** skip `email_verified` / `phone_number_verified` here.
  *
- * - `password_hash` — DynamoDB-only (verification); not a Cognito attribute.
+ * - `password_hash` — lives on `Item.data` (same shape as `parseUserInfoCsv` output); not sent as a Cognito attribute.
  * - `cognito:username` — bulk CSV column; pool username is already chosen at sign-in (see alias notes in AWS docs).
  * - `cognito:mfa_enabled` — CSV column; SMS MFA for migrated users is `response.enableSMSMFA`, not this attribute.
  * - `updated_at` — import metadata / non-profile field in our CSV shape.
@@ -120,7 +121,7 @@ async function getStagingItemByUsername(
 }
 
 /**
- * Fetches the staging row, checks `password_hash`, and returns validated Cognito import fields.
+ * Fetches the staging row, parses `Item.data`, verifies `password_hash` from that payload, returns the same parsed user.
  * @throws `User not found.` or `Invalid Password.` when credentials do not match (Cognito migration contract).
  * @throws When `SCRYPT` is configured but `HASH_SALT` is missing (see `verifyScryptHex`).
  */
@@ -138,14 +139,16 @@ async function loadUserForMigration(
     throw new Error('User not found.');
   }
 
-  const storedHash = item['password_hash'];
-  if (storedHash === undefined || storedHash === null) {
+  const user = parseStagingUserData(item);
+
+  const storedHash = user.password_hash;
+  if (storedHash === undefined || storedHash === null || storedHash === '') {
     throw new Error('Invalid Password.');
   }
 
   const ok = await verifyPasswordHash(
     plainPassword,
-    String(storedHash),
+    storedHash,
     hashAlg,
     hashSalt
   );
@@ -153,7 +156,7 @@ async function loadUserForMigration(
     throw new Error('Invalid Password.');
   }
 
-  return parseStagingUserData(item);
+  return user;
 }
 
 function userToAttributes(user: CognitoImportData): StringMap {

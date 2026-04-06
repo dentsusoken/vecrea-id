@@ -12,7 +12,7 @@ import type { CognitoImportData } from '../schemas';
 
 /** Lambda event shape: raw CSV payload and target table name. */
 interface EventInput {
-  /** User-export CSV string (Cognito standard columns). */
+  /** User-export CSV string (Cognito standard columns; optional `password_hash` for staging / migration). */
   USER_INFO_CSV: string;
   /** DynamoDB table name for PutItem. */
   DDB_TABLE: string;
