@@ -20,13 +20,13 @@ Staged CSV load (**Parse User CSV**) and lazy migration on first sign-in (**Migr
 
 ```mermaid
 sequenceDiagram
-    participant Actor as "Operator or client"
+    participant Caller as "Operator or client"
     participant Sfn as "Step Functions optional"
     participant Parse as parseUserInfoCsv
     participant DDB as "DynamoDB staging"
     participant Pool as "Cognito User Pool"
     participant Migrate as "userMigrationTrigger"
-    Actor->>Sfn: Start state machine or invoke Parse Lambda directly
+    Caller->>Sfn: Start state machine or invoke Parse Lambda directly
     Sfn->>Parse: Invoke USER_INFO_CSV and DDB_TABLE
     Parse->>Parse: Parse CSV and validate rows
     Parse->>DDB: PutItem staging rows
