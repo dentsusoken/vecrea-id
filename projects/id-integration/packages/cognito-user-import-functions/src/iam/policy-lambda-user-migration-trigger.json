@@ -9,13 +9,13 @@
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "arn:aws:logs:__REGION__:__ACCOUNT_ID__:log-group:/aws/lambda/*"
+      "Resource": "arn:aws:logs:ap-northeast-1:572318586565:log-group:/aws/lambda/*"
     },
     {
       "Sid": "DynamoDBGetStagingUserForMigration",
       "Effect": "Allow",
       "Action": ["dynamodb:GetItem"],
-      "Resource": "arn:aws:dynamodb:__REGION__:__ACCOUNT_ID__:table/__DDB_STAGING_TABLE_NAME__"
+      "Resource": "arn:aws:dynamodb:ap-northeast-1:572318586565:table/UserImportTmp"
     }
   ]
 }

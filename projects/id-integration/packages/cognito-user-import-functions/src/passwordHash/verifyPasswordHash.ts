@@ -43,7 +43,7 @@ export async function verifyPasswordHash(
       return verifyScryptHex(plainPassword, storedHash, pepper);
 
     case 'BCRYPT':
-      return verifyBcrypt(plainPassword, storedHash);
+      return await verifyBcrypt(plainPassword, storedHash);
 
     case 'ARGON2ID':
     case 'ARGON2I':

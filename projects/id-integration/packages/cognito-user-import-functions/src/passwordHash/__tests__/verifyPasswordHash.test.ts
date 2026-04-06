@@ -1,8 +1,8 @@
 /// <reference types="node" />
+import { randomBytes } from 'crypto';
 import { createHash, pbkdf2Sync } from 'crypto';
+import { argon2id, bcrypt } from 'hash-wasm';
 import { describe, expect, it, vi } from 'vitest';
-import argon2 from 'argon2';
-import bcrypt from 'bcryptjs';
 import { verifyPasswordHash } from '../verifyPasswordHash';
 
 describe('verifyPasswordHash', () => {
@@ -46,7 +46,13 @@ describe('verifyPasswordHash', () => {
   });
 
   it('BCRYPT: compares PHC hash', async () => {
-    const hash = bcrypt.hashSync('pw', 4);
+    const salt = randomBytes(16);
+    const hash = await bcrypt({
+      password: 'pw',
+      salt,
+      costFactor: 4,
+      outputType: 'encoded',
+    });
     await expect(
       verifyPasswordHash('pw', hash, 'BCRYPT', undefined)
     ).resolves.toBe(true);
@@ -56,7 +62,16 @@ describe('verifyPasswordHash', () => {
   });
 
   it('ARGON2ID: compares PHC hash', async () => {
-    const hash = await argon2.hash('pw', { type: argon2.argon2id, hashLength: 32 });
+    const salt = randomBytes(16);
+    const hash = await argon2id({
+      password: 'pw',
+      salt,
+      parallelism: 1,
+      iterations: 2,
+      memorySize: 16,
+      hashLength: 32,
+      outputType: 'encoded',
+    });
     await expect(
       verifyPasswordHash('pw', hash, 'ARGON2ID', undefined)
     ).resolves.toBe(true);
