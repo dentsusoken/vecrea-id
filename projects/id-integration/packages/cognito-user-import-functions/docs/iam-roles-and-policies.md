@@ -10,11 +10,13 @@ Replace placeholders in the JSON files in [`../src/iam/`](../src/iam/) (such as 
 | **importVerifiedUsers** Lambda execution role | Same as above | [`policy-lambda-import-verified-users.json`](../src/iam/policy-lambda-import-verified-users.json) |
 | **checkImportStatus** Lambda execution role | Same as above | [`policy-lambda-check-import-status.json`](../src/iam/policy-lambda-check-import-status.json) |
 | **startUserImportPipeline** Lambda execution role | Same as above | [`policy-lambda-start-user-import-pipeline.json`](../src/iam/policy-lambda-start-user-import-pipeline.json) |
+| **userMigrationTrigger** (Cognito Migrate user Lambda) execution role | Same as above | [`policy-lambda-user-migration-trigger.json`](../src/iam/policy-lambda-user-migration-trigger.json) |
 | **cognito-user-import-pipeline** Step Functions execution role (attached to the state machine) | [`trust-policy-step-functions.json`](../src/iam/trust-policy-step-functions.json) | [`policy-stepfunctions-cognito-user-import-pipeline.json`](../src/iam/policy-stepfunctions-cognito-user-import-pipeline.json) |
 | **Cognito import logging** (IAM role passed as `CloudWatchLogsRoleArn` on `CreateUserImportJob`) | [`trust-policy-cognito-import-logs.json`](../src/iam/trust-policy-cognito-import-logs.json) | [`policy-role-cognito-import-cloudwatch-logs.json`](../src/iam/policy-role-cognito-import-cloudwatch-logs.json) |
 
 ## Notes
 
+- **userMigrationTrigger**: Cognito invokes this function; the execution role does **not** need `cognito-idp:*`. Allow **`cognito-idp.amazonaws.com`** to invoke the function via the **Lambda resource-based policy** (console: Cognito user pool → Sign-in experience → Lambda triggers, or `add-permission` / CloudFormation `AWS::Lambda::Permission`).
 - **Lambda execution roles**: You may use a separate role per function or share one role. If you share a role, **merge** the `policy-lambda-*.json` files into a single policy, or attach multiple policies to the same role.
 - **CloudWatch Logs (Lambda execution logs)**: You may attach the AWS managed policy **`AWSLambdaBasicExecutionRole`** instead of inline `logs:*` (in that case you can remove the `Sid: CloudWatchLogs` statement from each `policy-lambda-*.json`).
 - **Cognito logging role**: This is **not** a Lambda role; it is the ARN passed as **`CLOUD_WATCH_LOG_ROLE_ARN` in events / from `importVerifiedUsers`**. The **importVerifiedUsers** Lambda role includes **`iam:PassRole`** (see [`policy-lambda-import-verified-users.json`](../src/iam/policy-lambda-import-verified-users.json)).
