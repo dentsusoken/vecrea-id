@@ -188,3 +188,5 @@ export type User = z.infer<typeof userSchema>;
 export type ErrorBody = z.infer<typeof errorBodySchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
 export type MfaOption = z.infer<typeof mfaOptionSchema>;
+export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
+export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;

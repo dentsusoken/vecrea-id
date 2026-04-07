@@ -5,6 +5,7 @@ import {
   error403,
   error409,
   error422,
+  error429,
   error500,
 } from './common';
 
@@ -40,6 +41,7 @@ export const createUserRoute = createRoute({
     403: error403,
     409: error409,
     422: error422,
+    429: error429,
     500: error500,
   },
 });

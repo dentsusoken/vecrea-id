@@ -59,6 +59,15 @@ export const error422 = {
   },
 } as const;
 
+export const error429 = {
+  description: 'Rate limited (TooManyRequestsException)',
+  content: {
+    'application/json': {
+      schema: errorBodySchema,
+    },
+  },
+} as const;
+
 export const error500 = {
   description: 'Internal error',
   content: {

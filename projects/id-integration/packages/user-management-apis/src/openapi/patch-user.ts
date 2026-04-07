@@ -5,6 +5,7 @@ import {
   error403,
   error404,
   error422,
+  error429,
   error500,
   userIdPathParamsSchema,
 } from './common';
@@ -42,6 +43,7 @@ export const patchUserRoute = createRoute({
     403: error403,
     404: error404,
     422: error422,
+    429: error429,
     500: error500,
   },
 });

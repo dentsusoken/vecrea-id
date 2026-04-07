@@ -1,13 +1,18 @@
+import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Hono } from 'hono';
-import { openApiRoutes } from './openapi';
+import { createOpenApiRoutes } from './openapi';
 
-const app = new Hono();
+export function createManagementApis(cognito: CognitoIdentityProviderClient) {
+  const app = new Hono();
+  app.route('/', createOpenApiRoutes(cognito));
+  app.get('/', (c) =>
+    c.text('User Management API — OpenAPI: /openapi.json, UI: /docs')
+  );
+  return app;
+}
 
-app.route('/', openApiRoutes);
+const defaultCognito = new CognitoIdentityProviderClient({});
 
-app.get('/', (c) =>
-  c.text('User Management API — OpenAPI: /openapi.json, UI: /docs')
-);
-
-export { app as managementApis };
-export default app;
+export const managementApis = createManagementApis(defaultCognito);
+export { createOpenApiRoutes } from './openapi';
+export default managementApis;

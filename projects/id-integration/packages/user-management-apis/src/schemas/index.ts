@@ -7,8 +7,10 @@ export {
   updateUserRequestSchema,
   userSchema,
   userStatusSchema,
+  type CreateUserRequest,
   type ErrorBody,
   type MfaOption,
+  type UpdateUserRequest,
   type User,
   type UserStatus,
 } from './user';

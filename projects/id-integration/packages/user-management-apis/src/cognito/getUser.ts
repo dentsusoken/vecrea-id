@@ -2,12 +2,9 @@ import {
   CognitoIdentityProviderClient,
   AdminGetUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { requireUserPoolId } from './env';
 import type { User } from '../schemas';
-import {
-  cognitoBooleanStringToBoolean,
-  userAttributesToRecord,
-} from './cognitoUserAttributes';
+import { requireUserPoolId } from './env';
+import { mapCognitoAttributeUserToUser } from './mapToUser';
 
 export const getUser = async (
   cognitoClient: CognitoIdentityProviderClient,
@@ -37,38 +34,15 @@ export const getUser = async (
     );
   }
 
-  const attributes = userAttributesToRecord(UserAttributes);
-  const userId = attributes.sub;
-  if (!userId) {
-    throw new Error('Cognito user is missing the sub attribute');
-  }
-
-  const emailRaw = attributes.email;
-  const email =
-    emailRaw !== undefined && emailRaw !== '' ? emailRaw : null;
-
-  return {
-    userId,
+  return mapCognitoAttributeUserToUser({
     username: Username,
-    attributes,
-    email,
-    emailVerified: cognitoBooleanStringToBoolean(attributes.email_verified),
-    phoneNumber:
-      attributes.phone_number !== undefined && attributes.phone_number !== ''
-        ? attributes.phone_number
-        : null,
-    phoneNumberVerified: cognitoBooleanStringToBoolean(
-      attributes.phone_number_verified
-    ),
+    attributeList: UserAttributes,
+    userCreateDate: UserCreateDate,
+    userLastModifiedDate: UserLastModifiedDate,
     enabled: Enabled,
-    status: UserStatus,
-    mfaOptions: MFAOptions?.map((o) => ({
-      deliveryMedium: o.DeliveryMedium,
-      attributeName: o.AttributeName,
-    })),
+    userStatus: UserStatus,
+    mfaOptions: MFAOptions,
     preferredMfaSetting: PreferredMfaSetting,
     userMfaSettingList: UserMFASettingList,
-    createdAt: UserCreateDate?.toISOString(),
-    updatedAt: UserLastModifiedDate?.toISOString(),
-  };
+  });
 };

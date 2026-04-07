@@ -3,6 +3,7 @@ import {
   error401,
   error403,
   error404,
+  error429,
   error500,
   userIdPathParamsSchema,
 } from './common';
@@ -26,6 +27,7 @@ export const deleteUserRoute = createRoute({
     401: error401,
     403: error403,
     404: error404,
+    429: error429,
     500: error500,
   },
 });
