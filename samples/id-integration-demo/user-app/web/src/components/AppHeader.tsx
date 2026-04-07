@@ -5,7 +5,7 @@ export function AppHeader() {
     <header className="flex items-center justify-end gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
       <Link
         className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-zinc-800"
-        href="/about"
+        href="/login"
         prefetch={true}
       >
         Log in
