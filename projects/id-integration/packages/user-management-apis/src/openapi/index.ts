@@ -1,5 +1,5 @@
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { swaggerUI } from '@hono/swagger-ui';
+import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { createUser } from '../cognito/createUser';
 import { deleteUser } from '../cognito/deleteUser';
@@ -101,7 +101,7 @@ export function createOpenApiRoutes(
     servers: [...openApiServers],
   });
 
-  app.get('/docs', swaggerUI({ url: '/openapi.json' }));
+  app.get('/docs', Scalar({ url: '/openapi.json' }));
 
   return app;
 }

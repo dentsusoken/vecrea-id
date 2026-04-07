@@ -24,7 +24,6 @@
 		"@cloudflare/vitest-pool-workers": "^0.12.4",
     "@aws-sdk/client-cognito-identity-provider": "^3.1020.0",
     "@hono/node-server": "^1.19.12",
-    "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.2.4",
     "@scalar/hono-api-reference": "^0.10.5",
     "@types/node": "^25.5.0",
@@ -40,7 +39,6 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1020.0",
-    "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.2.4",
     "@scalar/hono-api-reference": "^0.10.5",
     "hono": "^4.12.9",
