@@ -1,6 +1,11 @@
 {
   "name": "${localWorkspaceFolder}",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "forwardPorts": [3000, 8787],
+  "portsAttributes": {
+    "3000": { "label": "Node (dev:node)" },
+    "8787": { "label": "Wrangler (pnpm dev)" }
+  },
   "remoteUser": "node",
   "remoteEnv": {
     "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
