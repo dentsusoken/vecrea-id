@@ -6,20 +6,35 @@
 
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Hono } from 'hono';
-import { createOpenApiRoutes } from './openapi';
+import {
+  createOpenApiRoutes,
+  landingPageText,
+  normalizeBasePath,
+  type CreateManagementApisOptions,
+} from './openapi';
+
+export type { CreateManagementApisOptions, CreateOpenApiRoutesOptions } from './openapi';
+export { createOpenApiRoutes, normalizeBasePath } from './openapi';
 
 /**
- * Builds a Hono app with OpenAPI routes and a root landing message.
+ * Builds a Hono app with OpenAPI routes and a landing message at the mount path.
  *
  * @param cognito - SDK client used for all Cognito Admin API calls (configure region/credentials in the host).
+ * @param options.basePath - Optional prefix where routes are mounted (e.g. `/api/v1`). Omit for root.
  * @returns A Hono instance; mount at `/` or use `fetch` as a Workers handler.
  */
-export function createManagementApis(cognito: CognitoIdentityProviderClient) {
+export function createManagementApis(
+  cognito: CognitoIdentityProviderClient,
+  options?: CreateManagementApisOptions
+) {
+  const base = normalizeBasePath(options?.basePath);
+  const api = createOpenApiRoutes(cognito, { basePath: base });
   const app = new Hono();
-  app.route('/', createOpenApiRoutes(cognito));
-  app.get('/', (c) =>
-    c.text('User Management API — OpenAPI: /openapi.json, UI: /docs')
-  );
+  const mountPath = base === '' ? '/' : base;
+
+  app.get(mountPath, (c) => c.text(landingPageText(base)));
+  app.route(mountPath, api);
+
   return app;
 }
 
@@ -28,6 +43,5 @@ const defaultCognito = new CognitoIdentityProviderClient({});
 
 /** Pre-built app using the default Cognito client (local dev / quickstarts). */
 export const managementApis = createManagementApis(defaultCognito);
-export { createOpenApiRoutes } from './openapi';
 /** Default export: same as {@link managementApis}. */
 export default managementApis;

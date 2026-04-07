@@ -16,6 +16,20 @@ import { deleteUserRoute } from './delete-user';
 import { getUserRoute } from './get-user';
 import { listUsersRoute } from './list-users';
 import { patchUserRoute } from './patch-user';
+import { normalizeBasePath } from './basePath';
+
+/** Options for {@link createOpenApiRoutes}. */
+export type CreateOpenApiRoutesOptions = {
+  /**
+   * Path prefix where this app is mounted (e.g. `/api/v1`).
+   * Used for Scalar’s OpenAPI `url` and for `servers` in the generated document.
+   * Omit or use `/` for routes at the host root.
+   */
+  basePath?: string;
+};
+
+/** Options for {@link createManagementApis} (re-exported from entry). */
+export type CreateManagementApisOptions = CreateOpenApiRoutesOptions;
 
 /** Base OpenAPI document fields shared with `app.doc`. */
 export const openApiInfo = {
@@ -37,11 +51,16 @@ export const openApiServers = [
  * Registers OpenAPI-documented user routes and wires them to Cognito helpers.
  *
  * @param cognito - Passed to list/create/get/patch/delete handlers.
- * @returns An `OpenAPIHono` app exposing `/openapi.json`, `/docs` (Scalar), and `/users/*` routes.
+ * @param options.basePath - If the host mounts this app under a prefix, pass it so `/docs` and `servers` match.
+ * @returns An `OpenAPIHono` app exposing `/openapi.json`, `/docs` (Scalar), and `/users/*` routes (relative to the mount point).
  */
 export function createOpenApiRoutes(
-  cognito: CognitoIdentityProviderClient
+  cognito: CognitoIdentityProviderClient,
+  options?: CreateOpenApiRoutesOptions
 ): OpenAPIHono {
+  const base = normalizeBasePath(options?.basePath);
+  const openApiJsonHref = base === '' ? '/openapi.json' : `${base}/openapi.json`;
+
   const app = new OpenAPIHono();
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
@@ -109,10 +128,25 @@ export function createOpenApiRoutes(
   app.doc('/openapi.json', {
     openapi: '3.0.3',
     info: { ...openApiInfo },
-    servers: [...openApiServers],
+    servers:
+      base === ''
+        ? [...openApiServers]
+        : [{ url: base, description: 'API base path (see hosting mount)' }],
   });
 
-  app.get('/docs', Scalar({ url: '/openapi.json' }));
+  app.get('/docs', Scalar({ url: openApiJsonHref }));
 
   return app;
 }
+
+/**
+ * Text for the landing route (root of the mount).
+ * @internal
+ */
+export function landingPageText(base: string): string {
+  const openApiJsonHref = base === '' ? '/openapi.json' : `${base}/openapi.json`;
+  const docsHref = base === '' ? '/docs' : `${base}/docs`;
+  return `User Management API — OpenAPI: ${openApiJsonHref}, UI: ${docsHref}`;
+}
+
+export { normalizeBasePath } from './basePath';

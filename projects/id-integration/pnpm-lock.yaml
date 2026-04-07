@@ -115,6 +115,12 @@ importers:
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
+      '@vecrea/au3te-ts-common':
+        specifier: ^0.1.2
+        version: 0.1.2(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6)
+      '@vecrea/au3te-ts-server':
+        specifier: ^0.1.4
+        version: 0.1.4(@vecrea/au3te-ts-common@0.1.2(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6))(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6)
       aws-sdk-client-mock-vitest:
         specifier: ^7.0.1
         version: 7.0.1(@smithy/types@4.13.1)(aws-sdk-client-mock@4.1.0)(vitest@4.1.2(@types/node@25.5.0)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.21.5)(tsx@4.21.0)(yaml@2.8.3)))
@@ -1729,6 +1735,27 @@ packages:
     resolution: {integrity: sha512-XJ9UD9+bbDo4a4epraTwG3TsNPeiB9aShrUneAVXy8q4LuwowN+qu89/6ByLMINqvIMeI9H9hOHQtg/ijrYXzQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@vecrea/au3te-ts-common@0.1.2':
+    resolution: {integrity: sha512-dWmkxgJBsZko/2Y1g1STUj6VMg08/VoYX+2PLZLj2sNweGjKB51dnPE1VCe+GjYVwBa/20Wn8UmQpTtWdOh1kQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@vecrea/oid4vc-core': ^0.1.0
+      u8a-utils: ^1.0.12
+      zod: ^3.23.8
+
+  '@vecrea/au3te-ts-server@0.1.4':
+    resolution: {integrity: sha512-BO8VU+EFaWWt7wbj/kIJcvIhvjiKeA2tmcpJ0WY7lRhjR1r2GF8J2Uz7XGRDs5NBT9AcrDnlMIdsNORQTCxq+g==}
+    peerDependencies:
+      '@vecrea/au3te-ts-common': ^0.1.2
+      '@vecrea/oid4vc-core': ^0.1.0
+      u8a-utils: ^1.0.12
+      zod: ^3.23.8
+
+  '@vecrea/oid4vc-core@0.1.0':
+    resolution: {integrity: sha512-jEllTxzixx5h8v5X1NwRGeDcIday8Oes3bd3HNKX3GCFgLsTvxsXPJkr90uVdXpUZOFjc4nImjLpKJMQ1L24Hw==}
+    peerDependencies:
+      '@aws-sdk/lib-dynamodb': ^3.713.0
+
   '@vitest/expect@4.1.2':
     resolution: {integrity: sha512-gbu+7B0YgUJ2nkdsRJrFFW6X7NTP44WlhiclHniUhxADQJH5Szt9mZ9hWnJPJ8YwOK5zUOSSlSvyzRf0u1DSBQ==}
 
@@ -2583,6 +2610,9 @@ packages:
     resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  u8a-utils@1.0.12:
+    resolution: {integrity: sha512-lW6a3t5rqAzRaIYiiupfMTnMRxFCPWSRtiVAJupEWzMg+vYoCHZ2xf8jaH9RJB13l4UdP0hBi2A6CBn0KwzsOQ==}
 
   ufo@1.6.3:
     resolution: {integrity: sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q==}
@@ -4464,6 +4494,23 @@ snapshots:
       '@typescript-eslint/types': 8.58.0
       eslint-visitor-keys: 5.0.1
 
+  '@vecrea/au3te-ts-common@0.1.2(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6)':
+    dependencies:
+      '@vecrea/oid4vc-core': 0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0))
+      u8a-utils: 1.0.12
+      zod: 4.3.6
+
+  '@vecrea/au3te-ts-server@0.1.4(@vecrea/au3te-ts-common@0.1.2(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6))(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6)':
+    dependencies:
+      '@vecrea/au3te-ts-common': 0.1.2(@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)))(u8a-utils@1.0.12)(zod@4.3.6)
+      '@vecrea/oid4vc-core': 0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0))
+      u8a-utils: 1.0.12
+      zod: 4.3.6
+
+  '@vecrea/oid4vc-core@0.1.0(@aws-sdk/lib-dynamodb@3.1020.0(@aws-sdk/client-dynamodb@3.1020.0))':
+    dependencies:
+      '@aws-sdk/lib-dynamodb': 3.1020.0(@aws-sdk/client-dynamodb@3.1020.0)
+
   '@vitest/expect@4.1.2':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -5406,6 +5453,8 @@ snapshots:
   typescript@5.8.2: {}
 
   typescript@6.0.2: {}
+
+  u8a-utils@1.0.12: {}
 
   ufo@1.6.3: {}
 
