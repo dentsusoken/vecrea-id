@@ -1,8 +1,5 @@
 import { createRoute } from '@hono/zod-openapi';
 import {
-  userSchema,
-} from '../schemas/user';
-import {
   error401,
   error403,
   error404,
@@ -11,25 +8,20 @@ import {
 } from './common';
 
 /**
- * `GET /users/{userId}` — fetch one user (AdminGetUser).
+ * `DELETE /users/{userId}` — delete a user (AdminDeleteUser).
  */
-export const getUserRoute = createRoute({
-  method: 'get',
+export const deleteUserRoute = createRoute({
+  method: 'delete',
   path: '/users/{userId}',
   tags: ['Users'],
-  summary: 'Get user by ID',
+  summary: 'Delete user',
   security: [{ bearerAuth: [] }],
   request: {
     params: userIdPathParamsSchema,
   },
   responses: {
-    200: {
-      description: 'User found',
-      content: {
-        'application/json': {
-          schema: userSchema,
-        },
-      },
+    204: {
+      description: 'User deleted',
     },
     401: error401,
     403: error403,

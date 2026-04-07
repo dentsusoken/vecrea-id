@@ -93,6 +93,90 @@ export const userSchema = z
   })
   .openapi('User');
 
+/** Request body for `POST /users` (maps to AdminCreateUser–style options). */
+export const createUserRequestSchema = z
+  .object({
+    username: z.string().min(1).openapi({ example: 'jdoe' }),
+    email: z.string().email().optional(),
+    attributes: z
+      .record(z.string(), z.string())
+      .optional()
+      .openapi({
+        description:
+          'Standard and custom attributes (e.g. `given_name`). `email` can be set here or via top-level `email`.',
+      }),
+    temporaryPassword: z
+      .string()
+      .min(8)
+      .optional()
+      .openapi({
+        description:
+          'Initial password; user often lands in `FORCE_CHANGE_PASSWORD` until first successful sign-in.',
+      }),
+    suppressInvitation: z
+      .boolean()
+      .optional()
+      .openapi({
+        description:
+          'When true, skips the invitation message (Cognito `MessageAction` `SUPPRESS`).',
+      }),
+  })
+  .openapi('CreateUserRequest');
+
+/** Request body for `PATCH /users/{userId}` (partial update; attributes merge per Cognito rules). */
+export const updateUserRequestSchema = z
+  .object({
+    enabled: z
+      .boolean()
+      .optional()
+      .openapi({
+        description: 'Enable or disable the user (`AdminEnableUser` / `AdminDisableUser`).',
+      }),
+    email: z.union([z.string().email(), z.null()]).optional(),
+    emailVerified: z.boolean().optional(),
+    phoneNumber: z.union([z.string(), z.null()]).optional(),
+    phoneNumberVerified: z.boolean().optional(),
+    attributes: z
+      .record(z.string(), z.string())
+      .optional()
+      .openapi({
+        description:
+          'Attributes to add or replace (`AdminUpdateUserAttributes`); omitted keys are unchanged.',
+      }),
+  })
+  .openapi('UpdateUserRequest');
+
+export const listUsersQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(60)
+    .optional()
+    .openapi({
+      param: { name: 'limit', in: 'query' },
+      description: 'Max results per page (aligns with Cognito `Limit`, max 60).',
+      example: 20,
+    }),
+  paginationToken: z
+    .string()
+    .optional()
+    .openapi({
+      param: { name: 'paginationToken', in: 'query' },
+      description:
+        'Opaque token from a previous `ListUsers` response (`PaginationToken`).',
+    }),
+});
+
+export const listUsersResponseSchema = z
+  .object({
+    items: z.array(userSchema),
+    paginationToken: z.string().optional().openapi({
+      description: 'Present when more results exist; pass as `paginationToken` on the next call.',
+    }),
+  })
+  .openapi('ListUsersResponse');
+
 export const errorBodySchema = z
   .object({
     message: z.string(),

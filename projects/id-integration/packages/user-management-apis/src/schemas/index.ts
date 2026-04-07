@@ -1,6 +1,10 @@
 export {
+  createUserRequestSchema,
   errorBodySchema,
+  listUsersQuerySchema,
+  listUsersResponseSchema,
   mfaOptionSchema,
+  updateUserRequestSchema,
   userSchema,
   userStatusSchema,
   type ErrorBody,

@@ -1,39 +1,39 @@
 import { createRoute } from '@hono/zod-openapi';
 import {
-  userSchema,
+  listUsersQuerySchema,
+  listUsersResponseSchema,
 } from '../schemas/user';
 import {
   error401,
   error403,
-  error404,
+  error422,
   error500,
-  userIdPathParamsSchema,
 } from './common';
 
 /**
- * `GET /users/{userId}` — fetch one user (AdminGetUser).
+ * `GET /users` — list users (ListUsers-style pagination).
  */
-export const getUserRoute = createRoute({
+export const listUsersRoute = createRoute({
   method: 'get',
-  path: '/users/{userId}',
+  path: '/users',
   tags: ['Users'],
-  summary: 'Get user by ID',
+  summary: 'List users',
   security: [{ bearerAuth: [] }],
   request: {
-    params: userIdPathParamsSchema,
+    query: listUsersQuerySchema,
   },
   responses: {
     200: {
-      description: 'User found',
+      description: 'Page of users',
       content: {
         'application/json': {
-          schema: userSchema,
+          schema: listUsersResponseSchema,
         },
       },
     },
     401: error401,
     403: error403,
-    404: error404,
+    422: error422,
     500: error500,
   },
 });
