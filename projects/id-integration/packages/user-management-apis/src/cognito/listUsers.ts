@@ -1,3 +1,7 @@
+/**
+ * Paginated user listing via Cognito `ListUsers`.
+ */
+
 import {
   CognitoIdentityProviderClient,
   ListUsersCommand,
@@ -5,6 +9,10 @@ import {
 import { requireUserPoolId } from './env';
 import { mapUserTypeToUser } from './mapToUser';
 
+/**
+ * @param query.limit - Max `Limit` (1–60).
+ * @param query.paginationToken - Opaque `PaginationToken` from a prior response.
+ */
 export async function listUsers(
   client: CognitoIdentityProviderClient,
   query: { limit?: number; paginationToken?: string }

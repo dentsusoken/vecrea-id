@@ -12,7 +12,9 @@ import {
 } from './common';
 
 /**
- * `GET /users/{userId}` — fetch one user (AdminGetUser).
+ * `GET /users/{userId}` — fetch one user (Cognito `AdminGetUser`).
+ *
+ * @remarks Path `userId` is passed as Cognito `Username`. Implements {@link getUser}.
  */
 export const getUserRoute = createRoute({
   method: 'get',

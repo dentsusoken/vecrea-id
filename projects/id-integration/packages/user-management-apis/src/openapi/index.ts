@@ -1,3 +1,7 @@
+/**
+ * OpenAPI route registration (`@hono/zod-openapi`) and Scalar UI (`/docs`).
+ */
+
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
@@ -21,6 +25,7 @@ export const openApiInfo = {
     'Cognito-backed user CRUD-style operations (list, get, create, patch, delete). Wire to Admin* APIs in the hosting project.',
 } as const;
 
+/** Example server entries for `app.doc` / exported OpenAPI document. */
 export const openApiServers = [
   {
     url: 'https://api.example.com/v1',
@@ -28,6 +33,12 @@ export const openApiServers = [
   },
 ] as const;
 
+/**
+ * Registers OpenAPI-documented user routes and wires them to Cognito helpers.
+ *
+ * @param cognito - Passed to list/create/get/patch/delete handlers.
+ * @returns An `OpenAPIHono` app exposing `/openapi.json`, `/docs` (Scalar), and `/users/*` routes.
+ */
 export function createOpenApiRoutes(
   cognito: CognitoIdentityProviderClient
 ): OpenAPIHono {

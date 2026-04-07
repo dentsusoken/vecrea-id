@@ -1,3 +1,7 @@
+/**
+ * Single-user fetch via Cognito `AdminGetUser`.
+ */
+
 import {
   CognitoIdentityProviderClient,
   AdminGetUserCommand,
@@ -6,6 +10,12 @@ import type { User } from '../schemas';
 import { requireUserPoolId } from './env';
 import { mapCognitoAttributeUserToUser } from './mapToUser';
 
+/**
+ * Loads one user by pool `Username` (alias/sign-in may differ; see Cognito docs).
+ *
+ * @param cognitoClient - Configured SDK client.
+ * @param username - Value passed to `AdminGetUser.Username` (often same as path `userId`).
+ */
 export const getUser = async (
   cognitoClient: CognitoIdentityProviderClient,
   username: string

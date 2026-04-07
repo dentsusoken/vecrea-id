@@ -1,3 +1,8 @@
+/**
+ * Partial updates: `AdminDeleteUserAttributes`, `AdminUpdateUserAttributes`,
+ * `AdminEnableUser` / `AdminDisableUser`, then {@link getUser} for the response body.
+ */
+
 import {
   AdminDeleteUserAttributesCommand,
   AdminDisableUserCommand,
@@ -5,15 +10,18 @@ import {
   AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { UpdateUserRequest } from '../schemas';
+import type { UpdateUserRequest, User } from '../schemas';
 import { requireUserPoolId } from './env';
 import { getUser } from './getUser';
 
+/**
+ * @param username - Value passed to Cognito `Username` for the target user.
+ */
 export async function patchUser(
   client: CognitoIdentityProviderClient,
   username: string,
   body: UpdateUserRequest
-) {
+): Promise<User> {
   const poolId = requireUserPoolId();
   const toSet: { Name: string; Value: string }[] = [];
   const toRemove: string[] = [];

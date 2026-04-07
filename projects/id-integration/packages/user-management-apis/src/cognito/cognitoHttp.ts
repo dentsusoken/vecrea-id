@@ -1,3 +1,7 @@
+/**
+ * Maps Cognito service exceptions to JSON error bodies and HTTP status codes for Hono.
+ */
+
 import type { Context } from 'hono';
 import {
   AliasExistsException,
@@ -10,6 +14,9 @@ import {
   UsernameExistsException,
 } from '@aws-sdk/client-cognito-identity-provider';
 
+/**
+ * Converts thrown SDK errors into `{ message, code? }` responses aligned with the OpenAPI `ErrorBody` schema.
+ */
 export function cognitoErrorResponse(c: Context, err: unknown) {
   if (err instanceof UserNotFoundException) {
     return c.json({ message: err.message, code: err.name }, 404);

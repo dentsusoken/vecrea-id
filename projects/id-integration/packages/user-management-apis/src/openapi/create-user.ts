@@ -10,7 +10,9 @@ import {
 } from './common';
 
 /**
- * `POST /users` — create a user (AdminCreateUser).
+ * `POST /users` — create a user (Cognito `AdminCreateUser`).
+ *
+ * @remarks Implements {@link createUser} in `openapi/index.ts`.
  */
 export const createUserRoute = createRoute({
   method: 'post',

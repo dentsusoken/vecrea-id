@@ -1,3 +1,7 @@
+/**
+ * User creation via Cognito `AdminCreateUser`.
+ */
+
 import {
   AdminCreateUserCommand,
   CognitoIdentityProviderClient,
@@ -7,6 +11,10 @@ import { requireUserPoolId } from './env';
 import { getUser } from './getUser';
 import { mapUserTypeToUser } from './mapToUser';
 
+/**
+ * Merges top-level `email` into `UserAttributes` (top-level wins on duplicate keys).
+ * If the command response omits `User`, falls back to {@link getUser}.
+ */
 export async function createUser(
   client: CognitoIdentityProviderClient,
   body: CreateUserRequest

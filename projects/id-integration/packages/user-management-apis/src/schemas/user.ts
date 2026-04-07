@@ -1,3 +1,7 @@
+/**
+ * Zod OpenAPI schemas for users, requests, and error bodies (Cognito-aligned field semantics).
+ */
+
 import { z } from '@hono/zod-openapi';
 import type {
   DeliveryMediumType,
@@ -22,10 +26,12 @@ const DELIVERY_MEDIUM_VALUES = ['EMAIL', 'SMS'] as const satisfies readonly [
   ...DeliveryMediumType[],
 ];
 
+/** Cognito `UserStatusType` as an OpenAPI enum. */
 export const userStatusSchema = z
   .enum(USER_STATUS_VALUES)
   .openapi({ description: 'Cognito UserStatusType' });
 
+/** One row of legacy `MFAOptions` from AdminGetUser. */
 export const mfaOptionSchema = z
   .object({
     deliveryMedium: z.enum(DELIVERY_MEDIUM_VALUES).optional(),
@@ -146,6 +152,7 @@ export const updateUserRequestSchema = z
   })
   .openapi('UpdateUserRequest');
 
+/** Query string for `GET /users` (Cognito `ListUsers`). */
 export const listUsersQuerySchema = z.object({
   limit: z.coerce
     .number()
@@ -168,6 +175,7 @@ export const listUsersQuerySchema = z.object({
     }),
 });
 
+/** Response body for `GET /users`. */
 export const listUsersResponseSchema = z
   .object({
     items: z.array(userSchema),
@@ -177,6 +185,7 @@ export const listUsersResponseSchema = z
   })
   .openapi('ListUsersResponse');
 
+/** Standard JSON error envelope for 4xx/5xx responses. */
 export const errorBodySchema = z
   .object({
     message: z.string(),

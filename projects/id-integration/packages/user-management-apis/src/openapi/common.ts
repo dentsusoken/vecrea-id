@@ -1,3 +1,7 @@
+/**
+ * Shared Zod path params and OpenAPI response fragments for error status codes.
+ */
+
 import { z } from '@hono/zod-openapi';
 import { errorBodySchema } from '../schemas/user';
 
@@ -14,6 +18,7 @@ export const userIdPathParamsSchema = z.object({
     }),
 });
 
+/** OpenAPI 401 — missing or invalid bearer token. */
 export const error401 = {
   description: 'Missing or invalid bearer token',
   content: {
@@ -23,6 +28,7 @@ export const error401 = {
   },
 } as const;
 
+/** OpenAPI 403 — not authorized for this operation. */
 export const error403 = {
   description: 'Caller is not allowed to perform this action',
   content: {
@@ -32,6 +38,7 @@ export const error403 = {
   },
 } as const;
 
+/** OpenAPI 404 — user or resource not found. */
 export const error404 = {
   description: 'User does not exist',
   content: {
@@ -41,6 +48,7 @@ export const error404 = {
   },
 } as const;
 
+/** OpenAPI 409 — conflict (e.g. duplicate username). */
 export const error409 = {
   description: 'Conflict (e.g. username already exists)',
   content: {
@@ -50,6 +58,7 @@ export const error409 = {
   },
 } as const;
 
+/** OpenAPI 422 — invalid parameters or password policy. */
 export const error422 = {
   description: 'Validation failed',
   content: {
@@ -59,6 +68,7 @@ export const error422 = {
   },
 } as const;
 
+/** OpenAPI 429 — Cognito rate limit (`TooManyRequestsException`). */
 export const error429 = {
   description: 'Rate limited (TooManyRequestsException)',
   content: {
@@ -68,6 +78,7 @@ export const error429 = {
   },
 } as const;
 
+/** OpenAPI 500 — unexpected error. */
 export const error500 = {
   description: 'Internal error',
   content: {

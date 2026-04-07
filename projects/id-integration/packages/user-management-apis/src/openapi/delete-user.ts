@@ -9,7 +9,9 @@ import {
 } from './common';
 
 /**
- * `DELETE /users/{userId}` — delete a user (AdminDeleteUser).
+ * `DELETE /users/{userId}` — delete a user (Cognito `AdminDeleteUser`).
+ *
+ * @remarks Implements {@link deleteUser}.
  */
 export const deleteUserRoute = createRoute({
   method: 'delete',

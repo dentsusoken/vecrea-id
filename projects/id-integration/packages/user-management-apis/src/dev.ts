@@ -1,3 +1,7 @@
+/**
+ * Local development server using `@hono/node-server` (not Cloudflare Workers).
+ */
+
 import { serve } from '@hono/node-server';
 import { managementApis } from './index';
 

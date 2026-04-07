@@ -1,7 +1,13 @@
+/**
+ * Helpers for Cognito user attribute arrays and string-encoded booleans.
+ */
+
 import type { AttributeType } from '@aws-sdk/client-cognito-identity-provider';
 
 /**
  * Converts Cognito `AttributeType[]` into a plain string map (Name → Value).
+ *
+ * @param attributes - `UserAttributes` / `UserType.Attributes`; empty or undefined yields `{}`.
  */
 export function userAttributesToRecord(
   attributes: AttributeType[] | undefined
@@ -19,7 +25,10 @@ export function userAttributesToRecord(
 }
 
 /**
- * Cognito boolean user attributes are stored as the strings `"true"` / `"false"`.
+ * Parses Cognito boolean user attributes (stored as `"true"` / `"false"` strings).
+ *
+ * @param value - Raw attribute value (e.g. `email_verified`).
+ * @returns `true` / `false`, or `undefined` if missing or unrecognized.
  */
 export function cognitoBooleanStringToBoolean(
   value: string | undefined

@@ -13,7 +13,9 @@ import {
 } from './common';
 
 /**
- * `GET /users` — list users (ListUsers-style pagination).
+ * `GET /users` — list users (Cognito `ListUsers`).
+ *
+ * @remarks Implements {@link listUsers} in `openapi/index.ts`.
  */
 export const listUsersRoute = createRoute({
   method: 'get',

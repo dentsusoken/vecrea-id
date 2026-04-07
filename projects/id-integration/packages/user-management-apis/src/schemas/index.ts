@@ -1,3 +1,7 @@
+/**
+ * Re-exports of Zod schemas and inferred TypeScript types for consumers.
+ */
+
 export {
   createUserRequestSchema,
   errorBodySchema,

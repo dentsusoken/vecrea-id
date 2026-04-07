@@ -1,3 +1,7 @@
+/**
+ * Maps Cognito API shapes (`AdminGetUser`, `ListUsers` entries) to the API {@link User} model.
+ */
+
 import type {
   AttributeType,
   MFAOptionType,
@@ -10,6 +14,12 @@ import {
   userAttributesToRecord,
 } from './cognitoUserAttributes';
 
+/**
+ * Builds a {@link User} from a Cognito username, attribute list, and optional metadata.
+ *
+ * @param params.attributeList - Typically `UserAttributes` or `UserType.Attributes`.
+ * @throws {Error} If `sub` is missing from attributes.
+ */
 export function mapCognitoAttributeUserToUser(params: {
   username: string;
   attributeList: AttributeType[] | undefined;
@@ -56,6 +66,11 @@ export function mapCognitoAttributeUserToUser(params: {
   };
 }
 
+/**
+ * Maps a `UserType` returned by `ListUsers` or `AdminCreateUser` to {@link User}.
+ *
+ * @throws {Error} If `Username`, `Attributes`, or `UserStatus` is missing.
+ */
 export function mapUserTypeToUser(user: UserType): User {
   if (!user.Username || !user.Attributes || user.UserStatus === undefined) {
     throw new Error(

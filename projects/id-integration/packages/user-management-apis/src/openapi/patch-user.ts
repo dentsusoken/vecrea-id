@@ -11,7 +11,9 @@ import {
 } from './common';
 
 /**
- * `PATCH /users/{userId}` — partial update (AdminUpdateUserAttributes, enable/disable, etc.).
+ * `PATCH /users/{userId}` — partial update (`AdminUpdateUserAttributes`, enable/disable, etc.).
+ *
+ * @remarks Implements {@link patchUser}.
  */
 export const patchUserRoute = createRoute({
   method: 'patch',
