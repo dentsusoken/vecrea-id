@@ -1,9 +1,9 @@
 import { serve } from '@hono/node-server';
-import app from './index';
+import { managementApis } from './index';
 
 serve(
   {
-    fetch: app.fetch,
+    fetch: managementApis.fetch,
     port: 3000,
   },
   (info) => {
