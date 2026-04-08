@@ -6,6 +6,7 @@
 
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Hono } from 'hono';
+import './auth/context';
 import {
   createOpenApiRoutes,
   landingPageText,
@@ -15,6 +16,7 @@ import {
 
 export type { CreateManagementApisOptions, CreateOpenApiRoutesOptions } from './openapi';
 export { createOpenApiRoutes, normalizeBasePath } from './openapi';
+export { createBearerAuthMiddleware } from './auth';
 export { registerUsersRoutes } from './routes/users';
 
 /**
@@ -29,7 +31,10 @@ export function createManagementApis(
   options?: CreateManagementApisOptions
 ) {
   const base = normalizeBasePath(options?.basePath);
-  const api = createOpenApiRoutes(cognito, { basePath: base });
+  const api = createOpenApiRoutes(cognito, {
+    basePath: base,
+    introspectionConfig: options?.introspectionConfig,
+  });
   const app = new Hono();
   const mountPath = base === '' ? '/' : base;
 

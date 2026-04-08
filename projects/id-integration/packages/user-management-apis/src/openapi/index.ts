@@ -3,8 +3,10 @@
  */
 
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import type { IntrospectionHandlerConfiguration } from '@vecrea/au3te-ts-server/handler.introspection';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
+import { createBearerAuthMiddleware } from '../auth';
 import { registerUsersRoutes } from '../routes/users';
 import { normalizeBasePath } from './basePath';
 
@@ -16,6 +18,11 @@ export type CreateOpenApiRoutesOptions = {
    * Omit or use `/` for routes at the host root.
    */
   basePath?: string;
+  /**
+   * Optional bearer-token introspection configuration.
+   * When provided, `/users` endpoints are protected by introspection middleware.
+   */
+  introspectionConfig?: IntrospectionHandlerConfiguration;
 };
 
 /** Options for {@link createManagementApis} (re-exported from entry). */
@@ -52,6 +59,12 @@ export function createOpenApiRoutes(
   const openApiJsonHref = base === '' ? '/openapi.json' : `${base}/openapi.json`;
 
   const app = new OpenAPIHono();
+
+  if (options?.introspectionConfig) {
+    const auth = createBearerAuthMiddleware(options.introspectionConfig);
+    app.use('/users', auth);
+    app.use('/users/*', auth);
+  }
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
     type: 'http',

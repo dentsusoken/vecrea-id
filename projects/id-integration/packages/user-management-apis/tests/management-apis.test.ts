@@ -12,6 +12,11 @@ import {
   UserNotFoundException,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import type {
+  IntrospectionRequest,
+  IntrospectionResponse,
+} from '@vecrea/au3te-ts-common/schemas.introspection';
+import type { IntrospectionHandlerConfiguration } from '@vecrea/au3te-ts-server/handler.introspection';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createManagementApis } from '../src/index';
@@ -370,5 +375,107 @@ describe('createManagementApis (Cognito mocked)', () => {
     const body = (await res.json()) as { success?: boolean };
     expect(body.success).toBe(false);
     expect(ddbMock).not.toHaveReceivedCommand(PutCommand);
+  });
+
+  it('requires bearer token when introspection config is provided', async () => {
+    const introspect = vi.fn(
+      async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
+        action: 'OK',
+        clientId: 1,
+      })
+    );
+    const introspectionConfig: IntrospectionHandlerConfiguration = {
+      path: '/api/auth/introspection',
+      processApiRequest: async () => {
+        throw new Error('not used in this test');
+      },
+      validateApiResponse: () => {
+        throw new Error('not used in this test');
+      },
+      processApiRequestWithValidation: introspect,
+    };
+
+    const authApp = createManagementApis(cognito, {
+      basePath: '',
+      introspectionConfig,
+    });
+
+    const res = await authApp.request('/users', { method: 'GET' });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({
+      message: 'Missing or invalid bearer token',
+    });
+    expect(introspect).not.toHaveBeenCalled();
+  });
+
+  it('allows /users when introspection action is OK', async () => {
+    cognitoMock.on(ListUsersCommand).resolves({ Users: [] });
+    const introspect = vi.fn(
+      async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
+        action: 'OK',
+        clientId: 1,
+        subject: 'subject-1',
+        scopes: ['users:read'],
+      })
+    );
+    const introspectionConfig: IntrospectionHandlerConfiguration = {
+      path: '/api/auth/introspection',
+      processApiRequest: async () => {
+        throw new Error('not used in this test');
+      },
+      validateApiResponse: () => {
+        throw new Error('not used in this test');
+      },
+      processApiRequestWithValidation: introspect,
+    };
+    const authApp = createManagementApis(cognito, {
+      basePath: '',
+      introspectionConfig,
+    });
+
+    const res = await authApp.request('/users', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer test-token' },
+    });
+    expect(res.status).toBe(200);
+    expect(introspect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'test-token',
+        htm: 'GET',
+      })
+    );
+  });
+
+  it('returns 403 when introspection action is FORBIDDEN', async () => {
+    const introspect = vi.fn(
+      async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
+        action: 'FORBIDDEN',
+        clientId: 1,
+        responseContent: 'insufficient_scope',
+      })
+    );
+    const introspectionConfig: IntrospectionHandlerConfiguration = {
+      path: '/api/auth/introspection',
+      processApiRequest: async () => {
+        throw new Error('not used in this test');
+      },
+      validateApiResponse: () => {
+        throw new Error('not used in this test');
+      },
+      processApiRequestWithValidation: introspect,
+    };
+    const authApp = createManagementApis(cognito, {
+      basePath: '',
+      introspectionConfig,
+    });
+
+    const res = await authApp.request('/users', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer forbidden-token' },
+    });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({
+      message: 'Forbidden by token introspection',
+    });
   });
 });
