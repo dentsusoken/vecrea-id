@@ -5,6 +5,8 @@
 export {
   createUserRequestSchema,
   errorBodySchema,
+  importUsersCsvErrorRowSchema,
+  importUsersCsvResponseSchema,
   listUsersQuerySchema,
   listUsersResponseSchema,
   mfaOptionSchema,
@@ -13,6 +15,8 @@ export {
   userStatusSchema,
   type CreateUserRequest,
   type ErrorBody,
+  type ImportUsersCsvErrorRow,
+  type ImportUsersCsvResponse,
   type MfaOption,
   type UpdateUserRequest,
   type User,

@@ -10,3 +10,16 @@ export function requireUserPoolId(): string {
   }
   return id;
 }
+
+/**
+ * Returns the DynamoDB staging table name from `DDB_STAGING_TABLE`.
+ *
+ * @throws {Error} When the variable is unset or blank.
+ */
+export function requireStagingTableName(): string {
+  const name = process.env.DDB_STAGING_TABLE;
+  if (name === undefined || name.trim() === '') {
+    throw new Error('DDB_STAGING_TABLE environment variable is not set');
+  }
+  return name;
+}

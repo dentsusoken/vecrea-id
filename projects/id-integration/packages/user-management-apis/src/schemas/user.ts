@@ -185,6 +185,39 @@ export const listUsersResponseSchema = z
   })
   .openapi('ListUsersResponse');
 
+/** One row that failed during CSV import. */
+export const importUsersCsvErrorRowSchema = z
+  .object({
+    row: z
+      .number()
+      .int()
+      .openapi({ description: 'Row number in the CSV (1-based, excluding header)' }),
+    message: z.string().openapi({ description: 'Reason the row could not be imported' }),
+  })
+  .openapi('ImportUsersCsvErrorRow');
+
+/** Response body for `POST /users/import-csv`. */
+export const importUsersCsvResponseSchema = z
+  .object({
+    totalRows: z
+      .number()
+      .int()
+      .openapi({ description: 'Total data rows parsed from the CSV' }),
+    successCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of users successfully created' }),
+    failureCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of rows that failed to import' }),
+    errors: z
+      .array(importUsersCsvErrorRowSchema)
+      .optional()
+      .openapi({ description: 'Details for each failed row (omitted when all rows succeed)' }),
+  })
+  .openapi('ImportUsersCsvResponse');
+
 /** Standard JSON error envelope for 4xx/5xx responses. */
 export const errorBodySchema = z
   .object({
@@ -199,3 +232,5 @@ export type UserStatus = z.infer<typeof userStatusSchema>;
 export type MfaOption = z.infer<typeof mfaOptionSchema>;
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
+export type ImportUsersCsvResponse = z.infer<typeof importUsersCsvResponseSchema>;
+export type ImportUsersCsvErrorRow = z.infer<typeof importUsersCsvErrorRowSchema>;
