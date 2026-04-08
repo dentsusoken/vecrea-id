@@ -38,11 +38,17 @@ export const importUsersCsvRoute = createRoute({
         'multipart/form-data': {
           schema: z
             .object({
-              file: z.string().openapi({
-                type: 'string',
-                format: 'binary',
-                description: 'Cognito user-export style CSV file',
-              }),
+              /** Runtime value is `File` / `Blob` from multipart; OpenAPI still describes binary upload. */
+              file: z
+                .custom<File | Blob>(
+                  (v) => v instanceof File || v instanceof Blob,
+                  { message: 'Expected a file upload in field "file"' }
+                )
+                .openapi({
+                  type: 'string',
+                  format: 'binary',
+                  description: 'Cognito user-export style CSV file',
+                }),
             })
             .openapi('ImportUsersCsvRequest'),
         },

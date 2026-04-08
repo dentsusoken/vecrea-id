@@ -6,20 +6,20 @@ import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-iden
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { OpenAPIHono } from '@hono/zod-openapi';
-import { createUser } from '../cognito/createUser';
-import { deleteUser } from '../cognito/deleteUser';
-import { cognitoErrorResponse } from '../cognito/cognitoHttp';
-import { requireStagingTableName } from '../cognito/env';
-import { getUser } from '../cognito/getUser';
-import { listUsers } from '../cognito/listUsers';
-import { patchUser } from '../cognito/patchUser';
+import { createUser } from '../aws/cognito/createUser';
+import { deleteUser } from '../aws/cognito/deleteUser';
+import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
+import { getUser } from '../aws/cognito/getUser';
+import { listUsers } from '../aws/cognito/listUsers';
+import { patchUser } from '../aws/cognito/patchUser';
+import { importUsersCsvToStaging } from '../aws/dynamodb/importUsersCsvToStaging';
+import { requireStagingTableName } from '../aws/env';
 import { createUserRoute } from '../openapi/users/create-user';
 import { deleteUserRoute } from '../openapi/users/delete-user';
 import { getUserRoute } from '../openapi/users/get-user';
 import { importUsersCsvRoute } from '../openapi/users/import-users-csv';
 import { listUsersRoute } from '../openapi/users/list-users';
 import { patchUserRoute } from '../openapi/users/patch-user';
-import { importUsersCsv } from '../staging/importUsersCsv';
 
 /**
  * Registers all User list/CRUD routes (`app.openapi`) on `app`.
@@ -98,7 +98,7 @@ export function registerUsersRoutes(
       const tableName = requireStagingTableName();
       const ddb = DynamoDBDocumentClient.from(new DynamoDBClient());
 
-      const result = await importUsersCsv(ddb, tableName, csvText);
+      const result = await importUsersCsvToStaging(ddb, tableName, csvText);
       return c.json(result, 200);
     } catch (err) {
       return cognitoErrorResponse(c, err) as never;

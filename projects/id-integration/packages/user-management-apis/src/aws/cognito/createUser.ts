@@ -6,8 +6,8 @@ import {
   AdminCreateUserCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { CreateUserRequest, User } from '../schemas';
-import { requireUserPoolId } from './env';
+import type { CreateUserRequest, User } from '../../schemas';
+import { requireUserPoolId } from '../env';
 import { getUser } from './getUser';
 import { mapUserTypeToUser } from './mapToUser';
 

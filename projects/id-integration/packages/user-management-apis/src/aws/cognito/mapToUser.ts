@@ -8,7 +8,7 @@ import type {
   UserStatusType,
   UserType,
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { User } from '../schemas';
+import type { User } from '../../schemas';
 import {
   cognitoBooleanStringToBoolean,
   userAttributesToRecord,

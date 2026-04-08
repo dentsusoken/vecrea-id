@@ -11,11 +11,13 @@ import {
   ListUsersCommand,
   UserNotFoundException,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createManagementApis } from '../src/index';
 
 const TEST_POOL = 'us-east-1_ExamplePool';
+const TEST_STAGING_TABLE = 'UserImportStagingTest';
 
 function listUsersUserType(username: string, sub: string) {
   return {
@@ -42,13 +44,16 @@ function adminGetUserOutput(username: string, sub: string) {
 }
 
 const cognitoMock = mockClient(CognitoIdentityProviderClient);
+const ddbMock = mockClient(DynamoDBDocumentClient);
 
 describe('createManagementApis (Cognito mocked)', () => {
   let cognito: CognitoIdentityProviderClient;
 
   beforeEach(() => {
     vi.stubEnv('USER_POOL_ID', TEST_POOL);
+    vi.stubEnv('DDB_STAGING_TABLE', TEST_STAGING_TABLE);
     cognitoMock.reset();
+    ddbMock.reset();
     cognito = new CognitoIdentityProviderClient({});
   });
 
@@ -192,5 +197,178 @@ describe('createManagementApis (Cognito mocked)', () => {
     expect(await res.json()).toMatchObject({
       code: 'UserNotFoundException',
     });
+  });
+
+  it('POST /users/import-csv writes valid rows to staging via PutCommand', async () => {
+    ddbMock.on(PutCommand).resolves({});
+
+    const csv =
+      'cognito:username,email\n' +
+      'user-one,user1@test.example\n' +
+      'user-two,user2@test.example\n';
+
+    const form = new FormData();
+    form.append('file', new File([csv], 'users.csv', { type: 'text/csv' }));
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      totalRows: 2,
+      successCount: 2,
+      failureCount: 0,
+    });
+
+    expect(ddbMock).toHaveReceivedCommandTimes(PutCommand, 2);
+    expect(ddbMock).toHaveReceivedCommandWith(PutCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Item: expect.objectContaining({
+        id: 'user-one',
+        imported: false,
+        verified: false,
+        data: expect.objectContaining({
+          'cognito:username': 'user-one',
+          email: 'user1@test.example',
+        }),
+      }),
+    });
+    expect(ddbMock).toHaveReceivedCommandWith(PutCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Item: expect.objectContaining({
+        id: 'user-two',
+        data: expect.objectContaining({
+          'cognito:username': 'user-two',
+          email: 'user2@test.example',
+        }),
+      }),
+    });
+  });
+
+  it('POST /users/import-csv sets verified when email_verified is true', async () => {
+    ddbMock.on(PutCommand).resolves({});
+
+    const csv =
+      'cognito:username,email,email_verified\n' +
+      'vuser,v@test.example,true\n';
+
+    const form = new FormData();
+    form.append('file', new File([csv], 'users.csv', { type: 'text/csv' }));
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(200);
+    expect(ddbMock).toHaveReceivedCommandWith(PutCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Item: expect.objectContaining({
+        id: 'vuser',
+        verified: true,
+      }),
+    });
+  });
+
+  it('POST /users/import-csv returns row errors and only puts valid rows', async () => {
+    ddbMock.on(PutCommand).resolves({});
+
+    const csv =
+      'cognito:username,email\n' +
+      'bad name,still@test.example\n' +
+      'gooduser,good@test.example\n';
+
+    const form = new FormData();
+    form.append('file', new File([csv], 'users.csv', { type: 'text/csv' }));
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      totalRows: number;
+      successCount: number;
+      failureCount: number;
+      errors?: { row: number; message: string }[];
+    };
+    expect(body.totalRows).toBe(2);
+    expect(body.successCount).toBe(1);
+    expect(body.failureCount).toBe(1);
+    expect(body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          row: 1,
+          message: expect.stringContaining('cognito:username'),
+        }),
+      ])
+    );
+    expect(ddbMock).toHaveReceivedCommandTimes(PutCommand, 1);
+    expect(ddbMock).toHaveReceivedCommandWith(PutCommand, {
+      Item: expect.objectContaining({ id: 'gooduser' }),
+    });
+  });
+
+  it('POST /users/import-csv records DynamoDB put failures in errors', async () => {
+    ddbMock.on(PutCommand).rejects(new Error('ConditionalCheckFailed'));
+
+    const csv = 'cognito:username,email\nsolo,solo@test.example\n';
+
+    const form = new FormData();
+    form.append('file', new File([csv], 'users.csv', { type: 'text/csv' }));
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      totalRows: 1,
+      successCount: 0,
+      failureCount: 1,
+      errors: [
+        expect.objectContaining({
+          row: 1,
+          message: expect.stringContaining('ConditionalCheckFailed'),
+        }),
+      ],
+    });
+  });
+
+  it('POST /users/import-csv returns 400 when file field is missing (OpenAPI form validation)', async () => {
+    const form = new FormData();
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as {
+      success?: boolean;
+      error?: { name?: string; message?: string };
+    };
+    expect(body.success).toBe(false);
+    expect(body.error?.name).toBe('ZodError');
+    expect(body.error?.message).toContain('file');
+    expect(ddbMock).not.toHaveReceivedCommand(PutCommand);
+  });
+
+  it('POST /users/import-csv returns 400 when "file" is not a File/Blob (e.g. plain form field)', async () => {
+    const form = new FormData();
+    form.append('file', 'not-a-upload');
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { success?: boolean };
+    expect(body.success).toBe(false);
+    expect(ddbMock).not.toHaveReceivedCommand(PutCommand);
   });
 });

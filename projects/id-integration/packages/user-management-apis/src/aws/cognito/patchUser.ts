@@ -10,8 +10,8 @@ import {
   AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { UpdateUserRequest, User } from '../schemas';
-import { requireUserPoolId } from './env';
+import type { UpdateUserRequest, User } from '../../schemas';
+import { requireUserPoolId } from '../env';
 import { getUser } from './getUser';
 
 /**

@@ -6,7 +6,7 @@ import {
   AdminDeleteUserCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { requireUserPoolId } from './env';
+import { requireUserPoolId } from '../env';
 
 /**
  * @param username - Value passed to Cognito `Username` for the user to remove.

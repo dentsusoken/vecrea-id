@@ -11,8 +11,8 @@ import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import {
   cognitoImportDataSchema,
   type CognitoImportData,
-} from './cognitoImportDataSchema';
-import type { ImportUsersCsvResponse } from '../schemas/user';
+} from '../../schemas/cognitoImportData';
+import type { ImportUsersCsvResponse } from '../../schemas/user';
 
 const isCsvTruthy = (value: string | undefined) =>
   value === 'true' || value === 'TRUE';
@@ -31,7 +31,7 @@ const isVerifiedUser = (user: CognitoImportData) =>
  * @returns Structured result with counts and per-row error details.
  * @throws Only on catastrophic PapaParse failure (empty / unparseable input).
  */
-export async function importUsersCsv(
+export async function importUsersCsvToStaging(
   ddb: DynamoDBDocumentClient,
   tableName: string,
   csvText: string
