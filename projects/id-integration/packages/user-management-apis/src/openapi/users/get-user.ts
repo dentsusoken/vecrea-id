@@ -1,7 +1,7 @@
 import { createRoute } from '@hono/zod-openapi';
 import {
   userSchema,
-} from '../schemas/user';
+} from '../../schemas/user';
 import {
   error401,
   error403,
@@ -9,12 +9,12 @@ import {
   error429,
   error500,
   userIdPathParamsSchema,
-} from './common';
+} from '../common';
 
 /**
  * `GET /users/{userId}` — fetch one user (Cognito `AdminGetUser`).
  *
- * @remarks Path `userId` is passed as Cognito `Username`. Implements {@link getUser}.
+ * @remarks Path `userId` → Cognito `Username`. Handler: {@link registerUsersRoutes}.
  */
 export const getUserRoute = createRoute({
   method: 'get',

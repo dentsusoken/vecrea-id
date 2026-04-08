@@ -1,21 +1,11 @@
 /**
- * OpenAPI route registration (`@hono/zod-openapi`) and Scalar UI (`/docs`).
+ * OpenAPI shell: security schemes, `app.doc`, Scalar, and composition of resource route modules.
  */
 
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { createUser } from '../cognito/createUser';
-import { deleteUser } from '../cognito/deleteUser';
-import { cognitoErrorResponse } from '../cognito/cognitoHttp';
-import { getUser } from '../cognito/getUser';
-import { listUsers } from '../cognito/listUsers';
-import { patchUser } from '../cognito/patchUser';
-import { createUserRoute } from './create-user';
-import { deleteUserRoute } from './delete-user';
-import { getUserRoute } from './get-user';
-import { listUsersRoute } from './list-users';
-import { patchUserRoute } from './patch-user';
+import { registerUsersRoutes } from '../routes/users';
 import { normalizeBasePath } from './basePath';
 
 /** Options for {@link createOpenApiRoutes}. */
@@ -48,11 +38,11 @@ export const openApiServers = [
 ] as const;
 
 /**
- * Registers OpenAPI-documented user routes and wires them to Cognito helpers.
+ * Builds the OpenAPI Hono app: registers security, user routes ({@link registerUsersRoutes}),
+ * `/openapi.json`, and `/docs` (Scalar).
  *
- * @param cognito - Passed to list/create/get/patch/delete handlers.
  * @param options.basePath - If the host mounts this app under a prefix, pass it so `/docs` and `servers` match.
- * @returns An `OpenAPIHono` app exposing `/openapi.json`, `/docs` (Scalar), and `/users/*` routes (relative to the mount point).
+ * @returns An `OpenAPIHono` instance (mount or use `fetch` as a Workers handler).
  */
 export function createOpenApiRoutes(
   cognito: CognitoIdentityProviderClient,
@@ -71,59 +61,7 @@ export function createOpenApiRoutes(
       'Cognito ID token or access token, depending on authorizer configuration.',
   });
 
-  app.openapi(listUsersRoute, async (c) => {
-    try {
-      const query = c.req.valid('query');
-      const result = await listUsers(cognito, {
-        limit: query.limit,
-        paginationToken: query.paginationToken,
-      });
-      return c.json(result, 200);
-    } catch (err) {
-      return cognitoErrorResponse(c, err) as never;
-    }
-  });
-
-  app.openapi(createUserRoute, async (c) => {
-    try {
-      const body = c.req.valid('json');
-      const user = await createUser(cognito, body);
-      return c.json(user, 201);
-    } catch (err) {
-      return cognitoErrorResponse(c, err) as never;
-    }
-  });
-
-  app.openapi(getUserRoute, async (c) => {
-    try {
-      const { userId } = c.req.valid('param');
-      const user = await getUser(cognito, userId);
-      return c.json(user, 200);
-    } catch (err) {
-      return cognitoErrorResponse(c, err) as never;
-    }
-  });
-
-  app.openapi(patchUserRoute, async (c) => {
-    try {
-      const { userId } = c.req.valid('param');
-      const body = c.req.valid('json');
-      const user = await patchUser(cognito, userId, body);
-      return c.json(user, 200);
-    } catch (err) {
-      return cognitoErrorResponse(c, err) as never;
-    }
-  });
-
-  app.openapi(deleteUserRoute, async (c) => {
-    try {
-      const { userId } = c.req.valid('param');
-      await deleteUser(cognito, userId);
-      return c.body(null, 204);
-    } catch (err) {
-      return cognitoErrorResponse(c, err) as never;
-    }
-  });
+  registerUsersRoutes(app, cognito);
 
   app.doc('/openapi.json', {
     openapi: '3.0.3',

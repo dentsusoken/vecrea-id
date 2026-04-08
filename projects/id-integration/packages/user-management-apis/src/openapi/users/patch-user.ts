@@ -1,5 +1,5 @@
 import { createRoute } from '@hono/zod-openapi';
-import { updateUserRequestSchema, userSchema } from '../schemas/user';
+import { updateUserRequestSchema, userSchema } from '../../schemas/user';
 import {
   error401,
   error403,
@@ -8,12 +8,12 @@ import {
   error429,
   error500,
   userIdPathParamsSchema,
-} from './common';
+} from '../common';
 
 /**
  * `PATCH /users/{userId}` — partial update (`AdminUpdateUserAttributes`, enable/disable, etc.).
  *
- * @remarks Implements {@link patchUser}.
+ * @remarks Handler: {@link registerUsersRoutes}.
  */
 export const patchUserRoute = createRoute({
   method: 'patch',

@@ -6,12 +6,12 @@ import {
   error429,
   error500,
   userIdPathParamsSchema,
-} from './common';
+} from '../common';
 
 /**
  * `DELETE /users/{userId}` — delete a user (Cognito `AdminDeleteUser`).
  *
- * @remarks Implements {@link deleteUser}.
+ * @remarks Handler: {@link registerUsersRoutes}.
  */
 export const deleteUserRoute = createRoute({
   method: 'delete',

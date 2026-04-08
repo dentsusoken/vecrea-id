@@ -1,5 +1,5 @@
 import { createRoute } from '@hono/zod-openapi';
-import { createUserRequestSchema, userSchema } from '../schemas/user';
+import { createUserRequestSchema, userSchema } from '../../schemas/user';
 import {
   error401,
   error403,
@@ -7,12 +7,12 @@ import {
   error422,
   error429,
   error500,
-} from './common';
+} from '../common';
 
 /**
  * `POST /users` — create a user (Cognito `AdminCreateUser`).
  *
- * @remarks Implements {@link createUser} in `openapi/index.ts`.
+ * @remarks Handler: {@link registerUsersRoutes} in `routes/users.ts`.
  */
 export const createUserRoute = createRoute({
   method: 'post',

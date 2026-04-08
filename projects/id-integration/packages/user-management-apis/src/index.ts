@@ -15,6 +15,7 @@ import {
 
 export type { CreateManagementApisOptions, CreateOpenApiRoutesOptions } from './openapi';
 export { createOpenApiRoutes, normalizeBasePath } from './openapi';
+export { registerUsersRoutes } from './routes/users';
 
 /**
  * Builds a Hono app with OpenAPI routes and a landing message at the mount path.

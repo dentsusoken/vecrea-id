@@ -2,7 +2,7 @@ import { createRoute } from '@hono/zod-openapi';
 import {
   listUsersQuerySchema,
   listUsersResponseSchema,
-} from '../schemas/user';
+} from '../../schemas/user';
 import {
   error401,
   error403,
@@ -10,12 +10,12 @@ import {
   error422,
   error429,
   error500,
-} from './common';
+} from '../common';
 
 /**
  * `GET /users` — list users (Cognito `ListUsers`).
  *
- * @remarks Implements {@link listUsers} in `openapi/index.ts`.
+ * @remarks Handler: {@link registerUsersRoutes} in `routes/users.ts`.
  */
 export const listUsersRoute = createRoute({
   method: 'get',
