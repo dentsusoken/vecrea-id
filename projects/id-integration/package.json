@@ -4,5 +4,11 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.0",
     "typescript-eslint": "^8.56.0"
+  },
+  "dependencies": {
+    "@vecrea/au3te-ts-common": "link:../../../../home/node/.local/share/pnpm/global/5/node_modules/@vecrea/au3te-ts-common",
+    "@vecrea/au3te-ts-server": "link:../../../../home/node/.local/share/pnpm/global/5/node_modules/@vecrea/au3te-ts-server",
+    "@vecrea/user-management-apis": "link:../../../../home/node/.local/share/pnpm/global/5/node_modules/@vecrea/user-management-apis",
+    "user-management-apis": "link:../../../../home/node/.local/share/pnpm/global/5/node_modules/@vecrea/user-management-apis"
   }
 }

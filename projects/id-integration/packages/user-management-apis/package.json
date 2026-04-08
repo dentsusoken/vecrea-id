@@ -1,5 +1,5 @@
 {
-  "name": "user-management-apis",
+  "name": "@vecrea/user-management-apis",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

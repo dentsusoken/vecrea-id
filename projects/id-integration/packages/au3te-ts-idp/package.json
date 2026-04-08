@@ -1,0 +1,30 @@
+{
+  "name": "au3te-ts-idp",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1020.0",
+    "@aws-sdk/client-dynamodb": "^3.1020.0",
+    "@aws-sdk/lib-dynamodb": "^3.1020.0",
+    "@hono/zod-openapi": "^1.2.4",
+    "@scalar/hono-api-reference": "^0.10.5",
+    "@vecrea/au3te-ts-common": "workspace:*",
+    "@vecrea/au3te-ts-server": "workspace:*",
+    "@vecrea/user-management-apis": "workspace:*",
+    "hono": "^4.12.9",
+    "papaparse": "^5.5.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.19.12",
+    "tsx": "^4.21.0"
+  }
+}
