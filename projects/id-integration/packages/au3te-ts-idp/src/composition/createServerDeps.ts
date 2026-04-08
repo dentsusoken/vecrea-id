@@ -1,3 +1,5 @@
+import type { UserHandlerConfiguration } from '@vecrea/au3te-ts-common/handler.user';
+import { UserHandlerConfigurationImpl } from '@vecrea/au3te-ts-common/handler.user';
 import { ApiClientImpl } from '@vecrea/au3te-ts-server/api';
 import { ServerHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.core';
 import {
@@ -12,6 +14,8 @@ export type ServerDeps = {
   apiClient: ApiClientImpl;
   session: Session<DefaultSessionSchemas>;
   serverHandler: ServerHandlerConfigurationImpl<DefaultSessionSchemas>;
+  /** ユーザー永続化の実装（DynamoDB 等）。トークン・認可フローで利用する */
+  userHandlerConfiguration: UserHandlerConfiguration;
 };
 
 export type CreateServerDepsOptions = {
@@ -20,6 +24,11 @@ export type CreateServerDepsOptions = {
    * 省略時はプロセス内メモリ（{@link createInMemoryAu3teSession}）。
    */
   session?: Session<DefaultSessionSchemas>;
+  /**
+   * ユーザー取得・更新の実装。省略時は開発向けの {@link UserHandlerConfigurationImpl}（インメモリ）。
+   * 本番では DynamoDB 等にバックした実装を渡す。
+   */
+  userHandlerConfiguration?: UserHandlerConfiguration;
 };
 
 /**
@@ -36,7 +45,15 @@ export function createServerDeps(
 
   const session = options?.session ?? createInMemoryAu3teSession();
 
+  const userHandlerConfiguration =
+    options?.userHandlerConfiguration ?? new UserHandlerConfigurationImpl();
+
   const serverHandler = new ServerHandlerConfigurationImpl(apiClient, session);
 
-  return { apiClient, session, serverHandler };
+  return {
+    apiClient,
+    session,
+    serverHandler,
+    userHandlerConfiguration,
+  };
 }
