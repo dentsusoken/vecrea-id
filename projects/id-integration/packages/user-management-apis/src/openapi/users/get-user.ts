@@ -14,7 +14,7 @@ import {
 /**
  * `GET /users/{userId}` — fetch one user (Cognito `AdminGetUser`).
  *
- * @remarks Path `userId` → Cognito `Username`. Handler: {@link registerUsersRoutes}.
+ * @remarks Path `userId` → Cognito `Username`. Handler: {@link createUserHandlers}.
  */
 export const getUserRoute = createRoute({
   method: 'get',

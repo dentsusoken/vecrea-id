@@ -5,7 +5,7 @@
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { registerUsersRoutes } from '../routes/users';
+import { registerUsersOpenApi } from './users/registerOpenApi';
 import { normalizeBasePath } from './basePath';
 
 /** Options for {@link createOpenApiRoutes}. */
@@ -38,7 +38,7 @@ export const openApiServers = [
 ] as const;
 
 /**
- * Builds the OpenAPI Hono app: registers security, user routes ({@link registerUsersRoutes}),
+ * Builds the OpenAPI Hono app: registers security, user routes ({@link registerUsersOpenApi}),
  * `/openapi.json`, and `/docs` (Scalar).
  *
  * @param options.basePath - If the host mounts this app under a prefix, pass it so `/docs` and `servers` match.
@@ -61,7 +61,7 @@ export function createOpenApiRoutes(
       'Cognito ID token or access token, depending on authorizer configuration.',
   });
 
-  registerUsersRoutes(app, cognito);
+  registerUsersOpenApi(app, cognito);
 
   app.doc('/openapi.json', {
     openapi: '3.0.3',

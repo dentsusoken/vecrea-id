@@ -13,7 +13,7 @@ import {
 /**
  * `PATCH /users/{userId}` — partial update (`AdminUpdateUserAttributes`, enable/disable, etc.).
  *
- * @remarks Handler: {@link registerUsersRoutes}.
+ * @remarks Handler: {@link createUserHandlers}.
  */
 export const patchUserRoute = createRoute({
   method: 'patch',
