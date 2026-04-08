@@ -12,7 +12,7 @@ import {
 /**
  * `POST /users` — create a user (Cognito `AdminCreateUser`).
  *
- * @remarks Handler: {@link createUserHandlers}; wiring: {@link registerUsersOpenApi}.
+ * @remarks Handler: {@link registerUsersRoutes} in `routes/users.ts`.
  */
 export const createUserRoute = createRoute({
   method: 'post',

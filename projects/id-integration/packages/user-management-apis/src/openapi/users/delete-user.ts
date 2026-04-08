@@ -11,7 +11,7 @@ import {
 /**
  * `DELETE /users/{userId}` — delete a user (Cognito `AdminDeleteUser`).
  *
- * @remarks Handler: {@link createUserHandlers}.
+ * @remarks Handler: {@link registerUsersRoutes}.
  */
 export const deleteUserRoute = createRoute({
   method: 'delete',

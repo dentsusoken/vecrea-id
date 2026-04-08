@@ -15,7 +15,7 @@ import {
 /**
  * `GET /users` — list users (Cognito `ListUsers`).
  *
- * @remarks Handler: {@link createUserHandlers} in `routes/users.ts`; wiring: {@link registerUsersOpenApi}.
+ * @remarks Handler: {@link registerUsersRoutes} in `routes/users.ts`.
  */
 export const listUsersRoute = createRoute({
   method: 'get',
