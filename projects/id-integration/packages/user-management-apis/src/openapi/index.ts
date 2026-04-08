@@ -32,7 +32,7 @@ export const openApiInfo = {
 /** Example server entries for `app.doc` / exported OpenAPI document. */
 export const openApiServers = [
   {
-    url: 'https://api.example.com/v1',
+    url: '/manage',
     description: 'Replace with your stage URL',
   },
 ] as const;
