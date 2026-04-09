@@ -1,4 +1,4 @@
-import type { InMemorySessionStore } from '@vecrea/au3te-ts-server/session';
+import type { SessionSnapshotStore } from '@vecrea/au3te-ts-server/session';
 import { ApiClientImpl } from '@vecrea/au3te-ts-server/api';
 import type { MiddlewareHandler } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
@@ -14,11 +14,8 @@ import { createKeyedAu3teSession } from './createAu3teSession';
 export const DEFAULT_AU3TE_SESSION_COOKIE = 'au3te_sid';
 
 export type CreateAu3teSessionMiddlewareOptions = {
-  /**
-   * スナップショットストア。現状は {@link InMemorySessionStore}。
-   * DynamoDB 等は同一の read/write/createSessionId 契約のアダプタに差し替え予定。
-   */
-  sessionStore: InMemorySessionStore;
+  /** Cookie セッションと共有する {@link SessionSnapshotStore}（インメモリまたは DynamoDB 等） */
+  sessionStore: SessionSnapshotStore;
   /** Cookie 名。省略時は {@link DEFAULT_AU3TE_SESSION_COOKIE} */
   cookieName?: string;
 };
