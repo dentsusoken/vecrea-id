@@ -18,6 +18,65 @@ import type { Au3teHonoEnv } from '../composition/createAu3teHandlers';
 import { AuthorizationConsentPage } from '../views/AuthorizationConsentPage';
 import { applyUpstreamSetCookiesToContext } from './forwardSetCookie';
 
+const FEDERATION_INITIATION_PREFIX =
+  FEDERATION_INITIATION_PATH.replace(/\/:[^/]+$/, '');
+
+const authorizationConsentDocumentRenderer = jsxRenderer(({ children }) => (
+  <html lang="ja">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Authorize</title>
+    </head>
+    <body>{children}</body>
+  </html>
+));
+
+/**
+ * `application/json` の {@link authorizationPageModelSchema} なら同意画面 HTML に変換する。
+ * それ以外は上流 `Response` をそのまま返す。
+ */
+async function respondWithAuthorizationConsentIfJson(
+  c: Context<Au3teHonoEnv>,
+  upstream: Response
+): Promise<Response> {
+  const ct = upstream.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) {
+    return upstream;
+  }
+
+  const text = await upstream.text();
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return new Response(text, {
+      status: upstream.status,
+      headers: upstream.headers,
+    });
+  }
+
+  const parsed = authorizationPageModelSchema.safeParse(json);
+  if (!parsed.success) {
+    return new Response(text, {
+      status: upstream.status,
+      headers: upstream.headers,
+    });
+  }
+
+  applyUpstreamSetCookiesToContext(c, upstream);
+
+  c.header('Cache-Control', 'no-store');
+
+  return c.render(
+    <AuthorizationConsentPage
+      model={parsed.data}
+      decisionPath={AUTHORIZATION_DECISION_PATH}
+      federationInitiationPathPrefix={FEDERATION_INITIATION_PREFIX}
+    />
+  );
+}
+
 /** au3te-ts-server ハンドラーを Hono に載せる（`au3teHandlers` はミドルウェアで注入） */
 export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
   app.get(SERVICE_JWKS_PATH, (c) =>
@@ -36,68 +95,36 @@ export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
 
   const federationInit = (c: Context<Au3teHonoEnv>) =>
     c.get('au3teHandlers').federationInitiation.processRequest(c.req.raw);
-  const federationCb = (c: Context<Au3teHonoEnv>) =>
-    c.get('au3teHandlers').federationCallback.processRequest(c.req.raw);
 
   app.get(FEDERATION_INITIATION_PATH, federationInit);
   app.post(FEDERATION_INITIATION_PATH, federationInit);
-  app.get(FEDERATION_CALLBACK_PATH, federationCb);
-  app.post(FEDERATION_CALLBACK_PATH, federationCb);
+
+  const federationCallbackHandler = async (c: Context<Au3teHonoEnv>) => {
+    const upstream = await c
+      .get('au3teHandlers')
+      .federationCallback.processRequest(c.req.raw);
+    return respondWithAuthorizationConsentIfJson(c, upstream);
+  };
+
+  app.get(
+    FEDERATION_CALLBACK_PATH,
+    authorizationConsentDocumentRenderer,
+    federationCallbackHandler
+  );
+  app.post(
+    FEDERATION_CALLBACK_PATH,
+    authorizationConsentDocumentRenderer,
+    federationCallbackHandler
+  );
 
   app.get(
     AUTHORIZATION_PATH,
-    jsxRenderer(({ children }) => (
-      <html lang="ja">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Authorize</title>
-        </head>
-        <body>{children}</body>
-      </html>
-    )),
+    authorizationConsentDocumentRenderer,
     async (c) => {
       const upstream = await c
         .get('au3teHandlers')
         .authorization.processRequest(c.req.raw);
-      const ct = upstream.headers.get('content-type') ?? '';
-      if (!ct.includes('application/json')) {
-        return upstream;
-      }
-
-      const text = await upstream.text();
-      let json: unknown;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        return new Response(text, {
-          status: upstream.status,
-          headers: upstream.headers,
-        });
-      }
-
-      const parsed = authorizationPageModelSchema.safeParse(json);
-      if (!parsed.success) {
-        return new Response(text, {
-          status: upstream.status,
-          headers: upstream.headers,
-        });
-      }
-
-      applyUpstreamSetCookiesToContext(c, upstream);
-
-      c.header('Cache-Control', 'no-store');
-
-      const federationInitiationPrefix =
-        FEDERATION_INITIATION_PATH.replace(/\/:[^/]+$/, '');
-
-      return c.render(
-        <AuthorizationConsentPage
-          model={parsed.data}
-          decisionPath={AUTHORIZATION_DECISION_PATH}
-          federationInitiationPathPrefix={federationInitiationPrefix}
-        />
-      );
+      return respondWithAuthorizationConsentIfJson(c, upstream);
     }
   );
 
