@@ -11,6 +11,7 @@ import {
   AuthorizationServerMetadataHandlerConfigurationImpl,
   OpenIDConfigurationHandlerConfigurationImpl,
 } from '@vecrea/au3te-ts-server/handler.service-configuration';
+import { ParHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.par';
 import { ServiceJwksHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.service-jwks';
 import { TokenHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token';
 import { TokenCreateHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token-create';
@@ -24,6 +25,7 @@ export type Au3teHandlers = {
   serviceJwks: ServiceJwksHandlerConfigurationImpl;
   openIdConfiguration: OpenIDConfigurationHandlerConfigurationImpl;
   authorizationServerMetadata: AuthorizationServerMetadataHandlerConfigurationImpl;
+  par: ParHandlerConfigurationImpl;
   token: TokenHandlerConfigurationImpl<User>;
   authorization: AuthorizationHandlerConfigurationImpl<DefaultSessionSchemas>;
   authorizationDecision: AuthorizationDecisionHandlerConfigurationImpl<
@@ -52,6 +54,11 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
 
   const extractorConfiguration = new ExtractorConfigurationImpl();
   const federationManager = createStubFederationManager();
+
+  const par = new ParHandlerConfigurationImpl({
+    serverHandlerConfiguration: serverHandler,
+    extractorConfiguration,
+  });
 
   const authorizationIssueHandlerConfiguration =
     new AuthorizationIssueHandlerConfigurationImpl(serverHandler);
@@ -101,6 +108,7 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     serviceJwks,
     openIdConfiguration,
     authorizationServerMetadata,
+    par,
     token,
     authorization,
     authorizationDecision,

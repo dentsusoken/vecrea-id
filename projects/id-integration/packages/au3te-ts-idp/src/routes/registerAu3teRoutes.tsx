@@ -3,6 +3,7 @@ import { AUTHORIZATION_PATH } from '@vecrea/au3te-ts-server/handler.authorizatio
 import {
   AUTHORIZATION_DECISION_PATH,
 } from '@vecrea/au3te-ts-server/handler.authorization-decision';
+import { PAR_PATH } from '@vecrea/au3te-ts-server/handler.par';
 import {
   AUTHORIZATION_SERVER_METADATA_PATH,
   OPENID_CONFIGURATION_PATH,
@@ -84,6 +85,10 @@ export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
 
   app.post(AUTHORIZATION_DECISION_PATH, (c) =>
     c.get('au3teHandlers').authorizationDecision.processRequest(c.req.raw)
+  );
+
+  app.post(PAR_PATH, (c) =>
+    c.get('au3teHandlers').par.processRequest(c.req.raw)
   );
 
   app.post(TOKEN_PATH, (c) =>
