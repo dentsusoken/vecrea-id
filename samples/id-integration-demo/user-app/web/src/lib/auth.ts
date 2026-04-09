@@ -1,11 +1,9 @@
 import { betterAuth } from "better-auth";
-import { cognito } from "./providers/cognito";
+import { customProvider } from "./providers/custom-provider";
 
 export const auth = betterAuth({
   advanced: {
     useSecureCookies: true,
   },
-  socialProviders: {
-    cognito,
-  },
+  plugins: [customProvider],
 });
