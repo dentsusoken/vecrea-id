@@ -7,6 +7,10 @@ import {
 import { AuthorizationFailHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-fail';
 import { AuthorizationIssueHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-issue';
 import { AuthorizationDecisionHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-decision';
+import {
+  AuthorizationServerMetadataHandlerConfigurationImpl,
+  OpenIDConfigurationHandlerConfigurationImpl,
+} from '@vecrea/au3te-ts-server/handler.service-configuration';
 import { ServiceJwksHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.service-jwks';
 import { TokenHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token';
 import { TokenCreateHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token-create';
@@ -18,6 +22,8 @@ import type { ServerDeps } from './createServerDeps';
 
 export type Au3teHandlers = {
   serviceJwks: ServiceJwksHandlerConfigurationImpl;
+  openIdConfiguration: OpenIDConfigurationHandlerConfigurationImpl;
+  authorizationServerMetadata: AuthorizationServerMetadataHandlerConfigurationImpl;
   token: TokenHandlerConfigurationImpl<User>;
   authorization: AuthorizationHandlerConfigurationImpl<DefaultSessionSchemas>;
   authorizationDecision: AuthorizationDecisionHandlerConfigurationImpl<
@@ -39,6 +45,10 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
   const { serverHandler, userHandlerConfiguration } = deps;
 
   const serviceJwks = new ServiceJwksHandlerConfigurationImpl(serverHandler);
+  const openIdConfiguration =
+    new OpenIDConfigurationHandlerConfigurationImpl(serverHandler);
+  const authorizationServerMetadata =
+    new AuthorizationServerMetadataHandlerConfigurationImpl(serverHandler);
 
   const extractorConfiguration = new ExtractorConfigurationImpl();
   const federationManager = createStubFederationManager();
@@ -87,5 +97,12 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     extractorConfiguration,
   });
 
-  return { serviceJwks, token, authorization, authorizationDecision };
+  return {
+    serviceJwks,
+    openIdConfiguration,
+    authorizationServerMetadata,
+    token,
+    authorization,
+    authorizationDecision,
+  };
 }

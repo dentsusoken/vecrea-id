@@ -3,6 +3,10 @@ import { AUTHORIZATION_PATH } from '@vecrea/au3te-ts-server/handler.authorizatio
 import {
   AUTHORIZATION_DECISION_PATH,
 } from '@vecrea/au3te-ts-server/handler.authorization-decision';
+import {
+  AUTHORIZATION_SERVER_METADATA_PATH,
+  OPENID_CONFIGURATION_PATH,
+} from '@vecrea/au3te-ts-server/handler.service-configuration';
 import { SERVICE_JWKS_PATH } from '@vecrea/au3te-ts-server/handler.service-jwks';
 import { TOKEN_PATH } from '@vecrea/au3te-ts-server/handler.token';
 import type { Hono } from 'hono';
@@ -15,6 +19,16 @@ import { applyUpstreamSetCookiesToContext } from './forwardSetCookie';
 export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
   app.get(SERVICE_JWKS_PATH, (c) =>
     c.get('au3teHandlers').serviceJwks.processRequest(c.req.raw)
+  );
+
+  app.get(OPENID_CONFIGURATION_PATH, (c) =>
+    c.get('au3teHandlers').openIdConfiguration.processRequest(c.req.raw)
+  );
+
+  app.get(AUTHORIZATION_SERVER_METADATA_PATH, (c) =>
+    c
+      .get('au3teHandlers')
+      .authorizationServerMetadata.processRequest(c.req.raw)
   );
 
   app.get(
