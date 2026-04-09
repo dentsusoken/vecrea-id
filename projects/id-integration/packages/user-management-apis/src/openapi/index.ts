@@ -9,6 +9,11 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { createBearerAuthMiddleware } from '../auth';
 import { registerUsersRoutes } from '../routes/users';
 import { normalizeBasePath } from './basePath';
+import {
+  resolvePublicOpenApiJsonPath,
+  resolvePublicServersPath,
+  type GetManagementEnv,
+} from './resolvePublicMountPath';
 
 /** Options for {@link createOpenApiRoutes}. */
 export type CreateOpenApiRoutesOptions = {
@@ -23,6 +28,11 @@ export type CreateOpenApiRoutesOptions = {
    * When provided, `/users` endpoints are protected by introspection middleware.
    */
   introspectionConfig?: IntrospectionHandlerConfiguration;
+  /**
+   * Lambda / Workers と同等の環境辞書（例: IdP の `getIdpConfigRecord`）。
+   * 設定すると `AU3TE_PUBLIC_PATH_PREFIX` 等をここから読み、API Gateway ステージ付き URL と一致させる。
+   */
+  getEnv?: GetManagementEnv;
 };
 
 /** Options for {@link createManagementApis} (re-exported from entry). */
@@ -36,14 +46,6 @@ export const openApiInfo = {
     'Cognito-backed user CRUD-style operations (list, get, create, patch, delete). Wire to Admin* APIs in the hosting project.',
 } as const;
 
-/** Example server entries for `app.doc` / exported OpenAPI document. */
-export const openApiServers = [
-  {
-    url: '/manage',
-    description: 'Replace with your stage URL',
-  },
-] as const;
-
 /**
  * Builds the OpenAPI Hono app: registers security, user routes ({@link registerUsersRoutes}),
  * `/openapi.json`, and `/docs` (Scalar).
@@ -56,7 +58,7 @@ export function createOpenApiRoutes(
   options?: CreateOpenApiRoutesOptions
 ): OpenAPIHono {
   const base = normalizeBasePath(options?.basePath);
-  const openApiJsonHref = base === '' ? '/openapi.json' : `${base}/openapi.json`;
+  const mountOpts = { getEnv: options?.getEnv };
 
   const app = new OpenAPIHono();
 
@@ -76,28 +78,39 @@ export function createOpenApiRoutes(
 
   registerUsersRoutes(app, cognito);
 
-  app.doc('/openapi.json', {
+  app.doc('/openapi.json', (c) => ({
     openapi: '3.0.3',
     info: { ...openApiInfo },
-    servers:
-      base === ''
-        ? [...openApiServers]
-        : [{ url: base, description: 'API base path (see hosting mount)' }],
-  });
+    servers: [
+      {
+        url: resolvePublicServersPath(c, base || undefined, mountOpts),
+        description: 'API base path (includes API Gateway stage when applicable)',
+      },
+    ],
+  }));
 
-  app.get('/docs', Scalar({ url: openApiJsonHref }));
+  app.get(
+    '/docs',
+    Scalar(async (c) => ({
+      url: resolvePublicOpenApiJsonPath(c, base || undefined, mountOpts),
+    }))
+  );
 
   return app;
 }
 
-/**
- * Text for the landing route (root of the mount).
- * @internal
- */
-export function landingPageText(base: string): string {
-  const openApiJsonHref = base === '' ? '/openapi.json' : `${base}/openapi.json`;
-  const docsHref = base === '' ? '/docs' : `${base}/docs`;
-  return `User Management API — OpenAPI: ${openApiJsonHref}, UI: ${docsHref}`;
-}
+export {
+  AU3TE_PUBLIC_PATH_PREFIX_ENV,
+  USER_MANAGEMENT_PUBLIC_PATH_PREFIX_ENV,
+  buildLandingPageText,
+  computePathPrefixBeforeMount,
+  normalizePublicPrefix,
+  resolvePublicDocsPath,
+  resolvePublicOpenApiJsonPath,
+  resolvePublicPathPrefix,
+  resolvePublicServersPath,
+  type GetManagementEnv,
+  type ResolvePublicMountOptions,
+} from './resolvePublicMountPath';
 
 export { normalizeBasePath } from './basePath';

@@ -8,14 +8,29 @@ import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-
 import { Hono } from 'hono';
 import './auth/context';
 import {
+  buildLandingPageText,
   createOpenApiRoutes,
-  landingPageText,
   normalizeBasePath,
   type CreateManagementApisOptions,
 } from './openapi';
 
 export type { CreateManagementApisOptions, CreateOpenApiRoutesOptions } from './openapi';
-export { createOpenApiRoutes, normalizeBasePath } from './openapi';
+export {
+  AU3TE_PUBLIC_PATH_PREFIX_ENV,
+  USER_MANAGEMENT_PUBLIC_PATH_PREFIX_ENV,
+  buildLandingPageText,
+  computePathPrefixBeforeMount,
+  createOpenApiRoutes,
+  normalizeBasePath,
+  normalizePublicPrefix,
+  resolvePublicDocsPath,
+  resolvePublicOpenApiJsonPath,
+  resolvePublicPathPrefix,
+  resolvePublicServersPath,
+  type GetManagementEnv,
+  type ResolvePublicMountOptions,
+} from './openapi';
+
 export { createBearerAuthMiddleware } from './auth';
 export { registerUsersRoutes } from './routes/users';
 
@@ -24,6 +39,7 @@ export { registerUsersRoutes } from './routes/users';
  *
  * @param cognito - SDK client used for all Cognito Admin API calls (configure region/credentials in the host).
  * @param options.basePath - Optional prefix where routes are mounted (e.g. `/api/v1`). Omit for root.
+ * @param options.getEnv - Optional env resolver (e.g. IdP `getIdpConfigRecord`) so `AU3TE_PUBLIC_PATH_PREFIX` and API Gateway stage are applied to Scalar / OpenAPI URLs.
  * @returns A Hono instance; mount at `/` or use `fetch` as a Workers handler.
  */
 export function createManagementApis(
@@ -34,11 +50,15 @@ export function createManagementApis(
   const api = createOpenApiRoutes(cognito, {
     basePath: base,
     introspectionConfig: options?.introspectionConfig,
+    getEnv: options?.getEnv,
   });
   const app = new Hono();
   const mountPath = base === '' ? '/' : base;
+  const mountOpts = { getEnv: options?.getEnv };
 
-  app.get(mountPath, (c) => c.text(landingPageText(base)));
+  app.get(mountPath, (c) =>
+    c.text(buildLandingPageText(c, base || undefined, mountOpts))
+  );
   app.route(mountPath, api);
 
   return app;

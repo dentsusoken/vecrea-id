@@ -6,6 +6,7 @@ import { registerAu3teRoutes } from './routes/registerAu3teRoutes';
 import { createAu3teSessionMiddleware } from './session/createAu3teSessionMiddleware';
 import { createAu3teSessionStore } from './session/createSessionStore';
 import { ensureIdpSecretEnvLoaded } from './aws/idp/secretEnvOverlay';
+import { getIdpConfigRecord } from './config/getIdpConfigRecord';
 import { handle } from 'hono/aws-lambda';
 
 const app = new Hono<Au3teHonoEnv>();
@@ -25,6 +26,7 @@ app.route(
   '/',
   createManagementApis(cognito, {
     basePath: '/manage',
+    getEnv: getIdpConfigRecord,
   })
 );
 
