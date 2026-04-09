@@ -1,17 +1,22 @@
 {
-    "name": "${localWorkspaceFolder}",
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-    "remoteUser": "node",
-    "remoteEnv": {
-      "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
-    },
-    "postCreateCommand": "bash -lc \"set -euo pipefail; npm install -g pnpm@latest; pnpm config set --location=project trustPolicy no-downgrade; pnpm config set --location=project --json minimumReleaseAge 10080; pnpm install --config.confirmModulesPurge=false\"",
-    "customizations": {
-      "vscode": {
-        "extensions": [
-          "dbaeumer.vscode-eslint",
-          "esbenp.prettier-vscode"
-        ]
-      }
+  "name": "${localWorkspaceFolder}",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "forwardPorts": [3000, 8787],
+  "portsAttributes": {
+    "3000": { "label": "Node (dev:node)" },
+    "8787": { "label": "Wrangler (pnpm dev)" }
+  },
+  "remoteUser": "node",
+  "remoteEnv": {
+    "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.cursor,target=/home/node/.cursor,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "bash -lc \"set -euo pipefail; npm install -g pnpm@latest; pnpm config set --location=project trustPolicy no-downgrade; pnpm config set --location=project --json minimumReleaseAge 10080; pnpm install --config.confirmModulesPurge=false\"",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
     }
   }
+}
