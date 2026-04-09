@@ -1,22 +1,27 @@
-import Link from 'next/link'
+"use client";
+
+import Link from "next/link";
+import { SignOutButton } from "./auth/SignOutButton";
+import { useSession } from "@/lib/auth-client";
 
 export function AppHeader() {
+  const { data: session } = useSession();
+  if (!session) {
+    return (
+      <header className="flex items-center justify-end gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
+        <Link
+          className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-px hover:bg-zinc-800 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+          href="/sign-in"
+          prefetch={true}
+        >
+          Sign in
+        </Link>
+      </header>
+    );
+  }
   return (
     <header className="flex items-center justify-end gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
-      <Link
-        className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-zinc-800"
-        href="/login"
-        prefetch={true}
-      >
-        Log in
-      </Link>
-      <Link
-        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
-        href="/"
-        prefetch={true}
-      >
-        Log out
-      </Link>
+      <SignOutButton />
     </header>
-  )
+  );
 }
