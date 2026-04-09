@@ -17,6 +17,7 @@ import { jsxRenderer } from 'hono/jsx-renderer';
 import type { Au3teHonoEnv } from '../composition/createAu3teHandlers';
 import { AuthorizationConsentPage } from '../views/AuthorizationConsentPage';
 import { applyUpstreamSetCookiesToContext } from './forwardSetCookie';
+import { resolvePublicApiPath } from './resolvePublicApiPath';
 
 const FEDERATION_INITIATION_PREFIX =
   FEDERATION_INITIATION_PATH.replace(/\/:[^/]+$/, '');
@@ -71,8 +72,11 @@ async function respondWithAuthorizationConsentIfJson(
   return c.render(
     <AuthorizationConsentPage
       model={parsed.data}
-      decisionPath={AUTHORIZATION_DECISION_PATH}
-      federationInitiationPathPrefix={FEDERATION_INITIATION_PREFIX}
+      decisionPath={resolvePublicApiPath(c, AUTHORIZATION_DECISION_PATH)}
+      federationInitiationPathPrefix={resolvePublicApiPath(
+        c,
+        FEDERATION_INITIATION_PREFIX
+      )}
     />
   );
 }
