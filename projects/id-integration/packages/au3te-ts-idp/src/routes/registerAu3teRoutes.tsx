@@ -7,17 +7,14 @@ import { SERVICE_JWKS_PATH } from '@vecrea/au3te-ts-server/handler.service-jwks'
 import { TOKEN_PATH } from '@vecrea/au3te-ts-server/handler.token';
 import type { Hono } from 'hono';
 import { jsxRenderer } from 'hono/jsx-renderer';
-import type { Au3teHandlers } from '../composition/createAu3teHandlers';
+import type { Au3teHonoEnv } from '../composition/createAu3teHandlers';
 import { AuthorizationConsentPage } from '../views/AuthorizationConsentPage';
 import { applyUpstreamSetCookiesToContext } from './forwardSetCookie';
 
-/** au3te-ts-server ハンドラーを Hono に載せる */
-export function registerAu3teRoutes(
-  app: Hono,
-  handlers: Au3teHandlers
-): void {
+/** au3te-ts-server ハンドラーを Hono に載せる（`au3teHandlers` はミドルウェアで注入） */
+export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
   app.get(SERVICE_JWKS_PATH, (c) =>
-    handlers.serviceJwks.processRequest(c.req.raw)
+    c.get('au3teHandlers').serviceJwks.processRequest(c.req.raw)
   );
 
   app.get(
@@ -33,7 +30,9 @@ export function registerAu3teRoutes(
       </html>
     )),
     async (c) => {
-      const upstream = await handlers.authorization.processRequest(c.req.raw);
+      const upstream = await c
+        .get('au3teHandlers')
+        .authorization.processRequest(c.req.raw);
       const ct = upstream.headers.get('content-type') ?? '';
       if (!ct.includes('application/json')) {
         return upstream;
@@ -70,8 +69,10 @@ export function registerAu3teRoutes(
   );
 
   app.post(AUTHORIZATION_DECISION_PATH, (c) =>
-    handlers.authorizationDecision.processRequest(c.req.raw)
+    c.get('au3teHandlers').authorizationDecision.processRequest(c.req.raw)
   );
 
-  app.post(TOKEN_PATH, (c) => handlers.token.processRequest(c.req.raw));
+  app.post(TOKEN_PATH, (c) =>
+    c.get('au3teHandlers').token.processRequest(c.req.raw)
+  );
 }

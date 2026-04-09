@@ -8,7 +8,7 @@ import {
 } from '@vecrea/au3te-ts-server/session';
 import type { Context } from 'hono';
 import { readAu3teApiClientConfig } from '../config/readAu3teApiClientConfig';
-import { createInMemoryAu3teSession } from '../session/createInMemoryAu3teSession';
+import { createEphemeralAu3teSession } from '../session/createAu3teSession';
 
 export type ServerDeps = {
   apiClient: ApiClientImpl;
@@ -20,8 +20,13 @@ export type ServerDeps = {
 
 export type CreateServerDepsOptions = {
   /**
+   * 同一プロセスで使い回す API クライアント。
+   * 省略時は毎回生成（ミドルウェアでリクエストごとに組み立てる場合はここで共有可能）。
+   */
+  apiClient?: ApiClientImpl;
+  /**
    * `Session` の具象（DynamoDB / 別KV / メモリ等）。
-   * 省略時はプロセス内メモリ（{@link createInMemoryAu3teSession}）。
+   * 省略時はインスタンス専用セッション（{@link createEphemeralAu3teSession}）。
    */
   session?: Session<DefaultSessionSchemas>;
   /**
@@ -41,9 +46,11 @@ export function createServerDeps(
   c?: Context,
   options?: CreateServerDepsOptions
 ): ServerDeps {
-  const apiClient = new ApiClientImpl(readAu3teApiClientConfig(c));
+  const apiClient =
+    options?.apiClient ?? new ApiClientImpl(readAu3teApiClientConfig(c));
 
-  const session = options?.session ?? createInMemoryAu3teSession();
+  const session =
+    options?.session ?? createEphemeralAu3teSession();
 
   const userHandlerConfiguration =
     options?.userHandlerConfiguration ?? new UserHandlerConfigurationImpl();

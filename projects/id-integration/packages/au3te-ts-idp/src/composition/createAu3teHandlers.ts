@@ -27,6 +27,13 @@ export type Au3teHandlers = {
   >;
 };
 
+/** Hono Context に載せる au3te ハンドラー束 */
+export type Au3teHonoEnv = {
+  Variables: {
+    au3teHandlers: Au3teHandlers;
+  };
+};
+
 /** au3te-ts-server の各 HandlerConfigurationImpl をまとめて生成する */
 export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
   const { serverHandler, userHandlerConfiguration } = deps;
