@@ -2,21 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 
+/**
+ * Demo gate for protected routes: resolves the Better Auth session from request headers.
+ * Unauthenticated visitors are redirected to `/sign-in`.
+ */
 export async function proxy(request: NextRequest) {
-  // Gate protected routes by checking the Better Auth session server-side.
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session) {
-    // Keep the sign-in UX predictable: unauthenticated users always land on /sign-in.
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   return NextResponse.next();
 }
 
+/** Limit middleware-style usage to the demo protected page `/page`. */
 export const config = {
-  // Apply this middleware only to the protected demo page.
   matcher: ["/page"],
 };

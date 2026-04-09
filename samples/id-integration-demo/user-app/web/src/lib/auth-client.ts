@@ -1,9 +1,12 @@
 import { genericOAuthClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
+/**
+ * Shared Better Auth client for React. Loads {@link genericOAuthClient} so
+ * `signIn.oauth2` (Generic OAuth) is available on the client.
+ */
 const authClient = createAuthClient({
   baseURL: process.env.BETTER_AUTH_URL,
-  // Enable Generic OAuth client methods like `signIn.oauth2(...)`.
   plugins: [genericOAuthClient()],
 });
 

@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+/**
+ * Post–sign-in landing page for the demo. Link returns visitors to the public root `/`.
+ */
 export default async function Page() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
@@ -11,7 +14,6 @@ export default async function Page() {
       </p>
       <Link
         className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-px hover:bg-zinc-800 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
-        // Give users a clear exit back to the public root page.
         href="/"
         prefetch={true}
       >

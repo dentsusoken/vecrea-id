@@ -3,6 +3,10 @@
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
+/**
+ * Signs the user out via Better Auth. On success, navigates to `/` in-app;
+ * Better Auth does not perform an automatic post-sign-out redirect by default.
+ */
 export function SignOutButton() {
   const router = useRouter();
 
@@ -13,7 +17,6 @@ export function SignOutButton() {
         await signOut({
           fetchOptions: {
             onSuccess: () => {
-              // Better Auth doesn't force a redirect on sign-out; keep navigation in-app.
               router.push("/");
             },
           },

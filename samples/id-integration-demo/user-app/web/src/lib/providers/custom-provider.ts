@@ -1,10 +1,15 @@
 import { genericOAuth } from "better-auth/plugins";
 
+/**
+ * Maps OIDC userinfo / id_token claims to Better Auth user fields.
+ *
+ * Better Auth’s generic-oauth handler rejects the flow when `name` is falsy
+ * (error `name_is_missing`). Display name resolution order: `name`, then OIDC
+ * `preferred_username`, then `email`, then `sub`, then the literal `"User"`.
+ */
 function mapOidcStyleProfileToUser(profile: Record<string, unknown>) {
   const sub = typeof profile.sub === "string" ? profile.sub : "";
   const email = typeof profile.email === "string" ? profile.email : undefined;
-  // Better Auth generic-oauth rejects the flow when `name` is falsy (see
-  // `name_is_missing`). Prefer `name`, then OIDC `preferred_username`, then email / sub.
   const nameFromProvider =
     typeof profile.name === "string" && profile.name.trim().length > 0
       ? profile.name.trim()
@@ -30,6 +35,13 @@ function mapOidcStyleProfileToUser(profile: Record<string, unknown>) {
   };
 }
 
+/**
+ * Generic OAuth plugin with a single provider id `custom`, driven by
+ * `CUSTOM_PROVIDER_*` env vars. Uses OIDC discovery and {@link mapOidcStyleProfileToUser}
+ * so IdPs that omit `name` still satisfy Better Auth.
+ *
+ * @see https://www.better-auth.com/docs/plugins/generic-oauth
+ */
 export const customProvider = genericOAuth({
   config: [
     {
@@ -38,7 +50,6 @@ export const customProvider = genericOAuth({
       clientSecret: process.env.CUSTOM_PROVIDER_CLIENT_SECRET as string,
       discoveryUrl: process.env.CUSTOM_PROVIDER_DISCOVERY_URL as string,
       scopes: ["openid", "email", "profile"],
-      // Some IdPs omit `name` on userinfo / id_token claims; still satisfy Better Auth.
       mapProfileToUser: async (profile) =>
         mapOidcStyleProfileToUser(profile as Record<string, unknown>),
     },

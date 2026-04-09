@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+/**
+ * Public demo home. Includes a link to `/page`, which is intended to be
+ * session-gated (see `src/proxy.ts` when wired as middleware).
+ */
 export default function DemoHomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
@@ -11,12 +15,11 @@ export default function DemoHomePage() {
       </p>
       <Link
         className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-px hover:bg-zinc-800 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
-        // This route is protected by middleware to demonstrate session-based gating.
         href="/page"
         prefetch={true}
       >
         Go to Page
       </Link>
     </div>
-  )
+  );
 }
