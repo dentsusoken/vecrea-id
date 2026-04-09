@@ -1,6 +1,7 @@
 import type { UserHandlerConfiguration } from '@vecrea/au3te-ts-common/handler.user';
 import { UserHandlerConfigurationImpl } from '@vecrea/au3te-ts-common/handler.user';
 import { ApiClientImpl } from '@vecrea/au3te-ts-server/api';
+import type { FederationManager } from '@vecrea/au3te-ts-server/federation';
 import { ServerHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.core';
 import {
   Session,
@@ -8,12 +9,15 @@ import {
 } from '@vecrea/au3te-ts-server/session';
 import type { Context } from 'hono';
 import { readAu3teApiClientConfig } from '../config/readAu3teApiClientConfig';
+import { createFederationManagerFromEnv } from '../federation/createFederationManager';
 import { createEphemeralAu3teSession } from '../session/createAu3teSession';
 
 export type ServerDeps = {
   apiClient: ApiClientImpl;
   session: Session<DefaultSessionSchemas>;
   serverHandler: ServerHandlerConfigurationImpl<DefaultSessionSchemas>;
+  /** 外部 IdP 連携（環境レジストリ由来の {@link FederationManagerImpl} など） */
+  federationManager: FederationManager;
   /** ユーザー永続化の実装（DynamoDB 等）。トークン・認可フローで利用する */
   userHandlerConfiguration: UserHandlerConfiguration;
 };
@@ -34,6 +38,10 @@ export type CreateServerDepsOptions = {
    * 本番では DynamoDB 等にバックした実装を渡す。
    */
   userHandlerConfiguration?: UserHandlerConfiguration;
+  /**
+   * フェデレーション。省略時は {@link createFederationManagerFromEnv}（`AU3TE_FEDERATION_REGISTRY` 等）。
+   */
+  federationManager?: FederationManager;
 };
 
 /**
@@ -55,12 +63,16 @@ export function createServerDeps(
   const userHandlerConfiguration =
     options?.userHandlerConfiguration ?? new UserHandlerConfigurationImpl();
 
+  const federationManager =
+    options?.federationManager ?? createFederationManagerFromEnv(c);
+
   const serverHandler = new ServerHandlerConfigurationImpl(apiClient, session);
 
   return {
     apiClient,
     session,
     serverHandler,
+    federationManager,
     userHandlerConfiguration,
   };
 }

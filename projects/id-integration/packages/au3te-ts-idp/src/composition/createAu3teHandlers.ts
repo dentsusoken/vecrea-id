@@ -7,6 +7,8 @@ import {
 import { AuthorizationFailHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-fail';
 import { AuthorizationIssueHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-issue';
 import { AuthorizationDecisionHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-decision';
+import { FederationCallbackHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.federation-callback';
+import { FederationInitiationHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.federation-initiation';
 import {
   AuthorizationServerMetadataHandlerConfigurationImpl,
   OpenIDConfigurationHandlerConfigurationImpl,
@@ -18,13 +20,18 @@ import { TokenCreateHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/han
 import { TokenFailHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token-fail';
 import { TokenIssueHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.token-issue';
 import type { DefaultSessionSchemas } from '@vecrea/au3te-ts-server/session';
-import { createStubFederationManager } from './createStubFederationManager';
 import type { ServerDeps } from './createServerDeps';
 
 export type Au3teHandlers = {
   serviceJwks: ServiceJwksHandlerConfigurationImpl;
   openIdConfiguration: OpenIDConfigurationHandlerConfigurationImpl;
   authorizationServerMetadata: AuthorizationServerMetadataHandlerConfigurationImpl;
+  federationInitiation: FederationInitiationHandlerConfigurationImpl<DefaultSessionSchemas>;
+  federationCallback: FederationCallbackHandlerConfigurationImpl<
+    DefaultSessionSchemas,
+    User,
+    never
+  >;
   par: ParHandlerConfigurationImpl;
   token: TokenHandlerConfigurationImpl<User>;
   authorization: AuthorizationHandlerConfigurationImpl<DefaultSessionSchemas>;
@@ -44,7 +51,7 @@ export type Au3teHonoEnv = {
 
 /** au3te-ts-server の各 HandlerConfigurationImpl をまとめて生成する */
 export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
-  const { serverHandler, userHandlerConfiguration } = deps;
+  const { serverHandler, userHandlerConfiguration, federationManager } = deps;
 
   const serviceJwks = new ServiceJwksHandlerConfigurationImpl(serverHandler);
   const openIdConfiguration =
@@ -53,7 +60,21 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     new AuthorizationServerMetadataHandlerConfigurationImpl(serverHandler);
 
   const extractorConfiguration = new ExtractorConfigurationImpl();
-  const federationManager = createStubFederationManager();
+
+  const federationInitiation = new FederationInitiationHandlerConfigurationImpl(
+    {
+      serverHandlerConfiguration: serverHandler,
+      extractorConfiguration,
+      federationManager,
+    }
+  );
+
+  const federationCallback = new FederationCallbackHandlerConfigurationImpl({
+    serverHandlerConfiguration: serverHandler,
+    extractorConfiguration,
+    federationManager,
+    userHandler: userHandlerConfiguration,
+  });
 
   const par = new ParHandlerConfigurationImpl({
     serverHandlerConfiguration: serverHandler,
@@ -108,6 +129,8 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     serviceJwks,
     openIdConfiguration,
     authorizationServerMetadata,
+    federationInitiation,
+    federationCallback,
     par,
     token,
     authorization,

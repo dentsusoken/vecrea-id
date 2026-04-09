@@ -3,6 +3,8 @@ import { AUTHORIZATION_PATH } from '@vecrea/au3te-ts-server/handler.authorizatio
 import {
   AUTHORIZATION_DECISION_PATH,
 } from '@vecrea/au3te-ts-server/handler.authorization-decision';
+import { FEDERATION_CALLBACK_PATH } from '@vecrea/au3te-ts-server/handler.federation-callback';
+import { FEDERATION_INITIATION_PATH } from '@vecrea/au3te-ts-server/handler.federation-initiation';
 import { PAR_PATH } from '@vecrea/au3te-ts-server/handler.par';
 import {
   AUTHORIZATION_SERVER_METADATA_PATH,
@@ -10,7 +12,7 @@ import {
 } from '@vecrea/au3te-ts-server/handler.service-configuration';
 import { SERVICE_JWKS_PATH } from '@vecrea/au3te-ts-server/handler.service-jwks';
 import { TOKEN_PATH } from '@vecrea/au3te-ts-server/handler.token';
-import type { Hono } from 'hono';
+import type { Context, Hono } from 'hono';
 import { jsxRenderer } from 'hono/jsx-renderer';
 import type { Au3teHonoEnv } from '../composition/createAu3teHandlers';
 import { AuthorizationConsentPage } from '../views/AuthorizationConsentPage';
@@ -31,6 +33,16 @@ export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
       .get('au3teHandlers')
       .authorizationServerMetadata.processRequest(c.req.raw)
   );
+
+  const federationInit = (c: Context<Au3teHonoEnv>) =>
+    c.get('au3teHandlers').federationInitiation.processRequest(c.req.raw);
+  const federationCb = (c: Context<Au3teHonoEnv>) =>
+    c.get('au3teHandlers').federationCallback.processRequest(c.req.raw);
+
+  app.get(FEDERATION_INITIATION_PATH, federationInit);
+  app.post(FEDERATION_INITIATION_PATH, federationInit);
+  app.get(FEDERATION_CALLBACK_PATH, federationCb);
+  app.post(FEDERATION_CALLBACK_PATH, federationCb);
 
   app.get(
     AUTHORIZATION_PATH,
