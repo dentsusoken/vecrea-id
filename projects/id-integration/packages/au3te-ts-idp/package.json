@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "dotenv -e ./.env -- tsx watch src/dev.ts"
+    "dev": "dotenv -e ./.env -- tsx watch src/dev.ts",
+    "build": "esbuild --bundle --outfile=./build/index.js --platform=node --target=node20 ./src/index.ts",
+    "zip": "mkdir -p ./dist && rm -f ./dist/index.zip && zip -j ./dist/index.zip ./build/index.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +30,7 @@
     "@hono/node-server": "^1.19.12",
     "@types/node": "^25.5.0",
     "dotenv-cli": "^11.0.0",
+    "esbuild": "^0.27.4",
     "tsx": "^4.21.0"
   }
 }
