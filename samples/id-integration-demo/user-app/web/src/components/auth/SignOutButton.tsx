@@ -13,6 +13,7 @@ export function SignOutButton() {
         await signOut({
           fetchOptions: {
             onSuccess: () => {
+              // Better Auth doesn't force a redirect on sign-out; keep navigation in-app.
               router.push("/");
             },
           },

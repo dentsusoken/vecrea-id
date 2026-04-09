@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "@/lib/auth-client"; //import the auth client
+import { signIn } from "@/lib/auth-client";
 
 export function SignInButton() {
   return (
@@ -9,6 +9,7 @@ export function SignInButton() {
       onClick={async () =>
         await signIn.social({
           provider: "cognito",
+          // After the IdP flow, land on the protected demo page to verify session gating.
           callbackURL: "/page",
         })
       }
