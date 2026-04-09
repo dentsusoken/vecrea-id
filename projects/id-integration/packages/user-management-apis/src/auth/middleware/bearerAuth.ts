@@ -1,6 +1,21 @@
 import type { IntrospectionResponse } from '@vecrea/au3te-ts-common/schemas.introspection';
 import type { IntrospectionHandlerConfiguration } from '@vecrea/au3te-ts-server/handler.introspection';
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
+
+/**
+ * Static introspection config or a per-request resolver (e.g. read from host
+ * `c.get('au3teHandlers').introspection` after upstream middleware).
+ */
+export type IntrospectionConfigSource =
+  | IntrospectionHandlerConfiguration
+  | ((c: Context) => IntrospectionHandlerConfiguration);
+
+function resolveIntrospectionConfig(
+  source: IntrospectionConfigSource,
+  c: Context
+): IntrospectionHandlerConfiguration {
+  return typeof source === 'function' ? source(c) : source;
+}
 
 const BEARER = 'Bearer ';
 
@@ -33,9 +48,10 @@ function responseByAction(
 }
 
 export function createBearerAuthMiddleware(
-  introspectionConfig: IntrospectionHandlerConfiguration
+  introspectionConfig: IntrospectionConfigSource
 ): MiddlewareHandler {
   return async (c, next) => {
+    const config = resolveIntrospectionConfig(introspectionConfig, c);
     const authorizationHeader = c.req.header('authorization');
     const token = extractBearerToken(authorizationHeader);
     if (!token) {
@@ -44,7 +60,7 @@ export function createBearerAuthMiddleware(
 
     let response: IntrospectionResponse;
     try {
-      response = await introspectionConfig.processApiRequestWithValidation({
+      response = await config.processApiRequestWithValidation({
         token,
         htm: c.req.method,
         htu: c.req.url,

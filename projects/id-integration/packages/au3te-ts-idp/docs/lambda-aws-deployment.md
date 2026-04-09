@@ -33,7 +33,7 @@
 
 アプリは `createManagementApis(cognito, { basePath: '/manage', getEnv: getIdpConfigRecord })` で **`/manage`** 以下にユーザー管理系をマウントしている。`getEnv` により **`AU3TE_PUBLIC_PATH_PREFIX`**（上述）と API Gateway ステージ推定が **Scalar（`/manage/docs`）と `openapi.json` の `servers`** にも反映され、ステージ付き URL で参照できる。
 
-**セキュリティ:** 現状の IdP `index.ts` では `introspectionConfig` を渡していないため、**`/manage/users` 系は bearer 保護なし**で公開される。本番では API Gateway（Cognito / JWT オーサライザ等）で守るか、`createManagementApis` に `introspectionConfig` を渡してトークン検証を有効にすること。（`introspectionConfig` 利用時は Authlete 等への到達権限も別途必要。）
+**セキュリティ:** IdP は `createManagementApis` に **`introspectionConfig: (c) => c.get('au3teHandlers').introspection`** を渡し、`/manage/users` は Authlete のイントロスペクションで **Bearer 必須**とする。API Gateway で JWT オーサライザを併用してもよい。
 
 | 変数 | 必須条件 | 説明 |
 |------|-----------|------|

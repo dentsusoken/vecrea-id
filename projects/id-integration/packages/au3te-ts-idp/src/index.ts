@@ -1,5 +1,6 @@
 import { createManagementApis } from 'user-management-apis';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import type { Context } from 'hono';
 import { Hono } from 'hono';
 import type { Au3teHonoEnv } from './composition/createAu3teHandlers';
 import { registerAu3teRoutes } from './routes/registerAu3teRoutes';
@@ -27,6 +28,8 @@ app.route(
   createManagementApis(cognito, {
     basePath: '/manage',
     getEnv: getIdpConfigRecord,
+    introspectionConfig: (c: Context<Au3teHonoEnv>) =>
+      c.get('au3teHandlers').introspection,
   })
 );
 

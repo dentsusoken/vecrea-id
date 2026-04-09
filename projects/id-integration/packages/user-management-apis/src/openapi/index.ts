@@ -3,10 +3,12 @@
  */
 
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import type { IntrospectionHandlerConfiguration } from '@vecrea/au3te-ts-server/handler.introspection';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { createBearerAuthMiddleware } from '../auth';
+import {
+  createBearerAuthMiddleware,
+  type IntrospectionConfigSource,
+} from '../auth';
 import { registerUsersRoutes } from '../routes/users';
 import { normalizeBasePath } from './basePath';
 import {
@@ -26,8 +28,9 @@ export type CreateOpenApiRoutesOptions = {
   /**
    * Optional bearer-token introspection configuration.
    * When provided, `/users` endpoints are protected by introspection middleware.
+   * Pass a function to resolve config per request (e.g. from host context).
    */
-  introspectionConfig?: IntrospectionHandlerConfiguration;
+  introspectionConfig?: IntrospectionConfigSource;
   /**
    * Lambda / Workers と同等の環境辞書（例: IdP の `getIdpConfigRecord`）。
    * 設定すると `AU3TE_PUBLIC_PATH_PREFIX` 等をここから読み、API Gateway ステージ付き URL と一致させる。

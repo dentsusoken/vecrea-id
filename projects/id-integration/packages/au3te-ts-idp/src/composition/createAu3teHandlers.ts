@@ -9,6 +9,7 @@ import { AuthorizationIssueHandlerConfigurationImpl } from '@vecrea/au3te-ts-ser
 import { AuthorizationDecisionHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.authorization-decision';
 import { FederationCallbackHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.federation-callback';
 import { FederationInitiationHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.federation-initiation';
+import { IntrospectionHandlerConfigurationImpl } from '@vecrea/au3te-ts-server/handler.introspection';
 import {
   AuthorizationServerMetadataHandlerConfigurationImpl,
   OpenIDConfigurationHandlerConfigurationImpl,
@@ -40,6 +41,7 @@ export type Au3teHandlers = {
     User,
     never
   >;
+  introspection: IntrospectionHandlerConfigurationImpl<DefaultSessionSchemas>;
 };
 
 /** Hono Context に載せる au3te ハンドラー束 */
@@ -127,6 +129,8 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     extractorConfiguration,
   });
 
+  const introspection = new IntrospectionHandlerConfigurationImpl(serverHandler);
+
   return {
     serviceJwks,
     openIdConfiguration,
@@ -137,5 +141,6 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
     token,
     authorization,
     authorizationDecision,
+    introspection,
   };
 }

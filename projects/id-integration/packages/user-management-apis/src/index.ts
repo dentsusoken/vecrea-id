@@ -31,7 +31,7 @@ export {
   type ResolvePublicMountOptions,
 } from './openapi';
 
-export { createBearerAuthMiddleware } from './auth';
+export { createBearerAuthMiddleware, type IntrospectionConfigSource } from './auth';
 export { registerUsersRoutes } from './routes/users';
 
 /**

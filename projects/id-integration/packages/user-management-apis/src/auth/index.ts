@@ -1,1 +1,4 @@
-export { createBearerAuthMiddleware } from './middleware/bearerAuth';
+export {
+  createBearerAuthMiddleware,
+  type IntrospectionConfigSource,
+} from './middleware/bearerAuth';

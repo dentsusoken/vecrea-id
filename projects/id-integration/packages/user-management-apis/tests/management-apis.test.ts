@@ -446,6 +446,38 @@ describe('createManagementApis (Cognito mocked)', () => {
     );
   });
 
+  it('resolves introspection config from a factory per request', async () => {
+    cognitoMock.on(ListUsersCommand).resolves({ Users: [] });
+    const introspect = vi.fn(
+      async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
+        action: 'OK',
+        clientId: 1,
+        subject: 'subject-1',
+        scopes: ['users:read'],
+      })
+    );
+    const introspectionConfig: IntrospectionHandlerConfiguration = {
+      path: '/api/auth/introspection',
+      processApiRequest: async () => {
+        throw new Error('not used');
+      },
+      validateApiResponse: () => {
+        throw new Error('not used');
+      },
+      processApiRequestWithValidation: introspect,
+    };
+    const authApp = createManagementApis(cognito, {
+      basePath: '',
+      introspectionConfig: () => introspectionConfig,
+    });
+    const res = await authApp.request('/users', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer factory-token' },
+    });
+    expect(res.status).toBe(200);
+    expect(introspect).toHaveBeenCalled();
+  });
+
   it('returns 403 when introspection action is FORBIDDEN', async () => {
     const introspect = vi.fn(
       async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
