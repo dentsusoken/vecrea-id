@@ -86,7 +86,9 @@ export function createAu3teHandlers(deps: ServerDeps): Au3teHandlers {
   const authorizationFailHandlerConfiguration =
     new AuthorizationFailHandlerConfigurationImpl(serverHandler);
   const authorizationPageHandlerConfiguration =
-    new AuthorizationPageHandlerConfigurationImpl();
+    new AuthorizationPageHandlerConfigurationImpl({
+      federationRegistry: deps.federationManager.getConfigurations(),
+    });
 
   const authorization = new AuthorizationHandlerConfigurationImpl({
     serverHandlerConfiguration: serverHandler,

@@ -86,10 +86,16 @@ export function registerAu3teRoutes(app: Hono<Au3teHonoEnv>): void {
 
       applyUpstreamSetCookiesToContext(c, upstream);
 
+      c.header('Cache-Control', 'no-store');
+
+      const federationInitiationPrefix =
+        FEDERATION_INITIATION_PATH.replace(/\/:[^/]+$/, '');
+
       return c.render(
         <AuthorizationConsentPage
           model={parsed.data}
           decisionPath={AUTHORIZATION_DECISION_PATH}
+          federationInitiationPathPrefix={federationInitiationPrefix}
         />
       );
     }
