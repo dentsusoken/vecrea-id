@@ -5,9 +5,15 @@ import { Hono } from 'hono';
 import type { Au3teHonoEnv } from './composition/createAu3teHandlers';
 import { registerAu3teRoutes } from './routes/registerAu3teRoutes';
 import { createAu3teSessionMiddleware } from './session/createAu3teSessionMiddleware';
+import { ensureIdpSecretEnvLoaded } from './aws/idp/secretEnvOverlay';
 import { handle } from 'hono/aws-lambda';
 
 const app = new Hono<Au3teHonoEnv>();
+
+app.use(async (c, next) => {
+  await ensureIdpSecretEnvLoaded();
+  await next();
+});
 
 const cognito = new CognitoIdentityProviderClient({});
 

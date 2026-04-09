@@ -3,7 +3,8 @@ import {
   type FederationRegistry,
 } from '@vecrea/au3te-ts-common/schemas.federation';
 import type { Context } from 'hono';
-import { env, getRuntimeKey } from 'hono/adapter';
+import { getIdpConfigRecord } from './getIdpConfigRecord';
+import { resolveEnvRuntime } from './resolveEnvRuntime';
 
 /** 連携 IdP レジストリ（JSON）。省略時は空の `federations` */
 export const AU3TE_FEDERATION_ENV = {
@@ -11,19 +12,6 @@ export const AU3TE_FEDERATION_ENV = {
   /** `true` / `false`。省略時は `NODE_ENV === 'production'` なら false、それ以外は true */
   IS_DEV: 'AU3TE_FEDERATION_DEV',
 } as const;
-
-function resolveEnvRuntime(): Parameters<typeof env>[1] {
-  const key = getRuntimeKey();
-  if (
-    key === 'other' &&
-    typeof globalThis.process !== 'undefined' &&
-    globalThis.process.env &&
-    typeof globalThis.process.env === 'object'
-  ) {
-    return 'node';
-  }
-  return key;
-}
 
 /**
  * `AU3TE_FEDERATION_REGISTRY` の JSON を {@link federationRegistrySchema} で検証する。
@@ -39,10 +27,7 @@ export function readFederationRegistry(c?: Context): FederationRegistry {
     );
   }
 
-  const record = env(
-    (c ?? ({} as Context)) as Context,
-    runtime
-  ) as Record<string, unknown>;
+  const record = getIdpConfigRecord(c);
 
   const raw = record[AU3TE_FEDERATION_ENV.REGISTRY_JSON];
   if (raw === undefined || raw === null || String(raw).trim() === '') {
@@ -70,10 +55,7 @@ export function readFederationIsDev(c?: Context): boolean {
     );
   }
 
-  const record = env(
-    (c ?? ({} as Context)) as Context,
-    runtime
-  ) as Record<string, unknown>;
+  const record = getIdpConfigRecord(c);
 
   const v = record[AU3TE_FEDERATION_ENV.IS_DEV];
   if (v === true || v === 'true' || v === '1') {

@@ -1,6 +1,7 @@
-import { env, getRuntimeKey } from 'hono/adapter';
 import type { AuthleteConfiguration } from '@vecrea/au3te-ts-common/conf';
 import type { Context } from 'hono';
+import { getIdpConfigRecord } from './getIdpConfigRecord';
+import { resolveEnvRuntime } from './resolveEnvRuntime';
 
 /** Authlete / au3te API クライアント用の環境変数名 */
 export const AU3TE_ENV = {
@@ -28,10 +29,7 @@ export function readAu3teApiClientConfig(
     );
   }
 
-  const record = env(
-    (c ?? ({} as Context)) as Context,
-    runtime
-  ) as Record<string, unknown>;
+  const record = getIdpConfigRecord(c);
 
   return {
     apiVersion: requireEnv(record, AU3TE_ENV.API_VERSION),
@@ -39,20 +37,6 @@ export function readAu3teApiClientConfig(
     serviceApiKey: requireEnv(record, AU3TE_ENV.SERVICE_API_KEY),
     serviceAccessToken: requireEnv(record, AU3TE_ENV.SERVICE_ACCESS_TOKEN),
   };
-}
-
-/** `getRuntimeKey() === 'other'` かつ Node 風環境のときは `env` が空になるため `node` として扱う */
-function resolveEnvRuntime(): Parameters<typeof env>[1] {
-  const key = getRuntimeKey();
-  if (
-    key === 'other' &&
-    typeof globalThis.process !== 'undefined' &&
-    globalThis.process.env &&
-    typeof globalThis.process.env === 'object'
-  ) {
-    return 'node';
-  }
-  return key;
 }
 
 function requireEnv(record: Record<string, unknown>, name: string): string {
