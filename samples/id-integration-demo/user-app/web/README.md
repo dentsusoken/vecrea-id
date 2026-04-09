@@ -38,7 +38,13 @@ Open **https://localhost:3000** (dev uses `next dev --experimental-https`; you m
 | Variable | Purpose |
 | -------- | ------- |
 | `BETTER_AUTH_URL` | Public base URL of this app (client + redirects). Example: `https://localhost:3000` |
-| `BETTER_AUTH_SECRET` | Server secret for Better Auth (generate a strong value for non-demo use) |
+| `BETTER_AUTH_SECRET` | Server secret for Better Auth. Generate a value with the command below. |
+
+Generate `BETTER_AUTH_SECRET` with:
+
+```bash
+openssl rand -base64 32
+```
 
 ### Generic OAuth `custom` (required for sign-in)
 
