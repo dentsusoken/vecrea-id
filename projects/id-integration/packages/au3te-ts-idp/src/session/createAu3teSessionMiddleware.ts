@@ -49,13 +49,19 @@ export function createAu3teSessionMiddleware(
     await next();
 
     if (issuedNewCookie) {
+      // SSO IdP: on HTTPS use SameSite=None + Secure so the session is sent on
+      // cross-site top-level POSTs (e.g. SAML SP → IdP) and other strict flows;
+      // Lax would omit the cookie on those POSTs. On plain HTTP (local dev),
+      // None is invalid without Secure — keep Lax.
+      const secure =
+        c.req.header('x-forwarded-proto') === 'https' ||
+        c.req.url.startsWith('https:');
+
       setCookie(c, cookieName, sessionId, {
         path: '/',
         httpOnly: true,
-        sameSite: 'Lax',
-        secure:
-          c.req.header('x-forwarded-proto') === 'https' ||
-          c.req.url.startsWith('https:'),
+        sameSite: secure ? 'None' : 'Lax',
+        secure,
       });
     }
   };
