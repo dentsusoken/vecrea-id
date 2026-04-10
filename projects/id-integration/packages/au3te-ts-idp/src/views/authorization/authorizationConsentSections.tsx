@@ -57,10 +57,16 @@ export function ClientSummarySection({ model }: { model: AuthorizationPageModel 
 
   return (
     <>
-      <h3 id="client-name">{clientName ?? 'クライアント'}</h3>
-      <div class="indent au3te-indent">
+      <h3 id="client-name">{clientName ?? 'Client'}</h3>
+      <div class="indent">
         {logoUri != null && logoUri !== '' ? (
-          <img id="logo" src={logoUri} alt="" width={120} height={120} />
+          <img
+            id="logo"
+            src={logoUri}
+            alt="[Logo] (150x150)"
+            width={150}
+            height={150}
+          />
         ) : null}
         <div id="client-summary">
           {description != null && description !== '' ? <p>{description}</p> : null}
@@ -69,21 +75,21 @@ export function ClientSummarySection({ model }: { model: AuthorizationPageModel 
               {clientUri != null && clientUri !== '' ? (
                 <li>
                   <a target="_blank" href={clientUri} rel="noreferrer noopener">
-                    ホームページ
+                    Homepage
                   </a>
                 </li>
               ) : null}
               {policyUri != null && policyUri !== '' ? (
                 <li>
                   <a target="_blank" href={policyUri} rel="noreferrer noopener">
-                    プライバシーポリシー
+                    Policy
                   </a>
                 </li>
               ) : null}
               {tosUri != null && tosUri !== '' ? (
                 <li>
                   <a target="_blank" href={tosUri} rel="noreferrer noopener">
-                    利用規約
+                    Terms of Service
                   </a>
                 </li>
               ) : null}
@@ -103,16 +109,16 @@ export function PermissionsSection({ model }: { model: AuthorizationPageModel })
   }
   return (
     <>
-      <h4 id="permissions">権限（スコープ）</h4>
-      <div class="indent au3te-indent">
-        <p>このアプリケーションが次の権限を求めています。</p>
+      <h4 id="permissions">Permissions</h4>
+      <div class="indent">
+        <p>The application is requesting the following permissions.</p>
         <dl id="scope-list">
           {scopes.flatMap((scope, i) => [
             <dt key={`s-${i}-n`}>{scope.name ?? `scope-${i}`}</dt>,
             <dd key={`s-${i}-d`}>
               {scope.description != null && scope.description !== ''
                 ? scope.description
-                : '—'}
+                : '\u00a0'}
             </dd>,
           ])}
         </dl>
@@ -128,8 +134,8 @@ export function ClaimsSections({ model }: { model: AuthorizationPageModel }) {
     <>
       {idClaims != null && idClaims.length > 0 ? (
         <>
-          <h4 id="claims-for-id_token">ID トークンに含めるクレーム</h4>
-          <div class="indent au3te-indent">
+          <h4 id="claims-for-id_token">Claims for ID Token</h4>
+          <div class="indent">
             <ul>
               {idClaims.map((c, i) => (
                 <li key={i}>{c}</li>
@@ -140,8 +146,8 @@ export function ClaimsSections({ model }: { model: AuthorizationPageModel }) {
       ) : null}
       {uiClaims != null && uiClaims.length > 0 ? (
         <>
-          <h4 id="claims-for-userinfo">UserInfo に含めるクレーム</h4>
-          <div class="indent au3te-indent">
+          <h4 id="claims-for-userinfo">Claims for UserInfo</h4>
+          <div class="indent">
             <ul>
               {uiClaims.map((c, i) => (
                 <li key={i}>{c}</li>
@@ -170,11 +176,11 @@ export function IdentityAssuranceSection({ model }: { model: AuthorizationPageMo
   return (
     <>
       <h4 id="identity-assurance">Identity Assurance</h4>
-      <div class="indent au3te-indent">
+      <div class="indent">
         {purpose != null && purpose !== '' ? (
           <>
             <h5>Purpose</h5>
-            <div class="indent au3te-indent">
+            <div class="indent">
               <p>{purpose}</p>
             </div>
           </>
@@ -183,14 +189,12 @@ export function IdentityAssuranceSection({ model }: { model: AuthorizationPageMo
         {(allVerifiedClaimsForIdTokenRequested === true ||
           (verifiedClaimsForIdToken != null && verifiedClaimsForIdToken.length > 0)) ? (
           <>
-            <h5>ID トークン用 verified claims のリクエスト</h5>
-            <div class="indent au3te-indent">
-              {allVerifiedClaimsForIdTokenRequested === true ? (
-                <p>すべて（All）</p>
-              ) : null}
+            <h5>Verified claims requested for ID token</h5>
+            <div class="indent">
+              {allVerifiedClaimsForIdTokenRequested === true ? <p>All</p> : null}
               {verifiedClaimsForIdToken != null && verifiedClaimsForIdToken.length > 0 ? (
-                <div class="au3te-table-wrap">
-                  <table class="verified-claims" border={1}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table class="verified-claims" border={1} cellPadding={5}>
                     <thead>
                       <tr>
                         <th>claim</th>
@@ -215,14 +219,12 @@ export function IdentityAssuranceSection({ model }: { model: AuthorizationPageMo
         {(allVerifiedClaimsForUserInfoRequested === true ||
           (verifiedClaimsForUserInfo != null && verifiedClaimsForUserInfo.length > 0)) ? (
           <>
-            <h5>UserInfo 用 verified claims のリクエスト</h5>
-            <div class="indent au3te-indent">
-              {allVerifiedClaimsForUserInfoRequested === true ? (
-                <p>すべて（All）</p>
-              ) : null}
+            <h5>Verified claims requested for userinfo</h5>
+            <div class="indent">
+              {allVerifiedClaimsForUserInfoRequested === true ? <p>All</p> : null}
               {verifiedClaimsForUserInfo != null && verifiedClaimsForUserInfo.length > 0 ? (
-                <div class="au3te-table-wrap">
-                  <table class="verified-claims" border={1}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table class="verified-claims" border={1} cellPadding={5}>
                     <thead>
                       <tr>
                         <th>claim</th>
@@ -255,9 +257,9 @@ export function AuthorizationDetailsSection({ model }: { model: AuthorizationPag
   }
   return (
     <>
-      <h4 id="authorization-details">Authorization Details (RAR)</h4>
-      <div class="indent au3te-indent">
-        <pre class="au3te-pre">{details}</pre>
+      <h4 id="authorization-details">Authorization Details</h4>
+      <div class="indent">
+        <pre class="au3te-authz-details">{details}</pre>
       </div>
     </>
   );
@@ -281,9 +283,9 @@ export function AuthorizationDecisionForm({
 
   return (
     <>
-      <h4 id="authorization">認可</h4>
-      <div class="indent au3te-indent">
-        <p>このアプリケーションへ認可を与えますか？</p>
+      <h4 id="authorization">Authorization</h4>
+      <div class="indent">
+        <p>Do you grant authorization to the application?</p>
 
         <form
           id="authorization-form"
@@ -293,13 +295,13 @@ export function AuthorizationDecisionForm({
         >
           {showLoginFields ? (
             <>
-              <div id="login-fields" class="indent au3te-indent">
-                <div id="login-prompt">ログイン ID とパスワードを入力してください。</div>
+              <div id="login-fields" class="indent">
+                <div id="login-prompt">Input Login ID and Password.</div>
                 <input
                   type="text"
                   id="loginId"
                   name="loginId"
-                  placeholder="ログイン ID"
+                  placeholder="Login ID"
                   autocomplete="off"
                   autocorrect="off"
                   autocapitalize="off"
@@ -311,15 +313,15 @@ export function AuthorizationDecisionForm({
                   type="password"
                   id="password"
                   name="password"
-                  placeholder="パスワード"
+                  placeholder="Password"
                   required={user == null}
                 />
               </div>
 
               {federations.length > 0 ? (
-                <div id="federations" class="indent au3te-indent">
+                <div id="federations" class="indent">
                   <div id="federations-prompt">
-                    外部 OpenID プロバイダーによる ID フェデレーション
+                    ID federation using an external OpenID Provider
                   </div>
                   <ul>
                     {federations.map((f) => (
@@ -334,11 +336,11 @@ export function AuthorizationDecisionForm({
               ) : null}
             </>
           ) : (
-            <div id="login-user" class="indent au3te-indent">
-              ログイン中: <b>{user.subject ?? user.loginId ?? '—'}</b>
-              <p style={{ fontSize: '0.88rem', color: '#555', margin: '0.5rem 0 0' }}>
-                再認証が必要な場合は、認可リクエストに <code>&amp;prompt=login</code>{' '}
-                を付与してください。
+            <div id="login-user" class="indent">
+              Logged in as <b>{user.subject ?? user.loginId ?? '—'}</b>.
+              <p class="au3te-reauth-hint">
+                If re-authentication is needed, append <code>&amp;prompt=login</code>{' '}
+                to the authorization request.
               </p>
             </div>
           )}
@@ -348,14 +350,14 @@ export function AuthorizationDecisionForm({
               type="submit"
               name="authorized"
               id="authorize-button"
-              value="許可"
+              value="Authorize"
               class="font-default"
             />
             <input
               type="submit"
               name="denied"
               id="deny-button"
-              value="拒否"
+              value="Deny"
               class="font-default"
             />
           </div>

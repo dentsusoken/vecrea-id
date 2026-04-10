@@ -18,9 +18,11 @@ export type AuthorizationConsentPageProps = {
 };
 
 /**
- * Authlete java-oauth-server の authorization.jsp に相当する同意画面。
+ * Authorization / consent UI aligned with Authlete java-oauth-server
+ * (`authorization.jsp` + `authorization.css`): layout, typography, colors, controls.
  *
  * @see https://github.com/authlete/java-oauth-server/blob/master/src/main/webapp/WEB-INF/template/authorization.jsp
+ * @see https://github.com/authlete/java-oauth-server/blob/master/src/main/webapp/css/authorization.css
  */
 export function AuthorizationConsentPage({
   model,
@@ -29,29 +31,26 @@ export function AuthorizationConsentPage({
 }: AuthorizationConsentPageProps) {
   const { serviceName } = model;
 
+  const pageTitle =
+    serviceName != null && serviceName !== '' ? serviceName : 'Authorization';
+
   return (
     <>
       <AuthorizationPageStyles />
       <div class="au3te-authz font-default">
-        <div class="au3te-authz__inner">
-          <div id="page_title">
-            {serviceName != null && serviceName !== ''
-              ? `${serviceName} | 認可`
-              : '認可'}
-          </div>
+        <div id="page_title">{pageTitle}</div>
 
-          <div id="content">
-            <ClientSummarySection model={model} />
-            <PermissionsSection model={model} />
-            <ClaimsSections model={model} />
-            <IdentityAssuranceSection model={model} />
-            <AuthorizationDetailsSection model={model} />
-            <AuthorizationDecisionForm
-              model={model}
-              decisionPath={decisionPath}
-              federationInitiationPathPrefix={federationInitiationPathPrefix}
-            />
-          </div>
+        <div id="content">
+          <ClientSummarySection model={model} />
+          <PermissionsSection model={model} />
+          <ClaimsSections model={model} />
+          <IdentityAssuranceSection model={model} />
+          <AuthorizationDetailsSection model={model} />
+          <AuthorizationDecisionForm
+            model={model}
+            decisionPath={decisionPath}
+            federationInitiationPathPrefix={federationInitiationPathPrefix}
+          />
         </div>
       </div>
     </>

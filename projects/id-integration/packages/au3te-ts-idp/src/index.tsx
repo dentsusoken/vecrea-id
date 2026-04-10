@@ -11,6 +11,10 @@ import { createAu3teSessionStore } from './session/createSessionStore';
 import { ensureIdpSecretEnvLoaded } from './aws/idp/secretEnvOverlay';
 import { getIdpConfigRecord } from './config/getIdpConfigRecord';
 import { handle } from 'hono/aws-lambda';
+import {
+  AuthorizationServerIndexPage,
+  USER_MANAGEMENT_BASE_PATH,
+} from './views/AuthorizationServerIndexPage';
 
 const app = new Hono<Au3teHonoEnv>();
 
@@ -29,7 +33,7 @@ app.use(createAu3teSessionMiddleware({ sessionStore }));
 app.route(
   '/',
   createManagementApis(cognito, dynamo, {
-    basePath: '/api/manage',
+    basePath: USER_MANAGEMENT_BASE_PATH,
     getEnv: getIdpConfigRecord,
     introspectionConfig: (c: Context<Au3teHonoEnv>) =>
       c.get('au3teHandlers').introspection,
@@ -38,7 +42,7 @@ app.route(
 
 registerAu3teRoutes(app);
 
-app.get('/', (c) => c.text('Hello'));
+app.get('/', (c) => c.html(<AuthorizationServerIndexPage />));
 
 const handler = handle(app);
 export { app, handler };

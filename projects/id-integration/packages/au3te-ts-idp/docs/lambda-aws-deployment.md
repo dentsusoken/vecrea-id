@@ -1,6 +1,6 @@
 # Lambda デプロイ（`au3te-ts-idp`）
 
-このパッケージを AWS Lambda に載せるときに用意する **リソース**・**IAM**・**環境変数**を整理する。ビルドは `pnpm run build` → `pnpm run zip`（`dist/index.zip` の単一 `index.js`）想定。**ハンドラ**は `index.handler`（`src/index.ts` の `handler` エクスポート）。
+このパッケージを AWS Lambda に載せるときに用意する **リソース**・**IAM**・**環境変数**を整理する。ビルドは `pnpm run build` → `pnpm run zip`（`dist/index.zip` の単一 `index.js`）想定。**ハンドラ**は `index.handler`（`src/index.tsx` の `handler` エクスポート）。
 
 ---
 
