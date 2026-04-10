@@ -8,7 +8,10 @@
   },
   "remoteUser": "node",
   "remoteEnv": {
-    "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}"
+    "PATH": "${containerEnv:HOME}/.local/bin:${containerEnv:PATH}",
+    "HTTP_PROXY": "${localEnv:HTTP_PROXY}",
+    "HTTPS_PROXY": "${localEnv:HTTPS_PROXY}",
+    "NO_PROXY": "${localEnv:NO_PROXY}"
   },
   "mounts": [
     "source=${localEnv:HOME}/.cursor,target=/home/node/.cursor,type=bind,consistency=cached"
