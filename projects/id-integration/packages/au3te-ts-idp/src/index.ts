@@ -26,7 +26,7 @@ app.use(createAu3teSessionMiddleware({ sessionStore }));
 app.route(
   '/',
   createManagementApis(cognito, {
-    basePath: '/manage',
+    basePath: '/api/manage',
     getEnv: getIdpConfigRecord,
     introspectionConfig: (c: Context<Au3teHonoEnv>) =>
       c.get('au3teHandlers').introspection,
