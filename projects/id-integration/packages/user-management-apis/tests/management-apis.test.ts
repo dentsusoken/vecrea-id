@@ -11,7 +11,11 @@ import {
   ListUsersCommand,
   UserNotFoundException,
 } from '@aws-sdk/client-cognito-identity-provider';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 import type {
   IntrospectionRequest,
   IntrospectionResponse,
@@ -377,6 +381,64 @@ describe('createManagementApis (Cognito mocked)', () => {
     expect(ddbMock).not.toHaveReceivedCommand(PutCommand);
   });
 
+   it('GET /staging/users returns Scan page and omits password_hash from data', async () => {
+    ddbMock.on(ScanCommand).resolves({
+      Items: [
+        {
+          id: 'user-one',
+          imported: false,
+          verified: true,
+          data: {
+            'cognito:username': 'user-one',
+            email: 'one@test.example',
+            password_hash: 'must-not-leak',
+          },
+        },
+      ],
+      LastEvaluatedKey: { id: 'user-one' },
+    });
+
+    const res = await app().request('/staging/users', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      items: Array<{
+        id: string;
+        imported: boolean;
+        verified: boolean;
+        data: Record<string, unknown>;
+      }>;
+      paginationToken?: string;
+    };
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0].id).toBe('user-one');
+    expect(body.items[0].imported).toBe(false);
+    expect(body.items[0].verified).toBe(true);
+    expect(body.items[0].data.email).toBe('one@test.example');
+    expect(body.items[0].data.password_hash).toBeUndefined();
+    expect(body.paginationToken).toBeDefined();
+
+    expect(ddbMock).toHaveReceivedCommandWith(ScanCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Limit: 25,
+    });
+  });
+
+  it('GET /staging/users returns 422 for invalid paginationToken', async () => {
+    const res = await app().request(
+      '/staging/users?paginationToken=not-base64-json!!!',
+      { method: 'GET', headers: { Accept: 'application/json' } }
+    );
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({
+      message: 'Invalid paginationToken',
+    });
+    expect(ddbMock).not.toHaveReceivedCommand(ScanCommand);
+  });
+
   it('requires bearer token when introspection config is provided', async () => {
     const introspect = vi.fn(
       async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
@@ -400,9 +462,17 @@ describe('createManagementApis (Cognito mocked)', () => {
       introspectionConfig,
     });
 
-    const res = await authApp.request('/users', { method: 'GET' });
-    expect(res.status).toBe(401);
-    expect(await res.json()).toMatchObject({
+    const resUsers = await authApp.request('/users', { method: 'GET' });
+    expect(resUsers.status).toBe(401);
+    expect(await resUsers.json()).toMatchObject({
+      message: 'Missing or invalid bearer token',
+    });
+
+    const resStaging = await authApp.request('/staging/users', {
+      method: 'GET',
+    });
+    expect(resStaging.status).toBe(401);
+    expect(await resStaging.json()).toMatchObject({
       message: 'Missing or invalid bearer token',
     });
     expect(introspect).not.toHaveBeenCalled();

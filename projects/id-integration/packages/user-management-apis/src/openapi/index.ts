@@ -9,6 +9,7 @@ import {
   createBearerAuthMiddleware,
   type IntrospectionConfigSource,
 } from '../auth';
+import { registerStagingRoutes } from '../routes/staging';
 import { registerUsersRoutes } from '../routes/users';
 import { normalizeBasePath } from './basePath';
 import {
@@ -46,11 +47,12 @@ export const openApiInfo = {
   title: 'User Management API',
   version: '0.0.1',
   description:
-    'Cognito-backed user CRUD (list, get, create, patch, delete, CSV import). When bearer introspection is enabled, each operation requires OAuth scopes such as manage:users:read|write|delete|import (see USER_MANAGEMENT_SCOPES in package exports).',
+    'Cognito-backed user CRUD (list, get, create, patch, delete, CSV import) plus DynamoDB staging inspection (`GET /staging/users`). When bearer introspection is enabled, each operation requires OAuth scopes such as manage:users:read|write|delete|import (see USER_MANAGEMENT_SCOPES in package exports).',
 } as const;
 
 /**
  * Builds the OpenAPI Hono app: registers security, user routes ({@link registerUsersRoutes}),
+ * staging routes ({@link registerStagingRoutes}),
  * `/openapi.json`, and `/docs` (Scalar).
  *
  * @param options.basePath - If the host mounts this app under a prefix, pass it so `/docs` and `servers` match.
@@ -69,6 +71,8 @@ export function createOpenApiRoutes(
     const auth = createBearerAuthMiddleware(options.introspectionConfig);
     app.use('/users', auth);
     app.use('/users/*', auth);
+    app.use('/staging', auth);
+    app.use('/staging/*', auth);
   }
 
   app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
@@ -80,6 +84,7 @@ export function createOpenApiRoutes(
   });
 
   registerUsersRoutes(app, cognito);
+  registerStagingRoutes(app);
 
   app.doc('/openapi.json', (c) => ({
     openapi: '3.0.3',
