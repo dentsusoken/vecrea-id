@@ -6,6 +6,8 @@ import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-iden
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { OpenAPIHono } from '@hono/zod-openapi';
+import { requiredScopesResponse } from '../auth/checkRequiredScopes';
+import { USER_MANAGEMENT_SCOPES } from '../auth/scopes';
 import { createUser } from '../aws/cognito/createUser';
 import { deleteUser } from '../aws/cognito/deleteUser';
 import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
@@ -29,6 +31,8 @@ export function registerUsersRoutes(
   cognito: CognitoIdentityProviderClient
 ): void {
   app.openapi(listUsersRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.READ]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const query = c.req.valid('query');
       const result = await listUsers(cognito, {
@@ -42,6 +46,8 @@ export function registerUsersRoutes(
   });
 
   app.openapi(createUserRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.WRITE]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const body = c.req.valid('json');
       const user = await createUser(cognito, body);
@@ -52,6 +58,8 @@ export function registerUsersRoutes(
   });
 
   app.openapi(getUserRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.READ]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const { userId } = c.req.valid('param');
       const user = await getUser(cognito, userId);
@@ -62,6 +70,8 @@ export function registerUsersRoutes(
   });
 
   app.openapi(patchUserRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.WRITE]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const { userId } = c.req.valid('param');
       const body = c.req.valid('json');
@@ -73,6 +83,8 @@ export function registerUsersRoutes(
   });
 
   app.openapi(deleteUserRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.DELETE]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const { userId } = c.req.valid('param');
       await deleteUser(cognito, userId);
@@ -83,6 +95,8 @@ export function registerUsersRoutes(
   });
 
   app.openapi(importUsersCsvRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.IMPORT]);
+    if (scopeDenied) return scopeDenied as never;
     try {
       const body = await c.req.parseBody();
       const file = body['file'];

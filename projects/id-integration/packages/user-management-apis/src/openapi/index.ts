@@ -46,7 +46,7 @@ export const openApiInfo = {
   title: 'User Management API',
   version: '0.0.1',
   description:
-    'Cognito-backed user CRUD-style operations (list, get, create, patch, delete). Wire to Admin* APIs in the hosting project.',
+    'Cognito-backed user CRUD (list, get, create, patch, delete, CSV import). When bearer introspection is enabled, each operation requires OAuth scopes such as manage:users:read|write|delete|import (see USER_MANAGEMENT_SCOPES in package exports).',
 } as const;
 
 /**

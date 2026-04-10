@@ -19,7 +19,7 @@ import type {
 import type { IntrospectionHandlerConfiguration } from '@vecrea/au3te-ts-server/handler.introspection';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createManagementApis } from '../src/index';
+import { createManagementApis, USER_MANAGEMENT_SCOPES } from '../src/index';
 
 const TEST_POOL = 'us-east-1_ExamplePool';
 const TEST_STAGING_TABLE = 'UserImportStagingTest';
@@ -415,7 +415,7 @@ describe('createManagementApis (Cognito mocked)', () => {
         action: 'OK',
         clientId: 1,
         subject: 'subject-1',
-        scopes: ['users:read'],
+        scopes: [USER_MANAGEMENT_SCOPES.READ],
       })
     );
     const introspectionConfig: IntrospectionHandlerConfiguration = {
@@ -453,7 +453,7 @@ describe('createManagementApis (Cognito mocked)', () => {
         action: 'OK',
         clientId: 1,
         subject: 'subject-1',
-        scopes: ['users:read'],
+        scopes: [USER_MANAGEMENT_SCOPES.READ],
       })
     );
     const introspectionConfig: IntrospectionHandlerConfiguration = {
@@ -476,6 +476,43 @@ describe('createManagementApis (Cognito mocked)', () => {
     });
     expect(res.status).toBe(200);
     expect(introspect).toHaveBeenCalled();
+  });
+
+  it('returns 403 when introspection is OK but token lacks required scope', async () => {
+    const introspect = vi.fn(
+      async (_apiRequest: IntrospectionRequest): Promise<IntrospectionResponse> => ({
+        action: 'OK',
+        clientId: 1,
+        subject: 'subject-1',
+        scopes: [USER_MANAGEMENT_SCOPES.WRITE],
+      })
+    );
+    const introspectionConfig: IntrospectionHandlerConfiguration = {
+      path: '/api/auth/introspection',
+      processApiRequest: async () => {
+        throw new Error('not used');
+      },
+      validateApiResponse: () => {
+        throw new Error('not used');
+      },
+      processApiRequestWithValidation: introspect,
+    };
+    const authApp = createManagementApis(cognito, {
+      basePath: '',
+      introspectionConfig,
+    });
+    const res = await authApp.request('/users', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer wrong-scope' },
+    });
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as {
+      message?: string;
+      missingScopes?: string[];
+    };
+    expect(body.message).toBe('Insufficient scope');
+    expect(body.missingScopes).toEqual([USER_MANAGEMENT_SCOPES.READ]);
+    expect(cognitoMock).not.toHaveReceivedCommand(ListUsersCommand);
   });
 
   it('returns 403 when introspection action is FORBIDDEN', async () => {

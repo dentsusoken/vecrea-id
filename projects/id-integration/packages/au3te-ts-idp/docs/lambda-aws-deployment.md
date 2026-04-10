@@ -33,7 +33,7 @@
 
 アプリは `createManagementApis(cognito, { basePath: '/manage', getEnv: getIdpConfigRecord })` で **`/manage`** 以下にユーザー管理系をマウントしている。`getEnv` により **`AU3TE_PUBLIC_PATH_PREFIX`**（上述）と API Gateway ステージ推定が **Scalar（`/manage/docs`）と `openapi.json` の `servers`** にも反映され、ステージ付き URL で参照できる。
 
-**セキュリティ:** IdP は `createManagementApis` に **`introspectionConfig: (c) => c.get('au3teHandlers').introspection`** を渡し、`/manage/users` は Authlete のイントロスペクションで **Bearer 必須**とする。API Gateway で JWT オーサライザを併用してもよい。
+**セキュリティ:** IdP は `createManagementApis` に **`introspectionConfig: (c) => c.get('au3teHandlers').introspection`** を渡し、`/manage/users` は Authlete のイントロスペクションで **Bearer 必須**とする。さらに API ごとに **OAuth スコープ**（例: `manage:users:read` / `write` / `delete` / `import` — `@vecrea/user-management-apis` の `USER_MANAGEMENT_SCOPES` と一致させる）が無いと 403 となる。Authlete のクライアントに同じスコープを登録し、トークンに載せること。
 
 | 変数 | 必須条件 | 説明 |
 |------|-----------|------|
