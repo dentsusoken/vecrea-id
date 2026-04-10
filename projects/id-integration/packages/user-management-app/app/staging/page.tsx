@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import type { ListStagingUsersResponse } from '@/types/staging';
 
 function stagingDataPreview(data: Record<string, unknown>): string {
@@ -73,7 +74,11 @@ function StagingListInner() {
   return (
     <div className="px-5 py-6 space-y-4">
       <p className="text-sm text-um-text max-w-3xl">
-        DynamoDB staging rows for the user-import pipeline.{' '}
+        DynamoDB staging rows for the user-import pipeline. Rows are created from{' '}
+        <Link href="/users/import" className="text-um-link no-underline hover:underline">
+          Import CSV
+        </Link>
+        .{' '}
         <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
           imported
         </code>{' '}
@@ -81,7 +86,8 @@ function StagingListInner() {
         <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
           verified
         </code>{' '}
-        reflects CSV email/phone verification flags. Scan paging — use Next sparingly.
+        reflects CSV email/phone verification flags. DynamoDB Scan paging — load additional
+        chunks only when needed.
       </p>
       <div className="overflow-x-auto border border-um-border">
         <table className="w-full text-sm text-left border-collapse">
@@ -97,8 +103,17 @@ function StagingListInner() {
           <tbody>
             {data.items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-um-text text-center border border-um-border">
-                  No staging rows
+                <td colSpan={5} className="px-4 py-10 text-um-text text-center border border-um-border">
+                  <p className="text-black font-medium mb-2">No staging rows in this scan page</p>
+                  <p className="text-sm mb-4">
+                    Import a CSV to populate staging, or load the next page if more data exists.
+                  </p>
+                  <Link
+                    href="/users/import"
+                    className="inline-flex justify-center min-w-[150px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover"
+                  >
+                    Import CSV
+                  </Link>
                 </td>
               </tr>
             ) : (
@@ -124,12 +139,17 @@ function StagingListInner() {
         </table>
       </div>
       {nextHref ? (
-        <Link
-          href={nextHref}
-          className="inline-flex items-center justify-center min-w-[150px] px-3 py-2.5 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
-        >
-          Next page
-        </Link>
+        <div className="space-y-1">
+          <Link
+            href={nextHref}
+            className="inline-flex items-center justify-center min-w-[150px] px-3 py-2.5 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
+          >
+            Load next page
+          </Link>
+          <p className="text-xs text-um-text max-w-xl">
+            Fetches the next DynamoDB Scan segment; order is not guaranteed across pages.
+          </p>
+        </div>
       ) : null}
     </div>
   );
@@ -137,11 +157,19 @@ function StagingListInner() {
 
 export default function StagingPage() {
   return (
-    <Suspense fallback={<p className="px-5 py-6 text-um-text opacity-80">Loading…</p>}>
+    <>
       <div className="px-5 pt-6 pb-0">
+        <PageBreadcrumb
+          items={[
+            { label: 'Users', href: '/users' },
+            { label: 'Import staging' },
+          ]}
+        />
         <h1 className="text-um-heading text-xl font-semibold">Import staging</h1>
       </div>
-      <StagingListInner />
-    </Suspense>
+      <Suspense fallback={<p className="px-5 py-6 text-um-text opacity-80">Loading…</p>}>
+        <StagingListInner />
+      </Suspense>
+    </>
   );
 }

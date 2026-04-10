@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
+import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import {
   extraAttributesToRows,
   pickExtraAttributes,
@@ -41,8 +42,15 @@ export default function UserDetailPage() {
   const [extraRows, setExtraRows] = useState<ExtraRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!saveSuccess) return;
+    const t = globalThis.setTimeout(() => setSaveSuccess(false), 4000);
+    return () => globalThis.clearTimeout(t);
+  }, [saveSuccess]);
 
   useEffect(() => {
     if (!usernameParam) return;
@@ -114,6 +122,7 @@ export default function UserDetailPage() {
     e.preventDefault();
     if (!usernameParam) return;
     setActionError(null);
+    setSaveSuccess(false);
 
     const attrs: Record<string, string> = {};
     const gn = givenName.trim();
@@ -162,6 +171,7 @@ export default function UserDetailPage() {
         return;
       }
       const u = JSON.parse(text) as User;
+      setSaveSuccess(true);
       setUser(u);
       setEmail(u.email ?? '');
       setPhoneNumber(u.phoneNumber ?? '');
@@ -235,6 +245,13 @@ export default function UserDetailPage() {
 
   return (
     <div className="px-5 py-6 max-w-3xl space-y-8">
+      <PageBreadcrumb
+        items={[
+          { label: 'Users', href: '/users' },
+          { label: user.username },
+        ]}
+      />
+
       <div className="space-y-1">
         <h1 className="text-um-heading text-xl font-semibold">{user.username}</h1>
         <dl className="text-sm space-y-1 text-black">
@@ -261,40 +278,16 @@ export default function UserDetailPage() {
         </dl>
       </div>
 
-      {hasMfa ? (
-        <section className="border border-um-border p-4 space-y-2">
-          <h2 className="text-um-heading text-sm font-semibold">MFA</h2>
-          {user.preferredMfaSetting ? (
-            <p className="text-sm text-black">
-              Preferred: <span className="font-mono">{user.preferredMfaSetting}</span>
-            </p>
-          ) : null}
-          {user.userMfaSettingList?.length ? (
-            <p className="text-sm text-black">
-              Active methods:{' '}
-              <span className="font-mono">{user.userMfaSettingList.join(', ')}</span>
-            </p>
-          ) : null}
-          {user.mfaOptions?.length ? (
-            <pre className="text-xs bg-[#f8f8f8] border border-um-border border-l-4 border-l-um-pre-accent p-3 overflow-x-auto text-black mt-2">
-              {JSON.stringify(user.mfaOptions, null, 2)}
-            </pre>
-          ) : null}
-          <p className="text-xs text-um-text">
-            MFA settings are read-only here; manage them in Cognito or your IdP flows.
-          </p>
-        </section>
-      ) : null}
-
-      <section>
-        <h2 className="text-um-heading text-sm font-semibold mb-2">All Cognito attributes</h2>
-        <pre className="text-xs bg-[#f8f8f8] border border-um-border border-l-4 border-l-um-pre-accent p-3 overflow-x-auto text-black">
-          {attributesJson}
-        </pre>
-      </section>
-
       <form onSubmit={onSave} className="space-y-4 border border-um-border p-4">
-        <h2 className="text-um-heading text-sm font-semibold">Edit (PATCH)</h2>
+        <h2 className="text-um-heading text-sm font-semibold">Edit</h2>
+        {saveSuccess ? (
+          <p
+            role="status"
+            className="text-sm text-green-800 bg-green-50 border border-green-200 px-3 py-2"
+          >
+            Changes saved successfully.
+          </p>
+        ) : null}
         <p className="text-xs text-um-text">
           Updates mirror the management API: top-level fields for email, phone, verification flags,
           and enabled; profile and custom keys go in <code className="bg-[#f4f4f4] px-0.5 border border-um-border">attributes</code>.
@@ -458,6 +451,51 @@ export default function UserDetailPage() {
           </Link>
         </div>
       </form>
+
+      {hasMfa ? (
+        <details className="border border-um-border p-4 group">
+          <summary className="text-um-heading text-sm font-semibold cursor-pointer list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+            <span className="text-um-text group-open:rotate-90 transition-transform inline-block">
+              ▸
+            </span>
+            MFA (read-only)
+          </summary>
+          <div className="mt-3 space-y-2 pt-2 border-t border-um-border">
+            {user.preferredMfaSetting ? (
+              <p className="text-sm text-black">
+                Preferred:{' '}
+                <span className="font-mono">{user.preferredMfaSetting}</span>
+              </p>
+            ) : null}
+            {user.userMfaSettingList?.length ? (
+              <p className="text-sm text-black">
+                Active methods:{' '}
+                <span className="font-mono">{user.userMfaSettingList.join(', ')}</span>
+              </p>
+            ) : null}
+            {user.mfaOptions?.length ? (
+              <pre className="text-xs bg-[#f8f8f8] border border-um-border border-l-4 border-l-um-pre-accent p-3 overflow-x-auto text-black mt-2">
+                {JSON.stringify(user.mfaOptions, null, 2)}
+              </pre>
+            ) : null}
+            <p className="text-xs text-um-text">
+              MFA settings are read-only here; manage them in Cognito or your IdP flows.
+            </p>
+          </div>
+        </details>
+      ) : null}
+
+      <details className="border border-um-border p-4 group">
+        <summary className="text-um-heading text-sm font-semibold cursor-pointer list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
+          <span className="text-um-text group-open:rotate-90 transition-transform inline-block">
+            ▸
+          </span>
+          All Cognito attributes (JSON)
+        </summary>
+        <pre className="text-xs bg-[#f8f8f8] border border-um-border border-l-4 border-l-um-pre-accent p-3 overflow-x-auto text-black mt-3">
+          {attributesJson}
+        </pre>
+      </details>
     </div>
   );
 }

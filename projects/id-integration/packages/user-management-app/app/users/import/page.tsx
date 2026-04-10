@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
+import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import type { ImportUsersCsvResponse } from '@/types/user';
 
 export default function ImportCsvPage() {
@@ -46,7 +47,21 @@ export default function ImportCsvPage() {
 
   return (
     <div className="px-5 py-6 max-w-xl space-y-6">
+      <PageBreadcrumb
+        items={[
+          { label: 'Users', href: '/users' },
+          { label: 'Import CSV' },
+        ]}
+      />
       <h1 className="text-um-heading text-xl font-semibold">Import users (CSV)</h1>
+      <p className="text-sm text-um-text -mt-2">
+        Upload writes rows to the DynamoDB staging table used by migration. Inspect rows and
+        pipeline status on{' '}
+        <Link href="/staging" className="text-um-link no-underline hover:underline">
+          Import staging
+        </Link>
+        .
+      </p>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label htmlFor="file" className="block text-sm font-medium mb-1 text-black">

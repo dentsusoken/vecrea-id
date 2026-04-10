@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import type { CreateUserRequest, User } from '@/types/user';
 
 const inputClass =
@@ -74,6 +75,12 @@ export default function NewUserPage() {
 
   return (
     <div className="px-5 py-6 max-w-2xl">
+      <PageBreadcrumb
+        items={[
+          { label: 'Users', href: '/users' },
+          { label: 'New user' },
+        ]}
+      />
       <h1 className="text-um-heading text-xl font-semibold mb-4">New user</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <fieldset>

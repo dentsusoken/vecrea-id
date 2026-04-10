@@ -18,12 +18,6 @@ export function AppNav() {
             Users
           </Link>
           <Link
-            href="/users/new"
-            className="text-white/90 no-underline hover:text-white hover:underline"
-          >
-            New user
-          </Link>
-          <Link
             href="/users/import"
             className="text-white/90 no-underline hover:text-white hover:underline"
           >
