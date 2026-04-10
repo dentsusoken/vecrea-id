@@ -6,7 +6,11 @@ import type {
 } from 'aws-lambda';
 import 'aws-sdk-client-mock-vitest/extend';
 import { mockClient } from 'aws-sdk-client-mock';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handler } from '../userMigrationTrigger';
 
@@ -104,6 +108,7 @@ describe('userMigrationTrigger handler', () => {
     expect(result).toBe(event);
     expect(result.triggerSource).toBe('UserMigration_ForgotPassword');
     expect(ddbMock).toHaveReceivedCommandTimes(GetCommand, 0);
+    expect(ddbMock).toHaveReceivedCommandTimes(UpdateCommand, 0);
   });
 
   it('UserMigration_Authentication: loads staging user, sets userAttributes (PLAIN_TEXT password_hash in Item.data)', async () => {
@@ -117,6 +122,7 @@ describe('userMigrationTrigger handler', () => {
         },
       },
     });
+    ddbMock.on(UpdateCommand).resolves({});
 
     const event = migrationAuthEvent('alice', password);
     const result = await invoke(event);
@@ -126,12 +132,53 @@ describe('userMigrationTrigger handler', () => {
       Key: { id: 'alice' },
     });
 
+    expect(ddbMock).toHaveReceivedCommandWith(UpdateCommand, {
+      TableName: TABLE_NAME,
+      Key: { id: 'alice' },
+      UpdateExpression: 'SET imported = :imported',
+      ExpressionAttributeValues: { ':imported': true },
+    });
+
     expect(result.response.userAttributes).toEqual({
       email: 'alice@example.com',
       email_verified: 'true',
     });
 
     expect(result.triggerSource).toBe('UserMigration_Authentication');
+  });
+
+  it('UserMigration_Authentication: still returns success when staging imported update fails', async () => {
+    const password = 'plain-secret';
+    ddbMock.on(GetCommand).resolves({
+      Item: {
+        id: 'alice',
+        data: {
+          ...stagingData('alice', 'alice@example.com'),
+          password_hash: password,
+        },
+      },
+    });
+    const updateErr = new Error('ConditionalCheckFailed');
+    ddbMock.on(UpdateCommand).rejects(updateErr);
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const event = migrationAuthEvent('alice', password);
+    const result = await invoke(event);
+
+    expect(result.response.userAttributes).toEqual({
+      email: 'alice@example.com',
+      email_verified: 'true',
+    });
+    expect(spy).toHaveBeenCalledWith(
+      '[userMigrationTrigger] markStagingImportedBestEffort: failed to update staging row',
+      expect.objectContaining({
+        username: 'alice',
+        tableName: TABLE_NAME,
+        error: updateErr,
+      })
+    );
+
+    spy.mockRestore();
   });
 
   it('throws when DDB_TABLE is not set', async () => {

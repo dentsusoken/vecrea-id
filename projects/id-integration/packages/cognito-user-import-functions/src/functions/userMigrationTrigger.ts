@@ -10,7 +10,11 @@
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 import type { UserMigrationTriggerHandler } from 'aws-lambda';
 import type { StringMap } from 'aws-lambda/trigger/cognito-user-pool-trigger/_common';
 import {
@@ -172,6 +176,33 @@ function userToAttributes(user: CognitoImportData): StringMap {
 }
 
 /**
+ * Marks the staging row as imported (same semantics as {@link importUnVerifiedUsers} /
+ * bulk import bookkeeping). Best-effort: Cognito migration already succeeded; do not fail
+ * the sign-in if DynamoDB update fails.
+ */
+async function markStagingImportedBestEffort(
+  ddbClient: DynamoDBDocumentClient,
+  tableName: string,
+  username: string
+): Promise<void> {
+  try {
+    await ddbClient.send(
+      new UpdateCommand({
+        TableName: tableName,
+        Key: { id: username },
+        UpdateExpression: 'SET imported = :imported',
+        ExpressionAttributeValues: { ':imported': true },
+      })
+    );
+  } catch (e) {
+    console.error(
+      '[userMigrationTrigger] markStagingImportedBestEffort: failed to update staging row',
+      { username, tableName, error: e }
+    );
+  }
+}
+
+/**
  * @param event - Cognito user migration trigger event.
  * @returns The event with `response.userAttributes` set on successful authentication migration.
  * @throws When `DDB_TABLE` is missing, `HASH_ALG` is invalid, DynamoDB or schema validation fails, or auth fails.
@@ -196,5 +227,6 @@ export const handler: UserMigrationTriggerHandler = async (event) => {
   );
 
   event.response.userAttributes = userToAttributes(user);
+  await markStagingImportedBestEffort(ddbClient, tableName, event.userName);
   return event;
 };
