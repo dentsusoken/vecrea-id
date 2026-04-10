@@ -3,8 +3,7 @@
  */
 
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import { requiredScopesResponse } from '../auth/checkRequiredScopes';
 import { USER_MANAGEMENT_SCOPES } from '../auth/scopes';
@@ -25,10 +24,13 @@ import { patchUserRoute } from '../openapi/users/patch-user';
 
 /**
  * Registers all User list/CRUD routes (`app.openapi`) on `app`.
+ *
+ * @param dynamo - DynamoDB Document client (region/credentials configured by host, e.g. IdP Lambda).
  */
 export function registerUsersRoutes(
   app: OpenAPIHono,
-  cognito: CognitoIdentityProviderClient
+  cognito: CognitoIdentityProviderClient,
+  dynamo: DynamoDBDocumentClient
 ): void {
   app.openapi(listUsersRoute, async (c) => {
     const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.READ]);
@@ -110,9 +112,8 @@ export function registerUsersRoutes(
 
       const csvText = await file.text();
       const tableName = requireStagingTableName();
-      const ddb = DynamoDBDocumentClient.from(new DynamoDBClient());
 
-      const result = await importUsersCsvToStaging(ddb, tableName, csvText);
+      const result = await importUsersCsvToStaging(dynamo, tableName, csvText);
       return c.json(result, 200);
     } catch (err) {
       return cognitoErrorResponse(c, err) as never;

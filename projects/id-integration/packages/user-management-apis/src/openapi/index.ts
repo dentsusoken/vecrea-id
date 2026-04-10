@@ -3,6 +3,7 @@
  */
 
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { Scalar } from '@scalar/hono-api-reference';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import {
@@ -55,11 +56,13 @@ export const openApiInfo = {
  * staging routes ({@link registerStagingRoutes}),
  * `/openapi.json`, and `/docs` (Scalar).
  *
+ * @param dynamo - DynamoDB client for staging table reads and CSV import writes (configure in host).
  * @param options.basePath - If the host mounts this app under a prefix, pass it so `/docs` and `servers` match.
  * @returns An `OpenAPIHono` instance (mount or use `fetch` as a Workers handler).
  */
 export function createOpenApiRoutes(
   cognito: CognitoIdentityProviderClient,
+  dynamo: DynamoDBDocumentClient,
   options?: CreateOpenApiRoutesOptions
 ): OpenAPIHono {
   const base = normalizeBasePath(options?.basePath);
@@ -83,8 +86,8 @@ export function createOpenApiRoutes(
       'Cognito ID token or access token, depending on authorizer configuration.',
   });
 
-  registerUsersRoutes(app, cognito);
-  registerStagingRoutes(app);
+  registerUsersRoutes(app, cognito, dynamo);
+  registerStagingRoutes(app, dynamo);
 
   app.doc('/openapi.json', (c) => ({
     openapi: '3.0.3',

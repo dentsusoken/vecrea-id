@@ -27,23 +27,74 @@ const isVerifiedUser = (user: CognitoImportData) =>
   isCsvTruthy(user.email_verified) ||
   isCsvTruthy(user.phone_number_verified);
 
+function normalizeCsvText(s: string): string {
+  return s.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+function rowRecordFromArray(
+  fields: string[],
+  row: unknown[]
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (let j = 0; j < fields.length; j++) {
+    const v = row[j];
+    if (v === undefined) continue;
+    const key = fields[j]!;
+    if (key === '__parsed_extra') continue;
+    out[key] = typeof v === 'string' ? v : String(v);
+  }
+  return out;
+}
+
 /**
- * Parses CSV with the first row as headers into an array of row objects.
- * @param csv Raw CSV text
- * @returns Row objects keyed by header names
- * @throws If PapaParse reports `errors` (logged, then thrown as `Error` with JSON message)
+ * Row 0 = column names (Cognito export). `header: false` avoids PapaParse
+ * `fillHeaderFields` pushing data rows onto `meta.fields` when `data[0]` is
+ * not treated as an array.
  */
 function parseUserCsvRows(csv: string): Record<string, string>[] {
-  const { data, errors } = papa.parse<Record<string, string>>(csv, {
-    header: true,
+  const text = normalizeCsvText(csv);
+  const parseResult = papa.parse<string[]>(text, {
+    header: false,
+    skipEmptyLines: 'greedy',
+    dynamicTyping: false,
   });
+
+  const { data, errors } = parseResult;
 
   if (errors && errors.length > 0) {
     console.error('[parseUserInfoCsv] parseUserCsvRows: PapaParse errors', errors);
     throw new Error(JSON.stringify(errors, null, 2));
   }
 
-  return data;
+  if (!Array.isArray(data)) {
+    throw new Error('CSV parse produced non-array data');
+  }
+
+  if (data.length === 0) {
+    return [];
+  }
+
+  const headerRow = data[0];
+  if (!Array.isArray(headerRow)) {
+    throw new Error(
+      'CSV first row must be the header; check delimiter, quotes, and encoding'
+    );
+  }
+
+  const fields = headerRow.map((cell) =>
+    typeof cell === 'string' ? cell.trim() : String(cell ?? '').trim()
+  );
+
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < data.length; i++) {
+    const cells = data[i];
+    if (!Array.isArray(cells)) {
+      rows.push({});
+      continue;
+    }
+    rows.push(rowRecordFromArray(fields, cells));
+  }
+  return rows;
 }
 
 /**
@@ -119,9 +170,9 @@ async function saveUserData(
  * @throws On PapaParse errors, Zod validation failure, or any DynamoDB `PutItem` failure (errors logged then thrown as `Error` with JSON payload where applicable).
  */
 export const handler: Handler<EventInput> = async (event) => {
-  const rows = parseUserCsvRows(event.USER_INFO_CSV);
+  const rows = parseUserCsvRows(event.USER_INFO_CSV ?? '');
   const users = parseValidatedUsers(rows);
-  const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
+  const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
   await saveUserData(ddbClient, event.DDB_TABLE, users);
 };

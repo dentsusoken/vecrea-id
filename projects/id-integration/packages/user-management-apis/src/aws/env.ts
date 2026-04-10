@@ -21,5 +21,5 @@ export function requireStagingTableName(): string {
   if (name === undefined || name.trim() === '') {
     throw new Error('DDB_STAGING_TABLE environment variable is not set');
   }
-  return name;
+  return name.trim();
 }

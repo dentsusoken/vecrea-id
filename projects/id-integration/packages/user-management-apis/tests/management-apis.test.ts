@@ -11,6 +11,7 @@ import {
   ListUsersCommand,
   UserNotFoundException,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -57,6 +58,7 @@ const ddbMock = mockClient(DynamoDBDocumentClient);
 
 describe('createManagementApis (Cognito mocked)', () => {
   let cognito: CognitoIdentityProviderClient;
+  let ddb: DynamoDBDocumentClient;
 
   beforeEach(() => {
     vi.stubEnv('USER_POOL_ID', TEST_POOL);
@@ -64,6 +66,7 @@ describe('createManagementApis (Cognito mocked)', () => {
     cognitoMock.reset();
     ddbMock.reset();
     cognito = new CognitoIdentityProviderClient({});
+    ddb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-east-1' }));
   });
 
   afterEach(() => {
@@ -71,7 +74,7 @@ describe('createManagementApis (Cognito mocked)', () => {
   });
 
   function app() {
-    return createManagementApis(cognito, { basePath: '' });
+    return createManagementApis(cognito, ddb, { basePath: '' });
   }
 
   it('GET /users returns a page and calls ListUsers', async () => {
@@ -251,6 +254,38 @@ describe('createManagementApis (Cognito mocked)', () => {
         data: expect.objectContaining({
           'cognito:username': 'user-two',
           email: 'user2@test.example',
+        }),
+      }),
+    });
+  });
+
+  it('POST /users/import-csv accepts UTF-8 BOM before header row', async () => {
+    ddbMock.on(PutCommand).resolves({});
+
+    const csv =
+      '\ufeffcognito:username,email\n' + 'bomuser,bom@test.example\n';
+
+    const form = new FormData();
+    form.append('file', new File([csv], 'users.csv', { type: 'text/csv' }));
+
+    const res = await app().request('/users/import-csv', {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      totalRows: 1,
+      successCount: 1,
+      failureCount: 0,
+    });
+    expect(ddbMock).toHaveReceivedCommandWith(PutCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Item: expect.objectContaining({
+        id: 'bomuser',
+        data: expect.objectContaining({
+          'cognito:username': 'bomuser',
+          email: 'bom@test.example',
         }),
       }),
     });
@@ -457,7 +492,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       processApiRequestWithValidation: introspect,
     };
 
-    const authApp = createManagementApis(cognito, {
+    const authApp = createManagementApis(cognito, ddb, {
       basePath: '',
       introspectionConfig,
     });
@@ -498,7 +533,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       },
       processApiRequestWithValidation: introspect,
     };
-    const authApp = createManagementApis(cognito, {
+    const authApp = createManagementApis(cognito, ddb, {
       basePath: '',
       introspectionConfig,
     });
@@ -536,7 +571,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       },
       processApiRequestWithValidation: introspect,
     };
-    const authApp = createManagementApis(cognito, {
+    const authApp = createManagementApis(cognito, ddb, {
       basePath: '',
       introspectionConfig: () => introspectionConfig,
     });
@@ -567,7 +602,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       },
       processApiRequestWithValidation: introspect,
     };
-    const authApp = createManagementApis(cognito, {
+    const authApp = createManagementApis(cognito, ddb, {
       basePath: '',
       introspectionConfig,
     });
@@ -603,7 +638,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       },
       processApiRequestWithValidation: introspect,
     };
-    const authApp = createManagementApis(cognito, {
+    const authApp = createManagementApis(cognito, ddb, {
       basePath: '',
       introspectionConfig,
     });

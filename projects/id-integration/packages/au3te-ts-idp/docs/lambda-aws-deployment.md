@@ -31,16 +31,16 @@
 
 ### 2.2 管理 API（`user-management-apis`）
 
-アプリは `createManagementApis(cognito, { basePath: '/manage', getEnv: getIdpConfigRecord })` で **`/manage`** 以下にユーザー管理系をマウントしている。`getEnv` により **`AU3TE_PUBLIC_PATH_PREFIX`**（上述）と API Gateway ステージ推定が **Scalar（`/manage/docs`）と `openapi.json` の `servers`** にも反映され、ステージ付き URL で参照できる。
+アプリは `createManagementApis(cognito, dynamo, { basePath: '/api/manage', getEnv: getIdpConfigRecord, introspectionConfig: ... })` で **`/api/manage`** 以下にユーザー管理系をマウントしている。`cognito` / `dynamo` は IdP エントリで **`CognitoIdentityProviderClient` と `DynamoDBDocumentClient` を各 1 つ生成して渡す**（Cognito と同じくリージョン・資格情報は Lambda の `AWS_REGION` と実行ロールに依存）。`getEnv` により **`AU3TE_PUBLIC_PATH_PREFIX`**（上述）と API Gateway ステージ推定が **Scalar と `openapi.json` の `servers`** にも反映され、ステージ付き URL で参照できる。
 
-**セキュリティ:** IdP は `createManagementApis` に **`introspectionConfig: (c) => c.get('au3teHandlers').introspection`** を渡し、`/manage/users` は Authlete のイントロスペクションで **Bearer 必須**とする。さらに API ごとに **OAuth スコープ**（例: `manage:users:read` / `write` / `delete` / `import` — `@vecrea/user-management-apis` の `USER_MANAGEMENT_SCOPES` と一致させる）が無いと 403 となる。Authlete のクライアントに同じスコープを登録し、トークンに載せること。
+**セキュリティ:** IdP は `createManagementApis` に **`introspectionConfig: (c) => c.get('au3teHandlers').introspection`** を渡し、`/api/manage/users` は Authlete のイントロスペクションで **Bearer 必須**とする。さらに API ごとに **OAuth スコープ**（例: `manage:users:read` / `write` / `delete` / `import` — `@vecrea/user-management-apis` の `USER_MANAGEMENT_SCOPES` と一致させる）が無いと 403 となる。Authlete のクライアントに同じスコープを登録し、トークンに載せること。
 
 | 変数 | 必須条件 | 説明 |
 |------|-----------|------|
 | `USER_POOL_ID` | **`/manage` の Cognito 系 CRUD を使うとき必須** | 対象 Cognito ユーザープール ID |
-| `DDB_STAGING_TABLE` | **`POST .../users/import-csv` を使うとき必須** | CSV インポート先 DynamoDB テーブル名。未使用なら未設定でもよいが、そのルートを叩くと実行時エラー |
+| `DDB_STAGING_TABLE` | **`POST .../users/import-csv` および `GET .../staging/users` を使うとき必須** | ステージング DynamoDB テーブル名。未使用なら未設定でもよいが、該当ルートで実行時エラー |
 
-Cognito クライアントはリージョン未指定で生成されるため、**ユーザープールと同じリージョン**で Lambda を動かすか、コード側で `CognitoIdentityProviderClient` に `region` を渡す拡張が必要（現状は Lambda の `AWS_REGION` に依存）。
+Cognito / DynamoDB クライアントは IdP で **リージョン未指定のまま生成**しているため、**ユーザープール・DynamoDB と同じリージョン**で Lambda を動かすか、各クライアントのコンストラクタで `region` を明示する（現状は Lambda の `AWS_REGION` に依存）。Dynamo 用の **テーブル API（`dynamodb:PutItem` / `Scan` 等）** が実行ロールに含まれること。
 
 ### 2.3 その他（フェデレーション等）
 
