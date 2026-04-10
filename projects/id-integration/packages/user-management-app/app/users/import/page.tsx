@@ -45,11 +45,11 @@ export default function ImportCsvPage() {
   }
 
   return (
-    <div className="px-4 py-6 max-w-xl space-y-6">
-      <h1 className="text-xl font-semibold">Import users (CSV)</h1>
+    <div className="px-5 py-6 max-w-xl space-y-6">
+      <h1 className="text-um-heading text-xl font-semibold">Import users (CSV)</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="file" className="block text-sm font-medium mb-1">
+          <label htmlFor="file" className="block text-sm font-medium mb-1 text-black">
             CSV file
           </label>
           <input
@@ -57,22 +57,22 @@ export default function ImportCsvPage() {
             name="file"
             type="file"
             accept=".csv,text/csv"
-            className="block w-full text-sm"
+            className="block w-full text-sm text-black"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </div>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3 mt-5">
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="inline-flex justify-center min-w-[150px] px-0 py-3 text-sm font-medium text-white bg-um-primary border-0 cursor-pointer hover:bg-um-primary-hover active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Uploading…' : 'Upload'}
           </button>
           <Link
             href="/users"
-            className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm"
+            className="inline-flex items-center justify-center min-w-[150px] px-0 py-3 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
             Back to list
           </Link>
@@ -80,20 +80,20 @@ export default function ImportCsvPage() {
       </form>
 
       {result ? (
-        <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 text-sm space-y-2">
+        <div className="border border-um-border p-4 text-sm space-y-2 text-um-text">
           <p>
-            <span className="font-medium">Total rows:</span> {result.totalRows}
+            <span className="font-semibold text-black">Total rows:</span> {result.totalRows}
           </p>
           <p>
-            <span className="font-medium">Success:</span> {result.successCount}
+            <span className="font-semibold text-black">Success:</span> {result.successCount}
           </p>
           <p>
-            <span className="font-medium">Failures:</span> {result.failureCount}
+            <span className="font-semibold text-black">Failures:</span> {result.failureCount}
           </p>
           {result.errors?.length ? (
             <div>
-              <p className="font-medium mt-3 mb-1">Errors</p>
-              <ul className="list-disc pl-5 space-y-1 text-zinc-700 dark:text-zinc-300">
+              <p className="font-semibold text-um-heading mt-3 mb-1">Errors</p>
+              <ul className="list-disc pl-5 space-y-1">
                 {result.errors.map((err, i) => (
                   <li key={`${err.row}-${i}`}>
                     Row {err.row}: {err.message}
@@ -102,7 +102,7 @@ export default function ImportCsvPage() {
               </ul>
             </div>
           ) : null}
-          <pre className="mt-4 p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded text-xs overflow-x-auto">
+          <pre className="mt-4 p-4 text-xs overflow-x-auto bg-[#f4f4f4] border border-[#ddd] border-l-4 border-l-um-pre-accent text-um-text max-w-full">
             {JSON.stringify(result, null, 2)}
           </pre>
         </div>

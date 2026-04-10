@@ -45,25 +45,25 @@ export default function NewUserPage() {
   }
 
   return (
-    <div className="px-4 py-6 max-w-md">
-      <h1 className="text-xl font-semibold mb-4">New user</h1>
+    <div className="px-5 py-6 max-w-md">
+      <h1 className="text-um-heading text-xl font-semibold mb-4">New user</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="username" className="block text-sm font-medium mb-1">
-            Username <span className="text-red-500">*</span>
+          <label htmlFor="username" className="block text-sm font-medium mb-1 text-black">
+            Username <span className="text-red-600">*</span>
           </label>
           <input
             id="username"
             name="username"
             required
             autoComplete="username"
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-600 bg-transparent px-3 py-2 text-sm"
+            className="w-full max-w-[22rem] border border-um-border px-2 py-1.5 text-sm text-black box-border"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
+          <label htmlFor="email" className="block text-sm font-medium mb-1 text-black">
             Email
           </label>
           <input
@@ -71,23 +71,23 @@ export default function NewUserPage() {
             name="email"
             type="email"
             autoComplete="email"
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-600 bg-transparent px-3 py-2 text-sm"
+            className="w-full max-w-[22rem] border border-um-border px-2 py-1.5 text-sm text-black box-border"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3 mt-5">
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="inline-flex justify-center min-w-[150px] px-0 py-3 text-sm font-medium text-white bg-um-primary border-0 cursor-pointer hover:bg-um-primary-hover active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Creating…' : 'Create'}
           </button>
           <Link
             href="/users"
-            className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm"
+            className="inline-flex items-center justify-center min-w-[150px] px-0 py-3 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
             Cancel
           </Link>

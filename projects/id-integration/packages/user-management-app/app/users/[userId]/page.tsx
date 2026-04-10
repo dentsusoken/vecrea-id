@@ -120,16 +120,16 @@ export default function UserDetailPage() {
   }
 
   if (!userId) {
-    return <p className="px-4 py-6 text-red-600">Invalid user ID</p>;
+    return <p className="px-5 py-6 text-red-600">Invalid user ID</p>;
   }
   if (loading) {
-    return <p className="px-4 py-6 text-zinc-500">Loading…</p>;
+    return <p className="px-5 py-6 text-um-text opacity-80">Loading…</p>;
   }
   if (loadError || !user) {
     return (
-      <div className="px-4 py-6 space-y-4">
+      <div className="px-5 py-6 space-y-4">
         <p className="text-red-600">{loadError ?? 'User not found'}</p>
-        <Link href="/users" className="text-blue-600 dark:text-blue-400 hover:underline">
+        <Link href="/users" className="text-um-link no-underline hover:underline">
           Back to list
         </Link>
       </div>
@@ -137,25 +137,25 @@ export default function UserDetailPage() {
   }
 
   return (
-    <div className="px-4 py-6 max-w-lg space-y-6">
+    <div className="px-5 py-6 max-w-lg space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">{user.username}</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 font-mono mt-1">{user.userId}</p>
-        <p className="text-sm mt-2">
-          Status: <span className="font-medium">{user.status}</span>
+        <h1 className="text-um-heading text-xl font-semibold">{user.username}</h1>
+        <p className="text-sm text-um-text font-mono mt-1">{user.userId}</p>
+        <p className="text-sm mt-2 text-black">
+          Status: <span className="font-semibold">{user.status}</span>
         </p>
       </div>
 
-      <form onSubmit={onSave} className="space-y-4 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-        <h2 className="text-sm font-medium">Edit</h2>
+      <form onSubmit={onSave} className="space-y-4 border border-um-border p-4">
+        <h2 className="text-um-heading text-sm font-semibold">Edit</h2>
         <div>
-          <label htmlFor="email" className="block text-sm mb-1">
+          <label htmlFor="email" className="block text-sm mb-1 text-black">
             Email
           </label>
           <input
             id="email"
             type="email"
-            className="w-full rounded-md border border-zinc-300 dark:border-zinc-600 bg-transparent px-3 py-2 text-sm"
+            className="w-full max-w-[22rem] border border-um-border px-2 py-1.5 text-sm text-black box-border"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -167,16 +167,16 @@ export default function UserDetailPage() {
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
           />
-          <label htmlFor="enabled" className="text-sm">
+          <label htmlFor="enabled" className="text-sm text-black">
             Enabled
           </label>
         </div>
         {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3 mt-5">
           <button
             type="submit"
             disabled={saving}
-            className="rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="inline-flex justify-center min-w-[150px] px-0 py-3 text-sm font-medium text-white bg-um-primary border-0 cursor-pointer hover:bg-um-primary-hover active:bg-blue-700 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
@@ -184,13 +184,13 @@ export default function UserDetailPage() {
             type="button"
             disabled={saving}
             onClick={onDelete}
-            className="rounded-md border border-red-300 text-red-700 dark:border-red-800 dark:text-red-400 px-4 py-2 text-sm disabled:opacity-50"
+            className="inline-flex justify-center min-w-[150px] px-0 py-3 text-sm font-medium text-white bg-um-deny border-0 cursor-pointer hover:bg-um-deny-hover active:bg-red-600 disabled:opacity-50"
           >
             Delete user
           </button>
           <Link
             href="/users"
-            className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm"
+            className="inline-flex items-center justify-center min-w-[150px] px-0 py-3 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
             Back
           </Link>

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Source_Sans_3 } from 'next/font/google';
 import { AppNav } from './components/AppNav';
 import './globals.css';
 
-const inter = Inter({
+const sourceSans = Source_Sans_3({
   subsets: ['latin'],
-  variable: '--font-sans',
+  weight: ['400', '600'],
+  variable: '--font-source-sans',
 });
 
 export const metadata: Metadata = {
@@ -19,10 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className={`min-h-full flex flex-col font-sans ${inter.className}`}>
+    <html lang="en" className={`${sourceSans.variable} h-full`}>
+      <body className={`min-h-full flex flex-col font-sans antialiased`}>
         <AppNav />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 bg-white text-um-text">{children}</main>
       </body>
     </html>
   );

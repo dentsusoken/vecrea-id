@@ -48,7 +48,7 @@ function UsersListInner() {
   }, [token]);
 
   if (loading) {
-    return <p className="px-4 py-6 text-zinc-500">Loading…</p>;
+    return <p className="px-4 py-6 text-um-text opacity-80">Loading…</p>;
   }
   if (error) {
     return <p className="px-4 py-6 text-red-600">{error}</p>;
@@ -62,41 +62,39 @@ function UsersListInner() {
     : null;
 
   return (
-    <div className="px-4 py-6 space-y-4">
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
-            <tr>
-              <th className="px-3 py-2 font-medium">User ID</th>
-              <th className="px-3 py-2 font-medium">Username</th>
-              <th className="px-3 py-2 font-medium">Email</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium w-24" />
+    <div className="px-5 py-6 space-y-4">
+      <h1 className="text-um-heading text-xl font-semibold">Users</h1>
+      <div className="overflow-x-auto border border-um-border">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-um-table-header">
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">User ID</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Username</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Email</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Status</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border w-24" />
             </tr>
           </thead>
           <tbody>
             {data.items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-zinc-500 text-center">
+                <td colSpan={5} className="px-3 py-8 text-um-text text-center border border-um-border">
                   No users
                 </td>
               </tr>
             ) : (
               data.items.map((u) => (
-                <tr
-                  key={u.userId}
-                  className="border-b border-zinc-100 dark:border-zinc-800/80 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30"
-                >
-                  <td className="px-3 py-2 font-mono text-xs">{u.userId}</td>
-                  <td className="px-3 py-2">{u.username}</td>
-                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-400">
+                <tr key={u.userId} className="hover:bg-gray-50">
+                  <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border">{u.userId}</td>
+                  <td className="px-2.5 py-2.5 border border-um-border text-black">{u.username}</td>
+                  <td className="px-2.5 py-2.5 border border-um-border text-um-text">
                     {u.email ?? '—'}
                   </td>
-                  <td className="px-3 py-2">{u.status}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2.5 py-2.5 border border-um-border text-black">{u.status}</td>
+                  <td className="px-2.5 py-2.5 border border-um-border">
                     <Link
                       href={`/users/${encodeURIComponent(u.userId)}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-um-link no-underline hover:underline"
                     >
                       View
                     </Link>
@@ -110,7 +108,7 @@ function UsersListInner() {
       {nextHref ? (
         <Link
           href={nextHref}
-          className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+          className="inline-flex items-center justify-center min-w-[150px] px-3 py-2.5 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
         >
           Next page
         </Link>
@@ -121,7 +119,7 @@ function UsersListInner() {
 
 export default function UsersPage() {
   return (
-    <Suspense fallback={<p className="px-4 py-6 text-zinc-500">Loading…</p>}>
+    <Suspense fallback={<p className="px-5 py-6 text-um-text opacity-80">Loading…</p>}>
       <UsersListInner />
     </Suspense>
   );

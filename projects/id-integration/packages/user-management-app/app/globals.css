@@ -1,18 +1,34 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Visual nuance aligned with au3te-ts-idp / Authlete java-oauth-server
+ * (authorization.css + index.css): steelblue headings, #666 body text,
+ * dark title bar, blue primary actions, gray table headers.
+ */
+@theme {
+  --font-sans:
+    var(--font-source-sans), "Source Sans Pro", "Helvetica Neue", "Segoe UI", Arial,
+    sans-serif;
+  --color-um-text: #666;
+  --color-um-heading: steelblue;
+  --color-um-titlebar: #333;
+  --color-um-border: #666;
+  --color-um-table-header: #e0e0e0;
+  --color-um-primary: #4285f4;
+  --color-um-primary-hover: #1255f4;
+  --color-um-deny: #f08080;
+  --color-um-deny-hover: #f05050;
+  --color-um-link: blue;
+  --color-um-pre-accent: #33b0f3;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-um-text);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
 }
