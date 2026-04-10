@@ -1,0 +1,15 @@
+/** Aligns with `GET /staging/users` response from user-management-apis (sanitized `data`). */
+
+export type StagingUserItem = {
+  id: string;
+  imported: boolean;
+  verified: boolean;
+  error?: string;
+  errorMessage?: string;
+  data: Record<string, unknown>;
+};
+
+export type ListStagingUsersResponse = {
+  items: StagingUserItem[];
+  paginationToken?: string;
+};

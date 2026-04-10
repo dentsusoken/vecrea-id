@@ -16,6 +16,9 @@ export function AppNav() {
         <Link href="/users/import" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
           Import CSV
         </Link>
+        <Link href="/staging" className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
+          Staging
+        </Link>
       </nav>
     </header>
   );
