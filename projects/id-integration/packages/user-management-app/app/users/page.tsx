@@ -68,17 +68,19 @@ function UsersListInner() {
         <table className="w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-um-table-header">
-              <th className="px-2.5 py-2.5 font-semibold border border-um-border">User ID</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">User ID (sub)</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Username</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Email</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Status</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Enabled</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Phone</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border w-24" />
             </tr>
           </thead>
           <tbody>
             {data.items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-um-text text-center border border-um-border">
+                <td colSpan={7} className="px-3 py-8 text-um-text text-center border border-um-border">
                   No users
                 </td>
               </tr>
@@ -91,9 +93,15 @@ function UsersListInner() {
                     {u.email ?? '—'}
                   </td>
                   <td className="px-2.5 py-2.5 border border-um-border text-black">{u.status}</td>
+                  <td className="px-2.5 py-2.5 border border-um-border text-um-text">
+                    {u.enabled === false ? 'No' : 'Yes'}
+                  </td>
+                  <td className="px-2.5 py-2.5 border border-um-border text-um-text">
+                    {u.phoneNumber ?? '—'}
+                  </td>
                   <td className="px-2.5 py-2.5 border border-um-border">
                     <Link
-                      href={`/users/${encodeURIComponent(u.userId)}`}
+                      href={`/users/${encodeURIComponent(u.username)}`}
                       className="text-um-link no-underline hover:underline"
                     >
                       View

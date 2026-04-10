@@ -12,6 +12,11 @@ export type UserStatus =
   | 'UNCONFIRMED'
   | 'UNKNOWN';
 
+export type MfaOption = {
+  deliveryMedium?: string;
+  attributeName?: string;
+};
+
 export type User = {
   userId: string;
   username: string;
@@ -21,6 +26,9 @@ export type User = {
   phoneNumberVerified?: boolean;
   enabled?: boolean;
   status: UserStatus;
+  mfaOptions?: MfaOption[];
+  preferredMfaSetting?: string;
+  userMfaSettingList?: string[];
   createdAt?: string;
   updatedAt?: string;
   attributes?: Record<string, string>;
