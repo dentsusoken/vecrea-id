@@ -29,7 +29,9 @@ export function SignInButton() {
         try {
           await signIn.oauth2({
             providerId: "custom",
-            callbackURL: "/page",
+            // Use an explicit deep link so the native Expo plugin can complete the OAuth flow
+            // without relying on browser cookies for PKCE verification (Android is especially strict).
+            callbackURL: "id-integration-demo-expo://page",
           });
           logAuthSession("SignInButton:oauth2-settled", { ok: true });
           await refetch();
