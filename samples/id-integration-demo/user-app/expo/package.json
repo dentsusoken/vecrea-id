@@ -1,0 +1,49 @@
+{
+  "version": "0.0.1",
+  "name": "expo",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "@better-auth/expo": "1.5.6",
+    "better-auth": "1.5.6",
+    "expo": "55.0.11",
+    "expo-constants": "55.0.11",
+    "expo-linking": "55.0.11",
+    "expo-network": "55.0.11",
+    "expo-router": "55.0.10",
+    "expo-secure-store": "55.0.11",
+    "expo-status-bar": "55.0.5",
+    "expo-web-browser": "55.0.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-web": "^0.21.0",
+    "react-native-safe-area-context": "^5.6.0",
+    "react-native-screens": "^4.16.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/node": "25.5.0",
+    "@types/react": "^19.2.4",
+    "typescript": "6.0.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "semver": "^7.0.0",
+      "ua-parser-js": "1.0.39"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "typescript": ">=6.0.0 <7"
+      }
+    }
+  }
+}
