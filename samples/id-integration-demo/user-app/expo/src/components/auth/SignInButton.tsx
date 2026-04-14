@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Text,
+} from "react-native";
 import { router } from "expo-router";
 
 import { signIn, useSession } from "@/lib/auth-client";
@@ -29,9 +34,10 @@ export function SignInButton() {
         try {
           await signIn.oauth2({
             providerId: "custom",
-            // Use an explicit deep link so the native Expo plugin can complete the OAuth flow
-            // without relying on browser cookies for PKCE verification (Android is especially strict).
-            callbackURL: "id-integration-demo-expo://page",
+            // Use a relative path so the Expo plugin can generate the correct deep link:
+            // - Expo Go dev: exp://...
+            // - standalone/dev-client: <scheme>://...
+            callbackURL: "/page",
           });
           logAuthSession("SignInButton:oauth2-settled", { ok: true });
           await refetch();
