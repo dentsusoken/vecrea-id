@@ -1,15 +1,21 @@
 ## Demo Expo App (Better Auth + Generic OAuth)
 
-Expo / Expo Router port of the sibling [../web](../web) demo: sign-in via [Better Auth](https://better-auth.com/) [Generic OAuth](https://www.better-auth.com/docs/plugins/generic-oauth) (`providerId: "custom"`), with the Better Auth handler mounted on Expo Router **API routes** under `/api/auth/*` (see `app/api/auth/[...auth]+api.ts`).
+This is the Expo / Expo Router demo app for **Better Auth + Generic OAuth** (`providerId: "custom"`).
 
-**Targets: iOS and Android only.** Web UI for this product is expected to stay on the Next.js app under [../web](../web); this project does not include `react-native-web`.
+### Architecture
 
-`pnpm` and `tsconfig.json` follow the `web` sample (`packageManager`, path alias `@/*` → `./src/*`, `strict: false`, etc.), extended with `expo/tsconfig.base`.
+- **Client**: Expo app (iOS / Android / Web via `expo start --web`)
+- **Auth**: Better Auth client (`better-auth/react`) + Expo plugin (`@better-auth/expo/client`)
+- **Server**: Better Auth handler is mounted as Expo Router **API Routes** under `app/api/auth/[...auth]+api.ts` (served at `/api/auth/`* during dev)
+- **IdP**: Any OIDC provider (example: Cognito Hosted UI), configured via env vars (see below)
+
+TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (package manager, path alias `@/`* → `./src/*`, etc.), extended with `expo/tsconfig.base`.
 
 ## Prerequisites
 
 - Node.js (match the rest of this repo)
 - pnpm `10.x` (see `package.json` → `packageManager`)
+- (Android, optional) `adb` (Android Platform Tools)
 
 ## Setup
 
@@ -17,7 +23,12 @@ Expo / Expo Router port of the sibling [../web](../web) demo: sign-in via [Bette
 pnpm install --config.confirmModulesPurge=false
 ```
 
-Create `.env` (or `.env.local`) in this directory. Use the same variable names as `web`; add the public base URL for the native client.
+Create `.env` (or `.env.local`) in this directory.
+
+- Use the same variable names as `web`
+- Add the public base URL for the native client (`EXPO_PUBLIC_BETTER_AUTH_URL`)
+
+### Environment variables
 
 
 | Variable                        | Purpose                                                                                                                                           |
@@ -30,6 +41,21 @@ Create `.env` (or `.env.local`) in this directory. Use the same variable names a
 | `EXPO_PUBLIC_BETTER_AUTH_URL`   | Same origin as `BETTER_AUTH_URL` for the JS client (required on native when auto-detection is wrong).                                             |
 
 
+Example `.env.local`:
+
+```bash
+BETTER_AUTH_URL=http://localhost:8081
+EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:8081
+
+# Server-only secret
+BETTER_AUTH_SECRET=replace-me
+
+# Your IdP settings (Cognito / OIDC)
+CUSTOM_PROVIDER_CLIENT_ID=replace-me
+CUSTOM_PROVIDER_CLIENT_SECRET=replace-me
+CUSTOM_PROVIDER_DISCOVERY_URL=https://example.com/.well-known/openid-configuration
+```
+
 IdP redirect URI (must match `BETTER_AUTH_URL`):
 
 `{BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
@@ -40,11 +66,18 @@ IdP redirect URI (must match `BETTER_AUTH_URL`):
 pnpm dev
 ```
 
-Platform shortcuts:
+Then you can use the Expo CLI shortcuts in the terminal:
+
+- Press `a` to launch Android (requires a running Android emulator)
+- Press `i` to launch iOS (Simulator)
+- Press `w` to launch Web
+
+OR use platform shortcuts:
 
 ```bash
 pnpm run android
 pnpm run ios
+pnpm run web
 ```
 
 Typecheck:
@@ -53,8 +86,56 @@ Typecheck:
 pnpm run typecheck
 ```
 
+## Android (Emulator): accessing `localhost`
+
+This app (including the Better Auth handler on API routes) runs on the Expo dev server port (default: `8081`). If the Android emulator cannot reach your machine at `http://localhost:8081`, the OAuth callback + cookie handoff will fail.
+
+### Install `adb` (Android Platform Tools)
+
+macOS (Homebrew):
+
+```bash
+brew install android-platform-tools
+```
+
+Verify:
+
+```bash
+adb version
+adb devices
+```
+
+### Required: use `adb reverse`
+
+The Android emulator must be able to reach the dev server at `http://localhost:8081`. Make sure the emulator is running, then run:
+
+```bash
+adb reverse tcp:8081 tcp:8081
+```
+
+## iOS / Android: end-to-end runbook
+
+### iOS (Simulator)
+
+```bash
+pnpm ios
+```
+
+Then in the iOS Simulator:
+
+- Open the app
+- Tap **Sign in**
+- Complete the IdP flow in the browser sheet
+
+### Android (Emulator)
+
+Note: `pnpm android` requires a running Android emulator.
+
+```bash
+pnpm android
+```
+
 ## Notes
 
 - **Scheme**: `id-integration-demo-expo` (see `app.json`). It must stay aligned with `trustedOrigins` in `src/lib/auth.ts` and `scheme` in `src/lib/auth-client.ts`.
-- **Physical devices**: point `BETTER_AUTH_URL` and `EXPO_PUBLIC_BETTER_AUTH_URL` at a reachable host (your machine’s LAN IP or a tunnel), not `localhost`, and register that URL with your IdP.
 

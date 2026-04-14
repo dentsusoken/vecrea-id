@@ -12,6 +12,7 @@ web-build/
 npm-debug.*
 *.log
 .DS_Store
+*.tsbuildinfo
 .env
 .env.local
 .env.*.local
