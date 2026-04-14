@@ -9,7 +9,7 @@ This is the Expo / Expo Router demo app for **Better Auth + Generic OAuth** (`pr
 - **Server**: Better Auth handler is mounted as Expo Router **API Routes** under `app/api/auth/[...auth]+api.ts` (served at `/api/auth/`* during dev)
 - **IdP**: Any OIDC provider (example: Cognito Hosted UI), configured via env vars (see below)
 
-TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (package manager, path alias `@/`* → `./src/*`, etc.), extended with `expo/tsconfig.base`.
+TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (package manager, path alias `@/`* → `./src/`*, etc.), extended with `expo/tsconfig.base`.
 
 ## Prerequisites
 
