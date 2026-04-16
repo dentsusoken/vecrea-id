@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,15 +8,117 @@ import {
 import { router } from "expo-router";
 
 import { signIn, useSession } from "@/lib/auth-client";
-import { logAuthSession } from "@/lib/session-debug";
 
 /** Prevents overlapping `openAuthSession` calls across remounts / double-tap. */
 let oauth2StartInFlight = false;
 
+function isAbortError(e: unknown): boolean {
+  if (e instanceof Error && e.name === "AbortError") return true;
+  if (
+    typeof DOMException !== "undefined" &&
+    e instanceof DOMException &&
+    e.name === "AbortError"
+  )
+    return true;
+  const message = e instanceof Error ? e.message : String(e);
+  return message.toLowerCase().includes("abort");
+}
+
+type Oauth2SignInResult = Awaited<ReturnType<typeof signIn.oauth2>>;
+
+function isOauth2ErrorResult(res: Oauth2SignInResult): boolean {
+  return res.error != null;
+}
+
+function sessionDataHasUser(data: unknown): boolean {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "user" in data &&
+    (data as { user: unknown }).user != null
+  );
+}
+
+/**
+ * Try silent SSO (`prompt=none`); fall back to interactive OAuth when:
+ * - the sign-in POST returns an error, or throws (non-abort), or
+ * - the POST succeeds but `hasUserAfterRefetch` is false (e.g. OAuth failed in
+ *   the in-app browser and only `?error=` was returned).
+ */
+async function signInCustomWithPromptNoneFallback(options: {
+  hasUserAfterRefetch: () => Promise<boolean>;
+}): Promise<Oauth2SignInResult> {
+  const base = {
+    providerId: "custom" as const,
+    callbackURL: "/page",
+  };
+
+  let silent: Oauth2SignInResult;
+  try {
+    silent = await signIn.oauth2({
+      ...base,
+      additionalData: { prompt: "none" },
+    });
+  } catch (e) {
+    if (isAbortError(e)) throw e;
+    return signIn.oauth2({ ...base });
+  }
+
+  if (isOauth2ErrorResult(silent)) {
+    return signIn.oauth2({ ...base });
+  }
+
+  const hasUser = await options.hasUserAfterRefetch();
+  if (hasUser) return silent;
+
+  return signIn.oauth2({ ...base });
+}
+
+function oauth2ErrorMessage(err: Oauth2SignInResult["error"]): string {
+  if (err instanceof Error) return err.message;
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "message" in err &&
+    typeof (err as { message: unknown }).message === "string"
+  ) {
+    return (err as { message: string }).message;
+  }
+  return String(err);
+}
+
 /** Sign-in button entry point (inline implementation). */
 export function SignInButton() {
   const [busy, setBusy] = useState(false);
-  const { refetch } = useSession();
+  const { data: session, refetch } = useSession();
+  const sessionRef = useRef(session);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  async function refetchAndWaitForSessionPropagation() {
+    await refetch();
+    // Wait a few ticks for the session atom/store to propagate to React state.
+    // (Better Auth's refetch resolves after updating the atom, but React render can lag.)
+    for (let i = 0; i < 5; i++) {
+      await new Promise((r) => setTimeout(r, 0));
+      if (sessionRef.current !== session) break;
+    }
+  }
+
+  /**
+   * After OAuth returns, confirm whether a session exists (covers callback
+   * failures that do not surface as `signIn.oauth2` HTTP errors).
+   */
+  async function hasUserAfterRefetch(): Promise<boolean> {
+    await refetch();
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 32));
+      if (sessionDataHasUser(sessionRef.current)) return true;
+    }
+    return sessionDataHasUser(sessionRef.current);
+  }
 
   return (
     <Pressable
@@ -30,24 +132,25 @@ export function SignInButton() {
         if (busy || oauth2StartInFlight) return;
         oauth2StartInFlight = true;
         setBusy(true);
-        logAuthSession("SignInButton:press", {});
         try {
-          await signIn.oauth2({
-            providerId: "custom",
-            // Use a relative path so the Expo plugin can generate the correct deep link:
-            // - Expo Go dev: exp://...
-            // - standalone/dev-client: <scheme>://...
-            callbackURL: "/page",
+          const result = await signInCustomWithPromptNoneFallback({
+            hasUserAfterRefetch,
           });
-          logAuthSession("SignInButton:oauth2-settled", { ok: true });
-          await refetch();
+          if (isOauth2ErrorResult(result)) {
+            console.warn("[SignInButton] signIn.oauth2 failed", result.error);
+            Alert.alert("Sign in failed", oauth2ErrorMessage(result.error));
+            return;
+          }
+
+          await refetchAndWaitForSessionPropagation();
+
+          // Optional manual navigation after completion
           router.replace("/page");
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
-          logAuthSession("SignInButton:oauth2-settled", {
-            ok: false,
-            error: message,
-          });
+          if (isAbortError(e)) {
+            return;
+          }
           console.warn("[SignInButton] signIn.oauth2 failed", e);
           Alert.alert("Sign in failed", message);
         } finally {

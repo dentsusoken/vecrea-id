@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { expo } from "@better-auth/expo";
-import { customProvider } from "./providers/custom-provider";
+import { customProvider } from "@/lib/providers/custom-provider";
 
 function tryGetOrigin(url: string | undefined): string | null {
   if (!url) return null;
@@ -46,6 +46,20 @@ const envOrigins = [
 export const auth = betterAuth({
   baseURL: resolvedBaseURL,
   trustedOrigins: ["id-integration-demo-expo://", ...devTrustedOrigins, ...envOrigins],
+  onAPIError: {
+    // Avoid showing Better Auth's default error page inside iOS/Android auth sessions.
+    //
+    // NOTE: For Generic OAuth, callback errors that come back as `?error=...` are
+    // redirected to `onAPIError.errorURL` (not to `errorCallbackURL`).
+    //
+    // In Expo Go dev on the iOS simulator, `exp://127.0.0.1:8081/--/` is the
+    // app-return URL. Use it to close the auth session cleanly.
+    errorURL:
+      process.env.NODE_ENV === "development" &&
+      resolvedBaseURL.startsWith("http://localhost:8081")
+        ? "exp://127.0.0.1:8081/--/sign-in"
+        : `${resolvedBaseURL}/sign-in`,
+  },
   advanced: {
     useSecureCookies: Boolean(resolvedBaseURL.startsWith("https")),
   },

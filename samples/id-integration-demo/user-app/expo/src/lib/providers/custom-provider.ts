@@ -47,9 +47,24 @@ export const customProvider = genericOAuth({
     {
       providerId: "custom",
       clientId: process.env.CUSTOM_PROVIDER_CLIENT_ID as string,
-      clientSecret: process.env.CUSTOM_PROVIDER_CLIENT_SECRET as string,
+      // Public client: do NOT send a secret (even an empty string).
+      // clientSecret: (() => {
+      //   const s = process.env.CUSTOM_PROVIDER_CLIENT_SECRET;
+      //   return typeof s === "string" && s.trim().length > 0 ? s : undefined;
+      // })(),
+      // Make it explicit: this is a public client (token_endpoint_auth_method = none).
+      clientSecret: undefined,
       discoveryUrl: process.env.CUSTOM_PROVIDER_DISCOVERY_URL as string,
       scopes: ["openid", "email", "profile"],
+      pkce: true,
+      authorizationUrlParams: (ctx) => {
+        const additionalData =
+          (ctx.body as { additionalData?: Record<string, unknown> } | undefined)
+            ?.additionalData ?? {};
+        const prompt =
+          typeof additionalData.prompt === "string" ? additionalData.prompt : null;
+        return prompt ? { prompt } : {};
+      },
       mapProfileToUser: async (profile) =>
         mapOidcStyleProfileToUser(profile as Record<string, unknown>),
     },
