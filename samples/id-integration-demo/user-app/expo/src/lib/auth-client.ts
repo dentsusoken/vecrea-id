@@ -15,7 +15,7 @@ const resolvedBaseURL = resolveBaseURL();
 /**
  * Better Auth client with Expo storage + Generic OAuth (`signIn.oauth2`).
  */
-const authClient = createAuthClient({
+export const authClient = createAuthClient({
   baseURL: resolvedBaseURL,
   plugins: [
     expoClient({

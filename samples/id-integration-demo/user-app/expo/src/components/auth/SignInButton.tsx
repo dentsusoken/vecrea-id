@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-import { signIn, useSession } from "@/lib/auth-client";
+import { authClient, signIn, useSession } from "@/lib/auth-client";
 
 /** Prevents overlapping `openAuthSession` calls across remounts / double-tap. */
 let oauth2StartInFlight = false;
@@ -37,6 +37,13 @@ function sessionDataHasUser(data: unknown): boolean {
     "user" in data &&
     (data as { user: unknown }).user != null
   );
+}
+
+/** Session payload from Better Auth's nanostore (not React state — avoids iOS ref lag). */
+function sessionUserFromAuthStore(): unknown {
+  type SessionAtomSnapshot = { data?: unknown };
+  const snap = authClient.$store.atoms.session.get() as SessionAtomSnapshot;
+  return snap?.data ?? null;
 }
 
 /**
@@ -110,14 +117,19 @@ export function SignInButton() {
   /**
    * After OAuth returns, confirm whether a session exists (covers callback
    * failures that do not surface as `signIn.oauth2` HTTP errors).
+   *
+   * Read from `authClient.$store.atoms.session` so we do not depend on React
+   * `sessionRef` (on iOS, `useEffect` can lag behind refetch and falsely trigger
+   * a second interactive `signIn.oauth2`).
    */
   async function hasUserAfterRefetch(): Promise<boolean> {
     await refetch();
-    for (let i = 0; i < 25; i++) {
-      await new Promise((r) => setTimeout(r, 32));
-      if (sessionDataHasUser(sessionRef.current)) return true;
+    if (sessionDataHasUser(sessionUserFromAuthStore())) return true;
+    for (let i = 0; i < 12; i++) {
+      await new Promise((r) => setTimeout(r, 48));
+      if (sessionDataHasUser(sessionUserFromAuthStore())) return true;
     }
-    return sessionDataHasUser(sessionRef.current);
+    return sessionDataHasUser(sessionUserFromAuthStore());
   }
 
   return (
