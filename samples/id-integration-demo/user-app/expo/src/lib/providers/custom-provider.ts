@@ -46,15 +46,15 @@ export const customProvider = genericOAuth({
   config: [
     {
       providerId: "custom",
-      clientId: process.env.CUSTOM_PROVIDER_CLIENT_ID as string,
+      clientId: process.env.EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID as string,
       // Public client: do NOT send a secret (even an empty string).
       // clientSecret: (() => {
-      //   const s = process.env.CUSTOM_PROVIDER_CLIENT_SECRET;
+      //   const s = process.env.EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_SECRET;
       //   return typeof s === "string" && s.trim().length > 0 ? s : undefined;
       // })(),
       // Make it explicit: this is a public client (token_endpoint_auth_method = none).
       clientSecret: undefined,
-      discoveryUrl: process.env.CUSTOM_PROVIDER_DISCOVERY_URL as string,
+      discoveryUrl: process.env.EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL as string,
       scopes: ["openid", "email", "profile"],
       pkce: true,
       authorizationUrlParams: (ctx) => {

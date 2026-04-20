@@ -29,12 +29,10 @@ const devTrustedOrigins =
  * want `localhost`. Always resolve a concrete string.
  */
 const resolvedBaseURL =
-  process.env.BETTER_AUTH_URL?.trim() ||
   process.env.EXPO_PUBLIC_BETTER_AUTH_URL?.trim() ||
   "http://localhost:8081";
 
 const envOrigins = [
-  tryGetOrigin(process.env.BETTER_AUTH_URL),
   tryGetOrigin(process.env.EXPO_PUBLIC_BETTER_AUTH_URL),
   tryGetOrigin(resolvedBaseURL),
 ].filter(Boolean) as string[];
