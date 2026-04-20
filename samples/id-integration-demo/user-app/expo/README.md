@@ -23,12 +23,17 @@ TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (p
 pnpm install --config.confirmModulesPurge=false
 ```
 
-Create `.env` (or `.env.local`) in this directory.
-
-- Set the public base URL for this app (`EXPO_PUBLIC_BETTER_AUTH_URL`)
-- Configure your IdP settings (`EXPO_PUBLIC_CUSTOM_PROVIDER_*`)
-
 ### Environment variables
+
+For **distributed builds** (EAS Build / EAS Update), configure variables in the EAS dashboard (recommended).
+
+- Create/update variables in the `preview` environment (Project settings → Environment variables).
+- Use the variable names listed below.
+
+For **local development** (`pnpm dev`), you can either:
+
+- use EAS variables locally via `eas env:pull --environment preview`, or
+- create `.env.local` in this directory with the same variable names.
 
 | Variable                                    | Purpose                                                                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +41,7 @@ Create `.env` (or `.env.local`) in this directory.
 | `EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                                                                                                  |
 | `EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL` | OpenID configuration URL                                                                                                                          |
 
-Example `.env.local`:
+Example values:
 
 ```bash
 EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:8081
@@ -50,7 +55,7 @@ IdP redirect URI (must match `EXPO_PUBLIC_BETTER_AUTH_URL`):
 
 `{EXPO_PUBLIC_BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
 
-## EAS Build (cloud) quickstart
+## EAS Build (cloud)
 
 - Create an Expo account: https://expo.dev/signup
 - Create/configure your first EAS Build project (this will guide you through installing EAS CLI, logging in, and configuring the project): https://docs.expo.dev/build/setup/
@@ -69,7 +74,26 @@ pnpm eas:build:android
 pnpm eas:build:all
 ```
 
-## EAS Update (OTA) quickstart
+### Install the build (Android / iOS)
+
+After the build finishes, open the build details page in the EAS dashboard and use one of the options below.
+
+> Note: Install links and access requirements can vary by project settings and may expire or require sign-in. If you're not sure which link to use or how long it stays valid, confirm the intended install flow with the app/project owner.
+
+#### Android (device / emulator)
+
+- Click **Install** on the Android build artifact.
+- Copy the install link (or use the QR code), open it **inside the Android Emulator**, and complete the install flow on Android.
+  - You may need to allow installing apps from an unknown source on the emulator.
+
+#### iOS (Simulator)
+
+This repo builds iOS **Simulator** artifacts (`ios.simulator: true`).
+
+- Download the iOS simulator build on your Mac from the build page (**Download**).
+- In the build artifact menu (next to **Download**), use **Run on your simulator** and follow the on-screen instructions to install it.
+
+## EAS Update (OTA)
 
 Publish an over-the-air update to the `preview` channel:
 
@@ -86,7 +110,7 @@ pnpm eas:update
 - A build will apply updates only if the **runtimeVersion** matches (this repo uses `runtimeVersion.policy = "appVersion"`).
 - By default, `expo-updates` checks for updates on launch. If the download finishes quickly enough it may apply on the same launch, otherwise it will apply on the next launch.
 
-## Run (pnpm only)
+## Local development
 
 ```bash
 pnpm dev
@@ -139,7 +163,7 @@ The Android emulator must be able to reach the dev server at `http://localhost:8
 adb reverse tcp:8081 tcp:8081
 ```
 
-## iOS / Android: end-to-end runbook
+## iOS / Android: end-to-end runbook (local dev)
 
 ### iOS (Simulator)
 
