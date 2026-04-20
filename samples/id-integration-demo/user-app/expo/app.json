@@ -1,9 +1,12 @@
 {
   "expo": {
     "name": "id-integration-demo-expo",
-    "slug": "id-integration-demo-expo",
+    "slug": "id-integration-demo",
     "scheme": "id-integration-demo-expo",
     "version": "0.0.1",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,22 +18,38 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vecrea.idintegration.expo"
+      "bundleIdentifier": "com.vecrea.idintegration.demo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#fafafa"
       },
-      "package": "com.vecrea.idintegration.expo"
+      "package": "com.vecrea.idintegration.demo"
     },
     "web": {
       "bundler": "metro",
       "output": "server"
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/d9aba3c8-5310-45e0-a5d6-150cf401f740"
+    },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d9aba3c8-5310-45e0-a5d6-150cf401f740"
+      }
+    },
+    "owner": "fukuhara-m"
   }
 }

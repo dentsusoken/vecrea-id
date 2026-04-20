@@ -23,6 +23,25 @@ TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (p
 pnpm install --config.confirmModulesPurge=false
 ```
 
+## EAS Build (cloud) quickstart
+
+- Create an Expo account: https://expo.dev/signup
+- Create/configure your first EAS Build project (this will guide you through installing EAS CLI, logging in, and configuring the project): https://docs.expo.dev/build/setup/
+
+After project setup is complete, you can trigger builds with either EAS CLI directly or the `pnpm` shortcuts in this repo:
+
+```bash
+# EAS CLI
+eas build --platform ios --profile preview
+eas build --platform android --profile preview
+eas build --platform all --profile preview
+
+# pnpm shortcuts (same as above)
+pnpm eas:build:ios
+pnpm eas:build:android
+pnpm eas:build:all
+```
+
 Create `.env` (or `.env.local`) in this directory.
 
 - Set the public base URL for this app (`EXPO_PUBLIC_BETTER_AUTH_URL`)
