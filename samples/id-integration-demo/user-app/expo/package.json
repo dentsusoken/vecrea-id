@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "eas:build:ios": "eas build --platform ios --profile preview",
     "eas:build:android": "eas build --platform android --profile preview",
-    "eas:build:all": "eas build --platform all --profile preview"
+    "eas:build:all": "eas build --platform all --profile preview",
+    "eas:update": "eas update --channel preview --environment preview"
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {

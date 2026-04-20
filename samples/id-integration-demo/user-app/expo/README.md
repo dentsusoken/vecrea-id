@@ -23,6 +23,33 @@ TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (p
 pnpm install --config.confirmModulesPurge=false
 ```
 
+Create `.env` (or `.env.local`) in this directory.
+
+- Set the public base URL for this app (`EXPO_PUBLIC_BETTER_AUTH_URL`)
+- Configure your IdP settings (`EXPO_PUBLIC_CUSTOM_PROVIDER_*`)
+
+### Environment variables
+
+| Variable                                    | Purpose                                                                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_BETTER_AUTH_URL`               | Public base URL of this app (server + redirects). Example dev: `http://localhost:8081` (Expo dev server; use your LAN IP from a physical device). |
+| `EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                                                                                                  |
+| `EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL` | OpenID configuration URL                                                                                                                          |
+
+Example `.env.local`:
+
+```bash
+EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:8081
+
+# Your IdP settings (Cognito / OIDC)
+EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID=replace-me
+EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL=https://example.com/.well-known/openid-configuration
+```
+
+IdP redirect URI (must match `EXPO_PUBLIC_BETTER_AUTH_URL`):
+
+`{EXPO_PUBLIC_BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
+
 ## EAS Build (cloud) quickstart
 
 - Create an Expo account: https://expo.dev/signup
@@ -42,34 +69,22 @@ pnpm eas:build:android
 pnpm eas:build:all
 ```
 
-Create `.env` (or `.env.local`) in this directory.
+## EAS Update (OTA) quickstart
 
-- Set the public base URL for this app (`EXPO_PUBLIC_BETTER_AUTH_URL`)
-- Configure your IdP settings (`EXPO_PUBLIC_CUSTOM_PROVIDER_*`)
-
-### Environment variables
-
-
-| Variable                                    | Purpose                                                                                                                                           |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_BETTER_AUTH_URL`               | Public base URL of this app (server + redirects). Example dev: `http://localhost:8081` (Expo dev server; use your LAN IP from a physical device). |
-| `EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                                                                                                  |
-| `EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL` | OpenID configuration URL                                                                                                                          |
-
-
-Example `.env.local`:
+Publish an over-the-air update to the `preview` channel:
 
 ```bash
-EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:8081
+eas update --channel preview --environment preview
 
-# Your IdP settings (Cognito / OIDC)
-EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID=replace-me
-EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL=https://example.com/.well-known/openid-configuration
+# or via pnpm (same as above)
+pnpm eas:update
 ```
 
-IdP redirect URI (must match `EXPO_PUBLIC_BETTER_AUTH_URL`):
+### How updates are applied on devices
 
-`{EXPO_PUBLIC_BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
+- A build will fetch updates only if the **channel** matches (this repo uses `preview`).
+- A build will apply updates only if the **runtimeVersion** matches (this repo uses `runtimeVersion.policy = "appVersion"`).
+- By default, `expo-updates` checks for updates on launch. If the download finishes quickly enough it may apply on the same launch, otherwise it will apply on the next launch.
 
 ## Run (pnpm only)
 
