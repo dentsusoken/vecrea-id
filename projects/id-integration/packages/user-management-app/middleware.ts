@@ -1,4 +1,5 @@
 import { AUTH_POST_LOGIN_COOKIE } from '@/lib/auth-post-login';
+import { publicOriginFromRequest } from '@/lib/public-origin';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -33,7 +34,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const signIn = new URL('/api/auth/sign-in', request.url);
+  const origin = publicOriginFromRequest(request);
+  const signIn = new URL('/api/auth/sign-in', origin);
   const redirectRes = NextResponse.redirect(signIn);
   const path = request.nextUrl.pathname + request.nextUrl.search;
   redirectRes.cookies.set(AUTH_POST_LOGIN_COOKIE, path, {
