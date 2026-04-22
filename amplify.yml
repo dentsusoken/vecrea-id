@@ -13,8 +13,13 @@ applications:
             # CWD = appRoot (packages/user-management-app). Must match Amplify monorepo app root in console.
             # SSR / server auth: bake env into .env.production for next build.
             # @see https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html
+            # NEXT_PUBLIC_* は next build の時点でインライン化される。コンソール未設定・プレビュー枝のみ未継承などだとクライアントで Missing env になる。
             - |
               set -e
+              if [ -z "${NEXT_PUBLIC_COGNITO_USER_POOL_ID:-}" ] || [ -z "${NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID:-}" ]; then
+                echo "ERROR: Build env missing Cognito. In Amplify Console: App settings > Environment variables, set NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID for this branch (preview branches: enable vars or add per-branch), then redeploy so next build sees them."
+                exit 1
+              fi
               if [ -z "${AMPLIFY_APP_ORIGIN:-}" ]; then
                 export AMPLIFY_APP_ORIGIN="https://${AWS_BRANCH}.${AWS_APP_ID}.amplifyapp.com"
               fi
