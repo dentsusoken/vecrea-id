@@ -1,8 +1,9 @@
 import { Redirect, Link } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -30,14 +31,56 @@ function toPrettyJson(value: unknown): string {
  * `/sign-in` (same idea as the Next.js middleware gate on `/page`).
  */
 export default function AfterSignInPage() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, isRefetching, error, refetch } = useSession();
+  const [nativeVerified, setNativeVerified] = useState(false);
+  const pendingSinceRef = useRef<number | null>(null);
+  const instanceId = useMemo(() => Math.random().toString(16).slice(2, 8), []);
+  const nativeVerifyInFlightRef = useRef(false);
 
   useEffect(() => {
     logAuthSession("page/(main)/page:gate", {
+      instanceId,
       isPending,
+      isRefetching,
       hasUser: Boolean(session?.user),
+      error: error ? (error as Error).message ?? String(error) : null,
     });
-  }, [session, isPending]);
+  }, [session, isPending, isRefetching, error]);
+
+  useEffect(() => {
+    if (!isPending) {
+      pendingSinceRef.current = null;
+      return;
+    }
+    if (pendingSinceRef.current == null) pendingSinceRef.current = Date.now();
+    const id = setTimeout(() => {
+      const ms = pendingSinceRef.current ? Date.now() - pendingSinceRef.current : null;
+      logAuthSession("page/(main)/page:pending_too_long", { ms });
+    }, 4000);
+    return () => clearTimeout(id);
+  }, [isPending]);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (nativeVerified) return;
+    if (nativeVerifyInFlightRef.current) return;
+    if (isPending) return;
+    if (session?.user) return;
+    nativeVerifyInFlightRef.current = true;
+    logAuthSession("page/(main)/page:native_verify:effect_start", {
+      instanceId,
+      nativeVerified,
+    });
+    void (async () => {
+      try {
+        await refetch();
+      } finally {
+        nativeVerifyInFlightRef.current = false;
+        logAuthSession("page/(main)/page:native_verify:set_true", { instanceId });
+        setNativeVerified(true);
+      }
+    })();
+  }, [isPending, nativeVerified, refetch, session?.user]);
 
   if (isPending) {
     return (
@@ -48,7 +91,22 @@ export default function AfterSignInPage() {
   }
 
   if (!session?.user) {
-    return <Redirect href="/sign-in" />;
+    if (Platform.OS !== "web" && !nativeVerified) {
+      logAuthSession("page/(main)/page:native_verify", {
+        instanceId,
+        isPending,
+        nativeVerified,
+      });
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator />
+        </View>
+      );
+    }
+    logAuthSession("page/(main)/page:redirect", {
+      to: Platform.OS === "web" ? "/sign-in" : "/mobile-sign-in",
+    });
+    return <Redirect href={Platform.OS === "web" ? "/sign-in" : "/mobile-sign-in"} />;
   }
 
   const user = session.user as Record<string, unknown>;

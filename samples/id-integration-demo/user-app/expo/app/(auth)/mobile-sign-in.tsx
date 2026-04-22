@@ -63,6 +63,10 @@ export default function MobileSignInPage() {
 
     void (async () => {
       try {
+        logAuthSession("mobile-sign-in:begin", {
+          signInBrowserUrl: truncateUrl(signInBrowserUrl),
+          returnUrl: truncateUrl(returnUrl),
+        });
         const result = await WebBrowser.openAuthSessionAsync(signInBrowserUrl, returnUrl);
         if (result.type !== "success") {
           logAuthSession("SIGNIN_FLOW:authSession:done", {
