@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
@@ -97,7 +97,21 @@ export default function MobileSignInPage() {
         <ActivityIndicator />
         <Text style={styles.hint}>Opening sign in…</Text>
         <Text style={styles.subhint}>Continue in the in-app browser.</Text>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.error}>{error}</Text>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.homeButton,
+                pressed && styles.homeButtonPressed,
+              ]}
+              onPress={() => router.replace("/")}
+            >
+              <Text style={styles.homeButtonText}>Back to Home</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -124,8 +138,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#52525b",
   },
+  errorBox: {
+    alignItems: "center",
+    gap: 10,
+    marginTop: 4,
+  },
   error: {
     fontSize: 12,
     color: "#dc2626",
+  },
+  homeButton: {
+    borderRadius: 8,
+    backgroundColor: "#18181b",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  homeButtonPressed: {
+    opacity: 0.85,
+  },
+  homeButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
