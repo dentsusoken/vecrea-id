@@ -1,4 +1,3 @@
-import { AUTH_POST_LOGIN_COOKIE } from '@/lib/auth-post-login';
 import { publicOriginFromRequest } from '@/lib/public-origin';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -35,24 +34,11 @@ export async function middleware(request: NextRequest) {
   }
 
   const origin = publicOriginFromRequest(request);
-  const signIn = new URL('/api/auth/sign-in', origin);
-  const redirectRes = NextResponse.redirect(signIn);
-  const path = request.nextUrl.pathname + request.nextUrl.search;
-  redirectRes.cookies.set(AUTH_POST_LOGIN_COOKIE, path, {
-    path: '/',
-    maxAge: 900,
-    sameSite: 'lax',
-    secure: request.nextUrl.protocol === 'https:',
-    httpOnly: true,
-  });
-  return redirectRes;
+  return NextResponse.redirect(new URL('/login', origin));
 }
 
 export const config = {
   matcher: [
-    /*
-     * Skip static assets, Next internals, all API routes (including /api/auth/*), and favicon.
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
