@@ -8,9 +8,21 @@ import {
 import { router } from "expo-router";
 
 import { authClient, signIn, useSession } from "@/lib/auth-client";
+import { logAuthSession } from "@/lib/session-debug";
 
 /** Prevents overlapping `openAuthSession` calls across remounts / double-tap. */
 let oauth2StartInFlight = false;
+
+function now() {
+  return new Date().toISOString();
+}
+
+function describeError(err: unknown): unknown {
+  if (err instanceof Error) {
+    return { name: err.name, message: err.message, stack: err.stack };
+  }
+  return err;
+}
 
 function isAbortError(e: unknown): boolean {
   if (e instanceof Error && e.name === "AbortError") return true;
@@ -54,10 +66,11 @@ function sessionUserFromAuthStore(): unknown {
  */
 async function signInCustomWithPromptNoneFallback(options: {
   hasUserAfterRefetch: () => Promise<boolean>;
+  callbackURL?: string;
 }): Promise<Oauth2SignInResult> {
   const base = {
     providerId: "custom" as const,
-    callbackURL: "/page",
+    callbackURL: options.callbackURL ?? "/page",
   };
 
   let silent: Oauth2SignInResult;
@@ -68,16 +81,28 @@ async function signInCustomWithPromptNoneFallback(options: {
     });
   } catch (e) {
     if (isAbortError(e)) throw e;
+    logAuthSession("SIGNIN_FLOW:fallback", {
+      at: now(),
+      reason: "silent_throw",
+    });
     return signIn.oauth2({ ...base });
   }
 
   if (isOauth2ErrorResult(silent)) {
+    logAuthSession("SIGNIN_FLOW:fallback", {
+      at: now(),
+      reason: "silent_error_result",
+    });
     return signIn.oauth2({ ...base });
   }
 
   const hasUser = await options.hasUserAfterRefetch();
   if (hasUser) return silent;
 
+  logAuthSession("SIGNIN_FLOW:fallback", {
+    at: now(),
+    reason: "no_user_after_silent",
+  });
   return signIn.oauth2({ ...base });
 }
 
@@ -94,8 +119,17 @@ function oauth2ErrorMessage(err: Oauth2SignInResult["error"]): string {
   return String(err);
 }
 
+export type SignInButtonProps = {
+  /**
+   * OAuth post-sign-in URL (e.g. app deep link from `Linking.createURL("/page")`).
+   * When set to a non-http(s) URL, this flow returns to the host app; skip local
+   * `router.replace` after `signIn.oauth2` (the host handles the deep link).
+   */
+  oauthCallbackURL?: string;
+};
+
 /** Sign-in button entry point (inline implementation). */
-export function SignInButton() {
+export function SignInButton({ oauthCallbackURL }: SignInButtonProps) {
   const [busy, setBusy] = useState(false);
   const { data: session, refetch } = useSession();
   const sessionRef = useRef(session);
@@ -145,8 +179,10 @@ export function SignInButton() {
         oauth2StartInFlight = true;
         setBusy(true);
         try {
+          const callbackURL = oauthCallbackURL ?? "/page";
           const result = await signInCustomWithPromptNoneFallback({
             hasUserAfterRefetch,
+            callbackURL,
           });
           if (isOauth2ErrorResult(result)) {
             console.warn("[SignInButton] signIn.oauth2 failed", result.error);
@@ -154,10 +190,27 @@ export function SignInButton() {
             return;
           }
 
-          await refetchAndWaitForSessionPropagation();
+          const returnToHostApp =
+            oauthCallbackURL != null &&
+            !/^https?:\/\//i.test(oauthCallbackURL.trim());
+          const hasUser = await hasUserAfterRefetch();
+          if (!hasUser) {
+            logAuthSession("SIGNIN_FLOW:missing_session", {
+              at: now(),
+              callbackURL,
+              oauthCallbackURL: oauthCallbackURL ?? null,
+            });
+            Alert.alert(
+              "Sign in failed",
+              "OAuth finished but no session was created. Please try again.",
+            );
+            return;
+          }
 
-          // Optional manual navigation after completion
-          router.replace("/page");
+          if (!returnToHostApp) {
+            await refetchAndWaitForSessionPropagation();
+            router.replace("/page");
+          }
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           if (isAbortError(e)) {

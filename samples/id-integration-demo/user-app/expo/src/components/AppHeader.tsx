@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
@@ -24,6 +24,8 @@ export function AppHeader() {
   }, [session, isPending, isRefetching, error]);
   const insets = useSafeAreaInsets();
   const barStyle = [styles.bar, { paddingTop: insets.top + 10 }];
+  const signInHref: "/sign-in" | "/mobile-sign-in" =
+    Platform.OS === "web" ? "/sign-in" : "/mobile-sign-in";
 
   // Better Auth may leave `data` as a truthy object with no `user` after sign-out;
   // gate on `user`, not on `data` alone.
@@ -31,7 +33,7 @@ export function AppHeader() {
     return (
       <View style={barStyle}>
         <View style={{ flex: 1 }} />
-        <Link href="/sign-in" style={styles.primaryLink}>
+        <Link href={signInHref} style={styles.primaryLink}>
           <Text style={styles.primaryLinkText}>Sign in</Text>
         </Link>
       </View>
