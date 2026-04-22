@@ -5,37 +5,36 @@ applications:
         preBuild:
           commands:
             - npm install -g pnpm@10.33.0
-            - cd ../.. && pnpm install --frozen-lockfile
+            - pnpm install --frozen-lockfile
         build:
           commands:
-            # SSR / server auth: bake AMPLIFY_APP_ORIGIN and NEXT_PUBLIC_* into .env.production
+            # SSR / server auth: write .env.production next to the Next app, then build via workspace filter.
             # @see https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html
             - |
               set -e
+              APP_DIR=packages/user-management-app
               if [ -z "${AMPLIFY_APP_ORIGIN:-}" ]; then
                 export AMPLIFY_APP_ORIGIN="https://${AWS_BRANCH}.${AWS_APP_ID}.amplifyapp.com"
               fi
               if [ -z "${NEXT_PUBLIC_APP_ORIGIN:-}" ]; then
                 export NEXT_PUBLIC_APP_ORIGIN="$AMPLIFY_APP_ORIGIN"
               fi
-              rm -f .env.production
-              echo "AMPLIFY_APP_ORIGIN=$AMPLIFY_APP_ORIGIN" >> .env.production
-              echo "NEXT_PUBLIC_APP_ORIGIN=$NEXT_PUBLIC_APP_ORIGIN" >> .env.production
-              # Browser-exposed vars from the Amplify console (e.g. Cognito).
-              env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
-              # Server-only BFF / upstream (see packages/user-management-app/.env.example).
-              env | grep -e '^USER_MANAGEMENT_API_BASE_URL=' >> .env.production || true
-              env | grep -e '^OAUTH_TOKEN_URL=' >> .env.production || true
-              env | grep -e '^OAUTH_CLIENT_ID=' >> .env.production || true
-              env | grep -e '^OAUTH_CLIENT_SECRET=' >> .env.production || true
-              env | grep -e '^OAUTH_SCOPE=' >> .env.production || true
-            - pnpm run build
+              rm -f "$APP_DIR/.env.production"
+              echo "AMPLIFY_APP_ORIGIN=$AMPLIFY_APP_ORIGIN" >> "$APP_DIR/.env.production"
+              echo "NEXT_PUBLIC_APP_ORIGIN=$NEXT_PUBLIC_APP_ORIGIN" >> "$APP_DIR/.env.production"
+              env | grep -e '^NEXT_PUBLIC_' >> "$APP_DIR/.env.production" || true
+              env | grep -e '^USER_MANAGEMENT_API_BASE_URL=' >> "$APP_DIR/.env.production" || true
+              env | grep -e '^OAUTH_TOKEN_URL=' >> "$APP_DIR/.env.production" || true
+              env | grep -e '^OAUTH_CLIENT_ID=' >> "$APP_DIR/.env.production" || true
+              env | grep -e '^OAUTH_CLIENT_SECRET=' >> "$APP_DIR/.env.production" || true
+              env | grep -e '^OAUTH_SCOPE=' >> "$APP_DIR/.env.production" || true
+              pnpm --filter user-management-app run build
       artifacts:
-        baseDirectory: .next
+        baseDirectory: packages/user-management-app/.next
         files:
           - '**/*'
       cache:
         paths:
-          - .next/cache/**/*
+          - packages/user-management-app/.next/cache/**/*
           - node_modules/**/*
-    appRoot: projects/id-integration/packages/user-management-app
+    appRoot: projects/id-integration
