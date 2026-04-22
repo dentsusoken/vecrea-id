@@ -1,5 +1,9 @@
 import Link from 'next/link';
 
+/** Cognito 経由のログアウト（`@aws-amplify/adapter-nextjs` の `/api/auth/sign-out`）。ローカル dev は認証バイパスのため非表示。 */
+const showSignOut =
+  process.env.NODE_ENV === 'production';
+
 export function AppNav() {
   return (
     <header className="bg-um-titlebar text-white px-4 py-3 shadow-sm">
@@ -29,6 +33,14 @@ export function AppNav() {
           >
             Staging
           </Link>
+          {showSignOut ? (
+            <a
+              href="/api/auth/sign-out"
+              className="text-white/90 no-underline hover:text-white hover:underline"
+            >
+              Sign out
+            </a>
+          ) : null}
         </nav>
       </div>
     </header>
