@@ -1,14 +1,18 @@
 'use client';
 
+import { ensureAmplifyConfiguredOnClient } from '@/lib/amplify-client';
 import { confirmSignIn, signIn } from 'aws-amplify/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 type Step = 'email' | 'otp';
 
 export function LoginForm() {
   const router = useRouter();
+  useLayoutEffect(() => {
+    ensureAmplifyConfiguredOnClient();
+  }, []);
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -21,6 +25,7 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
+      ensureAmplifyConfiguredOnClient();
       const trimmed = email.trim();
       const { isSignedIn, nextStep } = await signIn({
         username: trimmed,
@@ -88,6 +93,7 @@ export function LoginForm() {
     setError(null);
     setPending(true);
     try {
+      ensureAmplifyConfiguredOnClient();
       const { isSignedIn, nextStep } = await confirmSignIn({
         challengeResponse: code.trim(),
       });

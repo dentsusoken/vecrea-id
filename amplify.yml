@@ -24,6 +24,13 @@ applications:
               rm -f .env.production
               echo "AMPLIFY_APP_ORIGIN=$AMPLIFY_APP_ORIGIN" >> .env.production
               echo "NEXT_PUBLIC_APP_ORIGIN=$NEXT_PUBLIC_APP_ORIGIN" >> .env.production
+              # Next はビルド時に NEXT_PUBLIC_* をクライアントへ埋め込む。コンソールだけで設定している変数も確実に .env.production へ。
+              if [ -n "${NEXT_PUBLIC_COGNITO_USER_POOL_ID:-}" ]; then
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=$NEXT_PUBLIC_COGNITO_USER_POOL_ID" >> .env.production
+              fi
+              if [ -n "${NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID:-}" ]; then
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=$NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID" >> .env.production
+              fi
               env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
               env | grep -e '^USER_MANAGEMENT_API_BASE_URL=' >> .env.production || true
               env | grep -e '^OAUTH_TOKEN_URL=' >> .env.production || true
