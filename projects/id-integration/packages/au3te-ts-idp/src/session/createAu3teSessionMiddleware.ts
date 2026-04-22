@@ -59,9 +59,10 @@ export function createAu3teSessionMiddleware(
 
       setCookie(c, cookieName, sessionId, {
         path: '/',
-        httpOnly: true,
+        // httpOnly: true,
         sameSite: secure ? 'None' : 'Lax',
         secure,
+        maxAge: 3600
       });
     }
   };

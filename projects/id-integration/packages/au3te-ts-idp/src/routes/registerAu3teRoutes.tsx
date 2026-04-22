@@ -17,6 +17,7 @@ import { jsxRenderer } from 'hono/jsx-renderer';
 import type { Au3teHonoEnv } from '../composition/createAu3teHandlers';
 import { AuthorizationConsentPage } from '../views/AuthorizationConsentPage';
 import { applyUpstreamSetCookiesToContext } from './forwardSetCookie';
+import { normalizeAuthorizationPageModelJson } from './normalizeAuthorizationPageModelJson';
 import { resolvePublicApiPath } from './resolvePublicApiPath';
 
 const FEDERATION_INITIATION_PREFIX =
@@ -57,7 +58,9 @@ async function respondWithAuthorizationConsentIfJson(
     });
   }
 
-  const parsed = authorizationPageModelSchema.safeParse(json);
+  const parsed = authorizationPageModelSchema.safeParse(
+    normalizeAuthorizationPageModelJson(json)
+  );
   if (!parsed.success) {
     return new Response(text, {
       status: upstream.status,

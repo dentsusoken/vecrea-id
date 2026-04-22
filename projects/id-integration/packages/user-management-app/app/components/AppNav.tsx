@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SignOutButton } from './SignOutButton';
 
 export function AppNav() {
   return (
@@ -29,6 +30,7 @@ export function AppNav() {
           >
             Staging
           </Link>
+          <SignOutButton />
         </nav>
       </div>
     </header>
