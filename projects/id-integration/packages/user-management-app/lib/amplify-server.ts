@@ -1,19 +1,10 @@
-import { createServerRunner, type NextServer } from '@aws-amplify/adapter-nextjs';
-import { getAmplifyResourcesConfig } from './amplify-config';
+import { createServerRunner } from "@aws-amplify/adapter-nextjs";
+import { getAmplifyAuthConfig } from "@/lib/amplify-config";
 
-let runner: NextServer.CreateServerRunnerOutput | null = null;
+const { runWithAmplifyServerContext, createAuthRouteHandlers } = createServerRunner(
+  {
+    config: getAmplifyAuthConfig(),
+  },
+);
 
-function getRunner(): NextServer.CreateServerRunnerOutput {
-  if (!runner) {
-    runner = createServerRunner({
-      config: getAmplifyResourcesConfig(),
-    });
-  }
-  return runner;
-}
-
-export function runWithAmplifyServerContext(
-  input: Parameters<NextServer.RunOperationWithContext>[0],
-): ReturnType<NextServer.RunOperationWithContext> {
-  return getRunner().runWithAmplifyServerContext(input);
-}
+export { runWithAmplifyServerContext, createAuthRouteHandlers };

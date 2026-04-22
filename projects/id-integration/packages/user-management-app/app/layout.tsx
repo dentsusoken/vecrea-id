@@ -23,10 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sourceSans.variable} h-full`}>
       <body className={`min-h-full flex flex-col font-sans antialiased`}>
-        <ConfigureAmplify>
+        <ConfigureAmplify />
           <AppNav />
           <main className="flex-1 bg-white text-um-text">{children}</main>
-        </ConfigureAmplify>
       </body>
     </html>
   );

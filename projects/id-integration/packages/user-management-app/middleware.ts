@@ -1,22 +1,10 @@
-import { publicOriginFromRequest } from '@/lib/public-origin';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-
-function shouldBypassAuth(): boolean {
-  return process.env.NODE_ENV === 'development';
-}
+import { NextRequest, NextResponse } from "next/server";
+import { fetchAuthSession } from "aws-amplify/auth/server";
+import { runWithAmplifyServerContext } from "@/lib/amplify-server";
 
 export async function middleware(request: NextRequest) {
-  if (shouldBypassAuth()) {
-    return NextResponse.next();
-  }
-
-  const [{ fetchAuthSession }, { runWithAmplifyServerContext }] = await Promise.all([
-    import('aws-amplify/auth/server'),
-    import('@/lib/amplify-server'),
-  ]);
-
   const response = NextResponse.next();
+
   const authenticated = await runWithAmplifyServerContext({
     nextServerContext: { request, response },
     operation: async (contextSpec) => {
@@ -33,12 +21,20 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const origin = publicOriginFromRequest(request);
-  return NextResponse.redirect(new URL('/login', origin));
+  const loginUrl = new URL("/login", request.url);
+  if (request.nextUrl.pathname !== "/login") {
+    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+  }
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    /*
+     * 次を除くパスを保護:
+     * - api, Next アセット, favicon, ログイン
+     * - 公開静的ファイル（拡張子）
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|login|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

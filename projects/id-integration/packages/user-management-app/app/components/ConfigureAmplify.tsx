@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import { ensureAmplifyConfiguredOnClient } from '@/lib/amplify-client';
-import { useLayoutEffect } from 'react';
+import { Amplify } from "aws-amplify";
+import { getAmplifyAuthConfig } from "@/lib/amplify-config";
 
-export function ConfigureAmplify({ children }: { children: React.ReactNode }) {
-  useLayoutEffect(() => {
-    ensureAmplifyConfiguredOnClient();
-  }, []);
-  return <>{children}</>;
+Amplify.configure(getAmplifyAuthConfig(), { ssr: true });
+
+export function ConfigureAmplify() {
+  return null;
 }

@@ -1,30 +1,38 @@
-import type { ResourcesConfig } from 'aws-amplify';
+import type { ResourcesConfig } from "aws-amplify";
 
-function required(name: string): string {
-  const v = process.env[name];
-  if (!v?.trim()) {
-    throw new Error(`Missing or empty environment variable: ${name}`);
-  }
-  return v.trim();
+function appOrigin(): string {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_ORIGIN ?? process.env.AMPLIFY_APP_ORIGIN ?? "";
+  return raw.replace(/\/$/, "");
 }
 
 /**
- * Cognito USER_AUTH + メール OTP（Hosted UI / OAuth なし）。
- * ユーザープールで Email OTP を有効化し、アプリクライアントに ALLOW_USER_AUTH を付与すること。
- * @see https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html
+ * Cognito マネージドログイン（Hosted UI / OAuth）向けの Amplify 設定。
+ *
+ * コンソール側ではアプリクライアントに次を登録してください（origin は環境と一致させる）:
+ * - コールバック URL: {origin}/api/auth/sign-in-callback
+ * - サインアウト URL: {origin}/api/auth/sign-out-callback
+ * - 許可された OAuth フロー: Authorization code grant
+ *
+ * @see https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-integrate-apps.html
  */
-export function getAmplifyResourcesConfig(): ResourcesConfig {
+export function getAmplifyAuthConfig(): ResourcesConfig {
+  const origin = appOrigin();
+  const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN ?? "";
+
   return {
     Auth: {
       Cognito: {
-        userPoolId: required('NEXT_PUBLIC_COGNITO_USER_POOL_ID'),
-        userPoolClientId: required('NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID'),
+        userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID ?? "",
+        userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID ?? "",
         loginWith: {
-          email: true,
-        },
-        passwordless: {
-          emailOtpEnabled: true,
-          preferredChallenge: 'EMAIL_OTP',
+          oauth: {
+            domain,
+            scopes: ["openid", "email", "profile"],
+            redirectSignIn: [`${origin}/api/auth/sign-in-callback`],
+            redirectSignOut: [`${origin}/api/auth/sign-out-callback`],
+            responseType: "code",
+          },
         },
       },
     },
