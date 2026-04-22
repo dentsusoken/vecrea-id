@@ -44,7 +44,17 @@ applications:
               echo "OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET" >> .env.production
               echo "OAUTH_SCOPE=$OAUTH_SCOPE" >> .env.production
               echo "AMPLIFY_APP_ORIGIN=$AMPLIFY_APP_ORIGIN" >> .env.production
+              # createAuthRouteHandlers / getAmplifyAuthConfig は next build 時に評価される。
+              # Cognito の NEXT_PUBLIC_* はここで必ず .env.production に含める（grep 任せにしない）。
+              echo "NEXT_PUBLIC_APP_ORIGIN=$NEXT_PUBLIC_APP_ORIGIN" >> .env.production
+              echo "NEXT_PUBLIC_USER_POOL_ID=$NEXT_PUBLIC_USER_POOL_ID" >> .env.production
+              echo "NEXT_PUBLIC_USER_POOL_CLIENT_ID=$NEXT_PUBLIC_USER_POOL_CLIENT_ID" >> .env.production
+              echo "NEXT_PUBLIC_COGNITO_DOMAIN=$NEXT_PUBLIC_COGNITO_DOMAIN" >> .env.production
               env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
+              if [ -z "${NEXT_PUBLIC_COGNITO_DOMAIN:-}" ] || [ -z "${NEXT_PUBLIC_USER_POOL_ID:-}" ] || [ -z "${NEXT_PUBLIC_USER_POOL_CLIENT_ID:-}" ]; then
+                echo "ERROR: Amplify Hosting の環境変数に Cognito 用の次が必要です（ブランチ継承・プレビュー含む）: NEXT_PUBLIC_COGNITO_DOMAIN, NEXT_PUBLIC_USER_POOL_ID, NEXT_PUBLIC_USER_POOL_CLIENT_ID"
+                exit 1
+              fi
             - npm run build
       artifacts:
         baseDirectory: .next

@@ -1,14 +1,21 @@
 import type { NextRequest } from "next/server";
 import { createAuthRouteHandlers } from "@/lib/amplify-server";
 
-const handleAuth = createAuthRouteHandlers({
-  redirectOnSignInComplete: "/",
-  redirectOnSignOutComplete: "/login",
-});
+let handleAuth: ReturnType<typeof createAuthRouteHandlers> | null = null;
+
+function getHandleAuth() {
+  if (!handleAuth) {
+    handleAuth = createAuthRouteHandlers({
+      redirectOnSignInComplete: "/",
+      redirectOnSignOutComplete: "/login",
+    });
+  }
+  return handleAuth;
+}
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
-  return handleAuth(request, { params: context.params });
+  return getHandleAuth()(request, { params: context.params });
 }
