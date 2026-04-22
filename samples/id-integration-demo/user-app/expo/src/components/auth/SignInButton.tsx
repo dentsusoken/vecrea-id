@@ -67,11 +67,16 @@ function sessionUserFromAuthStore(): unknown {
 async function signInCustomWithPromptNoneFallback(options: {
   hasUserAfterRefetch: () => Promise<boolean>;
   callbackURL?: string;
+  startMode?: "silent" | "interactive";
 }): Promise<Oauth2SignInResult> {
   const base = {
     providerId: "custom" as const,
     callbackURL: options.callbackURL ?? "/page",
   };
+
+  if (options.startMode === "interactive") {
+    return signIn.oauth2({ ...base });
+  }
 
   let silent: Oauth2SignInResult;
   try {
@@ -126,17 +131,84 @@ export type SignInButtonProps = {
    * `router.replace` after `signIn.oauth2` (the host handles the deep link).
    */
   oauthCallbackURL?: string;
+  /** Start interactive OAuth immediately (skips `prompt=none`). */
+  startMode?: "silent" | "interactive";
+  /** Auto-start OAuth on mount (used when returning with `?error=...`). */
+  autoStart?: boolean;
 };
 
 /** Sign-in button entry point (inline implementation). */
-export function SignInButton({ oauthCallbackURL }: SignInButtonProps) {
+export function SignInButton({
+  oauthCallbackURL,
+  startMode = "silent",
+  autoStart = false,
+}: SignInButtonProps) {
   const [busy, setBusy] = useState(false);
   const { data: session, refetch } = useSession();
   const sessionRef = useRef(session);
+  const autoStartRanRef = useRef(false);
 
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
+
+  async function runSignInFlow() {
+    const callbackURL = oauthCallbackURL ?? "/page";
+    const result = await signInCustomWithPromptNoneFallback({
+      hasUserAfterRefetch,
+      callbackURL,
+      startMode,
+    });
+    if (isOauth2ErrorResult(result)) {
+      console.warn("[SignInButton] signIn.oauth2 failed", result.error);
+      Alert.alert("Sign in failed", oauth2ErrorMessage(result.error));
+      return;
+    }
+
+    const returnToHostApp =
+      oauthCallbackURL != null &&
+      !/^https?:\/\//i.test(oauthCallbackURL.trim());
+    const hasUser = await hasUserAfterRefetch();
+    if (!hasUser) {
+      logAuthSession("SIGNIN_FLOW:missing_session", {
+        at: now(),
+        callbackURL,
+        oauthCallbackURL: oauthCallbackURL ?? null,
+      });
+      Alert.alert(
+        "Sign in failed",
+        "OAuth finished but no session was created. Please try again.",
+      );
+      return;
+    }
+
+    if (!returnToHostApp) {
+      await refetchAndWaitForSessionPropagation();
+      router.replace("/page");
+    }
+  }
+
+  useEffect(() => {
+    if (!autoStart) return;
+    if (autoStartRanRef.current) return;
+    if (busy || oauth2StartInFlight) return;
+    autoStartRanRef.current = true;
+    oauth2StartInFlight = true;
+    setBusy(true);
+    void (async () => {
+      try {
+        await runSignInFlow();
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        if (isAbortError(e)) return;
+        console.warn("[SignInButton] signIn.oauth2 failed", e);
+        Alert.alert("Sign in failed", message);
+      } finally {
+        setBusy(false);
+        oauth2StartInFlight = false;
+      }
+    })();
+  }, [autoStart, startMode, oauthCallbackURL]);
 
   async function refetchAndWaitForSessionPropagation() {
     await refetch();
@@ -179,38 +251,7 @@ export function SignInButton({ oauthCallbackURL }: SignInButtonProps) {
         oauth2StartInFlight = true;
         setBusy(true);
         try {
-          const callbackURL = oauthCallbackURL ?? "/page";
-          const result = await signInCustomWithPromptNoneFallback({
-            hasUserAfterRefetch,
-            callbackURL,
-          });
-          if (isOauth2ErrorResult(result)) {
-            console.warn("[SignInButton] signIn.oauth2 failed", result.error);
-            Alert.alert("Sign in failed", oauth2ErrorMessage(result.error));
-            return;
-          }
-
-          const returnToHostApp =
-            oauthCallbackURL != null &&
-            !/^https?:\/\//i.test(oauthCallbackURL.trim());
-          const hasUser = await hasUserAfterRefetch();
-          if (!hasUser) {
-            logAuthSession("SIGNIN_FLOW:missing_session", {
-              at: now(),
-              callbackURL,
-              oauthCallbackURL: oauthCallbackURL ?? null,
-            });
-            Alert.alert(
-              "Sign in failed",
-              "OAuth finished but no session was created. Please try again.",
-            );
-            return;
-          }
-
-          if (!returnToHostApp) {
-            await refetchAndWaitForSessionPropagation();
-            router.replace("/page");
-          }
+          await runSignInFlow();
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           if (isAbortError(e)) {

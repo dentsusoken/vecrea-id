@@ -50,13 +50,8 @@ export const auth = betterAuth({
     // NOTE: For Generic OAuth, callback errors that come back as `?error=...` are
     // redirected to `onAPIError.errorURL` (not to `errorCallbackURL`).
     //
-    // In Expo Go dev on the iOS simulator, `exp://127.0.0.1:8081/--/` is the
-    // app-return URL. Use it to close the auth session cleanly.
-    errorURL:
-      process.env.NODE_ENV === "development" &&
-      resolvedBaseURL.startsWith("http://localhost:8081")
-        ? "exp://127.0.0.1:8081/--/sign-in"
-        : `${resolvedBaseURL}/sign-in`,
+    // Keep this as HTTP(S) so web browsers never attempt to open `exp://...`.
+    errorURL: `${resolvedBaseURL}/sign-in`,
   },
   advanced: {
     useSecureCookies: Boolean(resolvedBaseURL.startsWith("https")),

@@ -7,6 +7,12 @@ import { SignInButton } from "@/components/auth/SignInButton";
 import { useSession } from "@/lib/auth-client";
 
 const APP_SCHEME = "id-integration-demo-expo:";
+const OIDC_PROMPT_NONE_ERRORS = new Set([
+  "login_required",
+  "interaction_required",
+  "consent_required",
+  "account_selection_required",
+]);
 
 function firstSearchParam(v: string | string[] | undefined): string | undefined {
   if (typeof v === "string") return v;
@@ -37,10 +43,18 @@ function parseTrustedOauthCallback(raw: string | undefined): string | undefined 
  */
 export default function SignInPage() {
   const { data: session, isPending } = useSession();
-  const params = useLocalSearchParams<{ oauthCallback?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    oauthCallback?: string | string[];
+    error?: string | string[];
+  }>();
   const oauthCallbackURL = useMemo(
     () => parseTrustedOauthCallback(firstSearchParam(params.oauthCallback)),
     [params.oauthCallback],
+  );
+  const error = useMemo(() => firstSearchParam(params.error), [params.error]);
+  const shouldAutoInteractive = useMemo(
+    () => (error ? OIDC_PROMPT_NONE_ERRORS.has(error) : false),
+    [error],
   );
 
   // Web UX: if already signed in, skip the sign-in screen and go straight to /page.
@@ -63,7 +77,11 @@ export default function SignInPage() {
           </Text>
         </View>
         <View style={styles.actions}>
-          <SignInButton oauthCallbackURL={oauthCallbackURL} />
+          <SignInButton
+            oauthCallbackURL={oauthCallbackURL}
+            startMode={shouldAutoInteractive ? "interactive" : "silent"}
+            autoStart={shouldAutoInteractive}
+          />
         </View>
       </View>
     </SafeAreaView>
