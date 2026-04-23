@@ -10,9 +10,11 @@ applications:
           commands:
             - npm i -g pnpm
             - pnpm install
-            # Amplify は appRoot 直下の node_modules/next の有無を検査する。hoisted では next はワークスペース根のみに置かれるため作る
+            # Amplify のビルド時検査用（シンボリックリンクにしない: standalone 内の next が絶対パス化するのを防ぐ）
             # @see https://github.com/aws-amplify/amplify-hosting/issues/4036
-            - mkdir -p packages/user-management-app/node_modules && ln -sfn "$PWD/node_modules/next" "packages/user-management-app/node_modules/next"
+            - rm -rf packages/user-management-app/node_modules/next
+            - mkdir -p packages/user-management-app/node_modules
+            - cp -R node_modules/next packages/user-management-app/node_modules/
         build:
           commands:
             # SSR（ミドルウェアの fetchAuthSession）用: AMPLIFY_APP_ORIGIN 等を .env.production へ出す
@@ -35,6 +37,21 @@ applications:
               echo "OAUTH_SCOPE=$OAUTH_SCOPE" >> "$APP_DIR/.env.production"
               env | grep -e '^NEXT_PUBLIC_' >> "$APP_DIR/.env.production" || true
               pnpm --filter user-management-app run build
+              # モノレポ + pnpm では standalone 内の node_modules/next がホストの絶対パスシンボリックリンクになる。
+              # Lambda では壊れるので実体に差し替え、加えて output: 'standalone' 用の static / public を配置
+              # @see https://nextjs.org/docs/app/api-reference/config/next-config-js/output
+              INNER="$APP_DIR/.next/standalone/packages/user-management-app"
+              if [ -d "$INNER" ]; then
+                if [ -L "$INNER/node_modules/next" ] || [ -d "$INNER/node_modules/next" ]; then
+                  rm -rf "$INNER/node_modules/next"
+                fi
+                cp -R "$APP_DIR/.next/standalone/node_modules/next" "$INNER/node_modules/next"
+                mkdir -p "$INNER/.next"
+                cp -R "$APP_DIR/.next/static" "$INNER/.next/static"
+                if [ -d "$APP_DIR/public" ]; then
+                  cp -R "$APP_DIR/public" "$INNER/public"
+                fi
+              fi
       artifacts:
         baseDirectory: packages/user-management-app/.next
         files:
