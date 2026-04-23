@@ -13,3 +13,10 @@ export type ListStagingUsersResponse = {
   items: StagingUserItem[];
   paginationToken?: string;
 };
+
+export type BatchDeleteStagingUsersResponse = {
+  requestedCount: number;
+  successCount: number;
+  failureCount: number;
+  errors?: Array<{ id: string; message: string }>;
+};

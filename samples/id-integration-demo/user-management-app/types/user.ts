@@ -62,3 +62,10 @@ export type ImportUsersCsvResponse = {
   failureCount: number;
   errors?: Array<{ row: number; message: string }>;
 };
+
+export type BatchDeleteUsersResponse = {
+  requestedCount: number;
+  successCount: number;
+  failureCount: number;
+  errors?: Array<{ username: string; message: string; code?: string }>;
+};

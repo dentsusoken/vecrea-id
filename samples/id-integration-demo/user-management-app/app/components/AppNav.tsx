@@ -43,6 +43,12 @@ export function AppNav() {
             >
               Staging
             </Link>
+            <Link
+              href="/data-init"
+              className="text-white/90 no-underline hover:text-white hover:underline"
+            >
+              Data reset
+            </Link>
           </nav>
         ) : null}
 
