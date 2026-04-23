@@ -168,21 +168,13 @@ export default function DataInitPage() {
         />
         <h1 className="text-um-heading text-xl font-semibold">データの初期化</h1>
         <p className="text-sm text-um-text mt-2">
-          管理 APIの{' '}
-          <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
-            POST /staging/users/batch-delete
-          </code>{' '}
-          および{' '}
-          <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
-            POST /users/batch-delete
-          </code>{' '}
-          を順に呼び、一覧 API で取得できるステージング行と Cognito ユーザーを一括削除します。デモ用です。
+          ステージングデータと Cognito ユーザーを一括削除します。
         </p>
       </div>
       <div className="px-5 py-6 max-w-3xl space-y-4">
-        <p className="text-sm text-red-800 border border-red-200 bg-red-50 px-3 py-2">
+        {/* <p className="text-sm text-red-800 border border-red-200 bg-red-50 px-3 py-2">
           本番では使用しないでください。ステージングとユーザープールのデータが消えます。
-        </p>
+        </p> */}
 
         <button
           type="button"
