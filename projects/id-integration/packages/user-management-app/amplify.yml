@@ -12,7 +12,7 @@ applications:
             - pnpm install
             # Amplify は appRoot 直下の node_modules/next の有無を検査する。hoisted では next はワークスペース根のみに置かれるため作る
             # @see https://github.com/aws-amplify/amplify-hosting/issues/4036
-            # - mkdir -p packages/user-management-app/node_modules && ln -sfn "$PWD/node_modules/next" "packages/user-management-app/node_modules/next"
+            - mkdir -p packages/user-management-app/node_modules && ln -sfn "$PWD/node_modules/next" "packages/user-management-app/node_modules/next"
         build:
           commands:
             # SSR（ミドルウェアの fetchAuthSession）用: AMPLIFY_APP_ORIGIN 等を .env.production へ出す
