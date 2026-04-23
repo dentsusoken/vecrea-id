@@ -16,18 +16,12 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.22.0",
-    "@aws-amplify/backend-cli": "^1.8.2",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "aws-cdk-lib": "2.234.1",
-    "constructs": "^10.6.0",
-    "esbuild": "^0.28.0",
     "eslint": "^10.1.0",
     "tailwindcss": "^4.2.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.9.3"
   }
 }
