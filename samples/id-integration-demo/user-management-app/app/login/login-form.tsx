@@ -74,10 +74,10 @@ function LoginInner() {
   return (
     <div className="mx-auto w-full max-w-sm rounded-lg border border-um-border bg-white p-8 shadow-sm">
       <h1 className="text-xl font-semibold text-um-text">Sign in</h1>
-      <p className="mt-2 text-sm text-um-text/80">
+      {/* <p className="mt-2 text-sm text-um-text/80">
         Email one-time code (Cognito USER_AUTH / EMAIL_OTP). Pool must allow
         choice-based sign-in and ALLOW_USER_AUTH on the app client.
-      </p>
+      </p> */}
 
       {displayError ? (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
