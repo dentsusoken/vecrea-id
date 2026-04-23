@@ -3,6 +3,9 @@
  */
 
 export {
+  batchDeleteUsersErrorItemSchema,
+  batchDeleteUsersRequestSchema,
+  batchDeleteUsersResponseSchema,
   createUserRequestSchema,
   errorBodySchema,
   importUsersCsvErrorRowSchema,
@@ -13,6 +16,9 @@ export {
   updateUserRequestSchema,
   userSchema,
   userStatusSchema,
+  type BatchDeleteUsersErrorItem,
+  type BatchDeleteUsersRequest,
+  type BatchDeleteUsersResponse,
   type CreateUserRequest,
   type ErrorBody,
   type ImportUsersCsvErrorRow,

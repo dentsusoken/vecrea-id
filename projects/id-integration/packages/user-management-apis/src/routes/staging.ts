@@ -6,9 +6,11 @@ import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { OpenAPIHono } from '@hono/zod-openapi';
 import { USER_MANAGEMENT_SCOPES } from '../auth/scopes';
 import { requiredScopesResponse } from '../auth/checkRequiredScopes';
+import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
+import { deleteStagingUsersBatch } from '../aws/dynamodb/deleteStagingUsersBatch';
 import { listStagingUsers } from '../aws/dynamodb/listStagingUsers';
 import { requireStagingTableName } from '../aws/env';
-import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
+import { batchDeleteStagingUsersRoute } from '../openapi/staging/batch-delete-staging-users';
 import { listStagingUsersRoute } from '../openapi/staging/list-staging-users';
 
 /**
@@ -35,6 +37,19 @@ export function registerStagingRoutes(
       if (err instanceof Error && err.message === 'Invalid paginationToken') {
         return c.json({ message: err.message }, 422) as never;
       }
+      return cognitoErrorResponse(c, err) as never;
+    }
+  });
+
+  app.openapi(batchDeleteStagingUsersRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.DELETE]);
+    if (scopeDenied) return scopeDenied as never;
+    try {
+      const body = c.req.valid('json');
+      const tableName = requireStagingTableName();
+      const result = await deleteStagingUsersBatch(dynamo, tableName, body.ids);
+      return c.json(result, 200);
+    } catch (err) {
       return cognitoErrorResponse(c, err) as never;
     }
   });

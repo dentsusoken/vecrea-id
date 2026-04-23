@@ -48,7 +48,7 @@ export const openApiInfo = {
   title: 'User Management API',
   version: '0.0.1',
   description:
-    'Cognito-backed user CRUD (list, get, create, patch, delete, CSV import) plus DynamoDB staging inspection (`GET /staging/users`). When bearer introspection is enabled, each operation requires OAuth scopes such as manage:users:read|write|delete|import (see USER_MANAGEMENT_SCOPES in package exports).',
+    'Cognito-backed user CRUD (list, get, create, patch, delete, `POST /users/batch-delete`, CSV import) plus DynamoDB staging inspection (`GET /staging/users`, `POST /staging/users/batch-delete`). When bearer introspection is enabled, each operation requires OAuth scopes such as manage:users:read|write|delete|import (see USER_MANAGEMENT_SCOPES in package exports).',
 } as const;
 
 /**

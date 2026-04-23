@@ -68,3 +68,46 @@ export const listStagingUsersResponseSchema = z
     }),
   })
   .openapi('ListStagingUsersResponse');
+
+/** Request body for `POST /staging/users/batch-delete` (staging partition keys to remove). */
+export const batchDeleteStagingUsersRequestSchema = z
+  .object({
+    ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .max(100)
+      .openapi({
+        description:
+          'Staging table `id` values (`cognito:username` from CSV). Max 100 per request.',
+      }),
+  })
+  .openapi('BatchDeleteStagingUsersRequest');
+
+export const batchDeleteStagingUsersErrorItemSchema = z
+  .object({
+    id: z.string().openapi({ description: 'Staging id that failed to delete' }),
+    message: z.string().openapi({ description: 'Error message' }),
+  })
+  .openapi('BatchDeleteStagingUsersErrorItem');
+
+/** Response body for `POST /staging/users/batch-delete`. */
+export const batchDeleteStagingUsersResponseSchema = z
+  .object({
+    requestedCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of ids in the request body' }),
+    successCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of `DeleteItem` calls that succeeded' }),
+    failureCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of calls that failed' }),
+    errors: z
+      .array(batchDeleteStagingUsersErrorItemSchema)
+      .optional()
+      .openapi({ description: 'Omitted when all deletes succeed' }),
+  })
+  .openapi('BatchDeleteStagingUsersResponse');

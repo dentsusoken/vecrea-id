@@ -218,6 +218,55 @@ export const importUsersCsvResponseSchema = z
   })
   .openapi('ImportUsersCsvResponse');
 
+/** Request body for `POST /users/batch-delete` (Cognito usernames to remove). */
+export const batchDeleteUsersRequestSchema = z
+  .object({
+    usernames: z
+      .array(z.string().min(1))
+      .min(1)
+      .max(100)
+      .openapi({
+        description:
+          'Cognito `Username` values to delete (same key as `DELETE /users/{userId}`). Max 100 per request.',
+      }),
+  })
+  .openapi('BatchDeleteUsersRequest');
+
+export const batchDeleteUsersErrorItemSchema = z
+  .object({
+    username: z
+      .string()
+      .openapi({ description: 'User name that failed to delete' }),
+    message: z.string().openapi({ description: 'Error message' }),
+    code: z
+      .string()
+      .optional()
+      .openapi({ description: 'AWS / SDK error name when available' }),
+  })
+  .openapi('BatchDeleteUsersErrorItem');
+
+/** Response body for `POST /users/batch-delete`. */
+export const batchDeleteUsersResponseSchema = z
+  .object({
+    requestedCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of usernames in the request body' }),
+    successCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of `AdminDeleteUser` calls that succeeded' }),
+    failureCount: z
+      .number()
+      .int()
+      .openapi({ description: 'Number of calls that failed' }),
+    errors: z
+      .array(batchDeleteUsersErrorItemSchema)
+      .optional()
+      .openapi({ description: 'Omitted when all deletions succeed' }),
+  })
+  .openapi('BatchDeleteUsersResponse');
+
 /** Standard JSON error envelope for 4xx/5xx responses. */
 export const errorBodySchema = z
   .object({
@@ -234,3 +283,6 @@ export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
 export type ImportUsersCsvResponse = z.infer<typeof importUsersCsvResponseSchema>;
 export type ImportUsersCsvErrorRow = z.infer<typeof importUsersCsvErrorRowSchema>;
+export type BatchDeleteUsersRequest = z.infer<typeof batchDeleteUsersRequestSchema>;
+export type BatchDeleteUsersResponse = z.infer<typeof batchDeleteUsersResponseSchema>;
+export type BatchDeleteUsersErrorItem = z.infer<typeof batchDeleteUsersErrorItemSchema>;

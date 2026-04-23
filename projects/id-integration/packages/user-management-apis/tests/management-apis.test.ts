@@ -13,6 +13,7 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
+  DeleteCommand,
   DynamoDBDocumentClient,
   PutCommand,
   ScanCommand,
@@ -189,6 +190,70 @@ describe('createManagementApis (Cognito mocked)', () => {
     expect(cognitoMock).toHaveReceivedCommandWith(AdminDeleteUserCommand, {
       UserPoolId: TEST_POOL,
       Username: 'jdoe',
+    });
+  });
+
+  it('POST /users/batch-delete calls AdminDeleteUser for each username', async () => {
+    cognitoMock.on(AdminDeleteUserCommand).resolves({});
+
+    const res = await app().request('/users/batch-delete', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ usernames: ['a', 'b'] }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      requestedCount: 2,
+      successCount: 2,
+      failureCount: 0,
+    });
+    expect(cognitoMock).toHaveReceivedCommandTimes(AdminDeleteUserCommand, 2);
+    expect(cognitoMock).toHaveReceivedCommandWith(AdminDeleteUserCommand, {
+      UserPoolId: TEST_POOL,
+      Username: 'a',
+    });
+    expect(cognitoMock).toHaveReceivedCommandWith(AdminDeleteUserCommand, {
+      UserPoolId: TEST_POOL,
+      Username: 'b',
+    });
+  });
+
+  it('POST /users/batch-delete returns per-username errors when a delete fails', async () => {
+    cognitoMock
+      .on(AdminDeleteUserCommand)
+      .resolvesOnce({})
+      .rejectsOnce(
+        new UserNotFoundException({
+          message: 'User does not exist',
+          $metadata: {},
+        })
+      );
+
+    const res = await app().request('/users/batch-delete', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ usernames: ['ok', 'missing'] }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      requestedCount: 2,
+      successCount: 1,
+      failureCount: 1,
+      errors: [
+        {
+          username: 'missing',
+          message: 'User does not exist',
+          code: 'UserNotFoundException',
+        },
+      ],
     });
   });
 
@@ -459,6 +524,35 @@ describe('createManagementApis (Cognito mocked)', () => {
     expect(ddbMock).toHaveReceivedCommandWith(ScanCommand, {
       TableName: TEST_STAGING_TABLE,
       Limit: 25,
+    });
+  });
+
+  it('POST /staging/users/batch-delete calls DeleteItem for each id', async () => {
+    ddbMock.on(DeleteCommand).resolves({});
+
+    const res = await app().request('/staging/users/batch-delete', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids: ['user-one', 'user-two'] }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      requestedCount: 2,
+      successCount: 2,
+      failureCount: 0,
+    });
+    expect(ddbMock).toHaveReceivedCommandTimes(DeleteCommand, 2);
+    expect(ddbMock).toHaveReceivedCommandWith(DeleteCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Key: { id: 'user-one' },
+    });
+    expect(ddbMock).toHaveReceivedCommandWith(DeleteCommand, {
+      TableName: TEST_STAGING_TABLE,
+      Key: { id: 'user-two' },
     });
   });
 

@@ -9,6 +9,7 @@ import { requiredScopesResponse } from '../auth/checkRequiredScopes';
 import { USER_MANAGEMENT_SCOPES } from '../auth/scopes';
 import { createUser } from '../aws/cognito/createUser';
 import { deleteUser } from '../aws/cognito/deleteUser';
+import { deleteUsersBatch } from '../aws/cognito/deleteUsersBatch';
 import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
 import { getUser } from '../aws/cognito/getUser';
 import { listUsers } from '../aws/cognito/listUsers';
@@ -16,6 +17,7 @@ import { patchUser } from '../aws/cognito/patchUser';
 import { importUsersCsvToStaging } from '../aws/dynamodb/importUsersCsvToStaging';
 import { requireStagingTableName } from '../aws/env';
 import { createUserRoute } from '../openapi/users/create-user';
+import { batchDeleteUsersRoute } from '../openapi/users/batch-delete-users';
 import { deleteUserRoute } from '../openapi/users/delete-user';
 import { getUserRoute } from '../openapi/users/get-user';
 import { importUsersCsvRoute } from '../openapi/users/import-users-csv';
@@ -23,7 +25,7 @@ import { listUsersRoute } from '../openapi/users/list-users';
 import { patchUserRoute } from '../openapi/users/patch-user';
 
 /**
- * Registers all User list/CRUD routes (`app.openapi`) on `app`.
+ * Registers all User list/CRUD routes (`app.openapi`) on `app`, including batch delete and CSV import.
  *
  * @param dynamo - DynamoDB Document client (region/credentials configured by host, e.g. IdP Lambda).
  */
@@ -91,6 +93,18 @@ export function registerUsersRoutes(
       const { userId } = c.req.valid('param');
       await deleteUser(cognito, userId);
       return c.body(null, 204);
+    } catch (err) {
+      return cognitoErrorResponse(c, err) as never;
+    }
+  });
+
+  app.openapi(batchDeleteUsersRoute, async (c) => {
+    const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.DELETE]);
+    if (scopeDenied) return scopeDenied as never;
+    try {
+      const body = c.req.valid('json');
+      const result = await deleteUsersBatch(cognito, body.usernames);
+      return c.json(result, 200);
     } catch (err) {
       return cognitoErrorResponse(c, err) as never;
     }
