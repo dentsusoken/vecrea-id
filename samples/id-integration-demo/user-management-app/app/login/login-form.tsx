@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { confirmSignIn, fetchAuthSession, signIn } from 'aws-amplify/auth';
+import { confirmSignIn, fetchAuthSession, getCurrentUser, signIn } from 'aws-amplify/auth';
+import { safeAppRedirectPath } from '@/lib/safe-redirect';
 
 function LoginInner() {
   const searchParams = useSearchParams();
@@ -11,9 +12,28 @@ function LoginInner() {
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [sessionCheck, setSessionCheck] = useState(true);
 
   const urlError = searchParams.get('error');
   const urlErrorDescription = searchParams.get('error_description');
+  const signedOut = searchParams.get('signedOut') === '1';
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUser()
+      .then(() => {
+        if (!cancelled) {
+          const sp = new URLSearchParams(window.location.search);
+          window.location.assign(safeAppRedirectPath(sp.get('redirect')));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setSessionCheck(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +70,9 @@ function LoginInner() {
       });
       if (nextStep.signInStep === 'DONE') {
         await fetchAuthSession().catch(() => undefined);
-        const redirect = searchParams.get('redirect') ?? '/users';
+        const redirect = safeAppRedirectPath(
+          searchParams.get('redirect') ?? '/users'
+        );
         window.location.assign(redirect);
         return;
       } else {
@@ -71,13 +93,22 @@ function LoginInner() {
         : urlError
       : null);
 
+  if (sessionCheck) {
+    return (
+      <div className="mx-auto w-full max-w-sm rounded-lg border border-um-border bg-white p-8 shadow-sm text-sm text-um-text/80">
+        Checking session…
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-sm rounded-lg border border-um-border bg-white p-8 shadow-sm">
       <h1 className="text-xl font-semibold text-um-text">Sign in</h1>
-      {/* <p className="mt-2 text-sm text-um-text/80">
-        Email one-time code (Cognito USER_AUTH / EMAIL_OTP). Pool must allow
-        choice-based sign-in and ALLOW_USER_AUTH on the app client.
-      </p> */}
+      {signedOut ? (
+        <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900 border border-emerald-200/80">
+          You are signed out.
+        </p>
+      ) : null}
 
       {displayError ? (
         <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">

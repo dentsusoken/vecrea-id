@@ -1,20 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
+import { ImportWizardStepper } from '@/app/components/ImportWizardStepper';
 import type { ImportUsersCsvResponse } from '@/types/user';
 
-export default function ImportCsvPage() {
+export default function ImportPage() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<ImportUsersCsvResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setResult(null);
     if (!file) {
       setError('Choose a CSV file');
       return;
@@ -37,7 +38,11 @@ export default function ImportCsvPage() {
         }
         return;
       }
-      setResult(JSON.parse(text) as ImportUsersCsvResponse);
+      const json = JSON.parse(text) as ImportUsersCsvResponse;
+      const batch = json.importBatchId
+        ? `&importBatchId=${encodeURIComponent(json.importBatchId)}`
+        : '';
+      router.push(`/import/staging?fromImport=1${batch}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -50,17 +55,24 @@ export default function ImportCsvPage() {
       <PageBreadcrumb
         items={[
           { label: 'Users', href: '/users' },
-          { label: 'Import CSV' },
+          { label: 'Import' },
         ]}
       />
-      <h1 className="text-um-heading text-xl font-semibold">Import users (CSV)</h1>
+      <div className="space-y-2">
+        <h1 className="text-um-heading text-xl font-semibold">Import (CSV)</h1>
+        <ImportWizardStepper current={1} />
+      </div>
       <p className="text-sm text-um-text -mt-2">
-        Upload writes rows to the DynamoDB staging table used by migration. Inspect rows and
-        pipeline status on{' '}
-        <Link href="/staging" className="text-um-link no-underline hover:underline">
-          Import staging
-        </Link>
-        .
+        Upload writes rows to the DynamoDB staging table used by migration. After a
+        successful upload you are taken to{' '}
+        <Link
+          href="/import/staging"
+          className="text-um-link no-underline hover:underline"
+        >
+          Review
+        </Link>{' '}
+        to inspect rows (Scan may include older data unless filtered by import batch
+        when available).
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
@@ -94,34 +106,6 @@ export default function ImportCsvPage() {
         </div>
       </form>
 
-      {result ? (
-        <div className="border border-um-border p-4 text-sm space-y-2 text-um-text">
-          <p>
-            <span className="font-semibold text-black">Total rows:</span> {result.totalRows}
-          </p>
-          <p>
-            <span className="font-semibold text-black">Success:</span> {result.successCount}
-          </p>
-          <p>
-            <span className="font-semibold text-black">Failures:</span> {result.failureCount}
-          </p>
-          {result.errors?.length ? (
-            <div>
-              <p className="font-semibold text-um-heading mt-3 mb-1">Errors</p>
-              <ul className="list-disc pl-5 space-y-1">
-                {result.errors.map((err, i) => (
-                  <li key={`${err.row}-${i}`}>
-                    Row {err.row}: {err.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          <pre className="mt-4 p-4 text-xs overflow-x-auto bg-[#f4f4f4] border border-[#ddd] border-l-4 border-l-um-pre-accent text-um-text max-w-full">
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        </div>
-      ) : null}
     </div>
   );
 }

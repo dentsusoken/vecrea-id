@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { UsersEntranceToast } from '@/app/users/users-entrance-toast';
+import {
+  clearUsersPaginationStack,
+  usersPaginationPopForBack,
+  usersPaginationPushForNext,
+  usersPaginationStackDepth,
+} from '@/lib/users-pagination-stack';
 import type { ListUsersResponse, User } from '@/types/user';
 
 function UsersTableSkeleton() {
@@ -29,13 +36,42 @@ function UsersTableSkeleton() {
   );
 }
 
+function buildUsersListUrl(
+  next: { token?: string | null; q?: string | null }
+): string {
+  const qs = new URLSearchParams();
+  if (next.q) qs.set('q', next.q);
+  if (next.token) qs.set('paginationToken', next.token);
+  const s = qs.toString();
+  return s ? `/users?${s}` : '/users';
+}
+
 function UsersListInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('paginationToken');
+  const q = searchParams.get('q')?.trim() ?? '';
   const [data, setData] = useState<ListUsersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [qInput, setQInput] = useState(q);
+  const [, setStackVersion] = useState(0);
+
+  useEffect(() => {
+    setQInput(q);
+  }, [q]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (qInput.trim() === q) return;
+      clearUsersPaginationStack();
+      setStackVersion((v) => v + 1);
+      const nq = qInput.trim();
+      const next = buildUsersListUrl({ q: nq || null });
+      router.replace(next);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [qInput, q, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +108,18 @@ function UsersListInner() {
     };
   }, [token]);
 
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    if (!q) return data.items;
+    const n = q.toLowerCase();
+    return data.items.filter(
+      (u) =>
+        u.username.toLowerCase().includes(n) ||
+        (u.email && u.email.toLowerCase().includes(n)) ||
+        u.userId.toLowerCase().includes(n)
+    );
+  }, [data, q]);
+
   function openUser(u: User) {
     router.push(`/users/${encodeURIComponent(u.username)}`);
   }
@@ -86,9 +134,17 @@ function UsersListInner() {
     return null;
   }
 
-  const nextHref = data.paginationToken
-    ? `/users?paginationToken=${encodeURIComponent(data.paginationToken)}`
+  const backDepth = usersPaginationStackDepth();
+  const nextToken = data.paginationToken
+    ? encodeURIComponent(data.paginationToken)
     : null;
+  const nextHref =
+    data.paginationToken && nextToken
+      ? buildUsersListUrl({
+          token: data.paginationToken,
+          q: q || null,
+        })
+      : null;
 
   return (
     <div className="px-5 py-6 space-y-4">
@@ -99,15 +155,32 @@ function UsersListInner() {
             href="/users/new"
             className="inline-flex justify-center min-w-[150px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover active:bg-blue-700"
           >
-            Create user
+            + New user
           </Link>
           <Link
-            href="/users/import"
+            href="/import"
             className="inline-flex justify-center min-w-[130px] px-4 py-2.5 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
-            Import CSV
+            Import
           </Link>
         </div>
+      </div>
+
+      <div className="max-w-md">
+        <label htmlFor="user-filter-q" className="text-sm font-medium text-black block mb-1">
+          Filter (this page)
+        </label>
+        <input
+          id="user-filter-q"
+          className="w-full border border-um-border px-2 py-1.5 text-sm"
+          value={qInput}
+          onChange={(e) => setQInput(e.target.value)}
+          placeholder="username, email, or sub (client-side, current page only)"
+        />
+        <p className="text-xs text-um-text mt-1 max-w-prose">
+          Matches only users on the current list page. Change filter to return to the first page
+          and clear pagination.
+        </p>
       </div>
 
       <div className="overflow-x-auto border border-um-border">
@@ -138,26 +211,30 @@ function UsersListInner() {
             </tr>
           </thead>
           <tbody>
-            {data.items.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr>
                 <td
                   colSpan={7}
                   className="px-4 py-10 text-um-text text-center border border-um-border"
                 >
-                  <p className="text-black font-medium mb-2">No users in this pool page</p>
+                  <p className="text-black font-medium mb-2">
+                    {q
+                      ? 'No matches on this page for your filter'
+                      : 'No users in this pool page'}
+                  </p>
                   <p className="text-sm mb-4">
-                    Create a user or import from CSV to get started.
+                    Create a user or use Import to get started.
                   </p>
                   <Link
                     href="/users/new"
                     className="inline-flex justify-center min-w-[150px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover"
                   >
-                    Create user
+                    + New user
                   </Link>
                 </td>
               </tr>
             ) : (
-              data.items.map((u) => (
+              filtered.map((u) => (
                 <tr
                   key={u.userId}
                   role="link"
@@ -207,19 +284,44 @@ function UsersListInner() {
         </table>
       </div>
 
-      {nextHref ? (
-        <div className="space-y-1">
+      <div className="flex flex-wrap items-center gap-2">
+        {backDepth > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              const { targetToken, empty } = usersPaginationPopForBack();
+              if (empty) return;
+              setStackVersion((v) => v + 1);
+              if (targetToken === null) {
+                router.push(buildUsersListUrl({ q: q || null }));
+              } else {
+                router.push(
+                  buildUsersListUrl({ token: targetToken, q: q || null })
+                );
+              }
+            }}
+            className="inline-flex items-center justify-center min-w-[150px] px-3 py-2.5 text-sm border border-um-border text-black bg-white hover:bg-gray-50"
+          >
+            Previous page
+          </button>
+        ) : null}
+        {nextHref ? (
           <Link
             href={nextHref}
+            onClick={() => {
+              usersPaginationPushForNext(token);
+            }}
             className="inline-flex items-center justify-center min-w-[150px] px-3 py-2.5 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
-            Load next page
+            Next page
           </Link>
-          <p className="text-xs text-um-text max-w-xl">
-            Cognito returns users in pages of up to 60. Use this to fetch the next chunk
-            (order is pool-defined, not alphabetical).
-          </p>
-        </div>
+        ) : null}
+      </div>
+      {nextHref || backDepth > 0 ? (
+        <p className="text-xs text-um-text max-w-xl">
+          Cognito returns users in up to 60 per page. Use Next/Previous to move through
+          the pool (order is pool-defined, not sorted).
+        </p>
       ) : null}
     </div>
   );
@@ -227,8 +329,13 @@ function UsersListInner() {
 
 export default function UsersPage() {
   return (
-    <Suspense fallback={<UsersTableSkeleton />}>
-      <UsersListInner />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <UsersEntranceToast />
+      </Suspense>
+      <Suspense fallback={<UsersTableSkeleton />}>
+        <UsersListInner />
+      </Suspense>
+    </>
   );
 }

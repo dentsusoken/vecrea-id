@@ -60,6 +60,7 @@ export type ImportUsersCsvResponse = {
   totalRows: number;
   successCount: number;
   failureCount: number;
+  importBatchId?: string;
   errors?: Array<{ row: number; message: string }>;
 };
 

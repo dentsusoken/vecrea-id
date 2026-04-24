@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
+import { useToast } from '@/lib/toast-context';
 import type { CreateUserRequest, User } from '@/types/user';
 
 const inputClass =
@@ -11,6 +12,7 @@ const inputClass =
 
 export default function NewUserPage() {
   const router = useRouter();
+  const { show: showToast } = useToast();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -22,6 +24,14 @@ export default function NewUserPage() {
   const [markEmailVerified, setMarkEmailVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const h = (e: BeforeUnloadEvent) => e.preventDefault();
+    globalThis.addEventListener('beforeunload', h);
+    return () => globalThis.removeEventListener('beforeunload', h);
+  }, [dirty]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -65,6 +75,8 @@ export default function NewUserPage() {
         return;
       }
       const user = JSON.parse(text) as User;
+      setDirty(false);
+      showToast('User created');
       router.push(`/users/${encodeURIComponent(user.username)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -82,7 +94,24 @@ export default function NewUserPage() {
         ]}
       />
       <h1 className="text-um-heading text-xl font-semibold mb-4">New user</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <p className="text-sm text-um-text -mt-2 mb-4">
+        Leave changes?{' '}
+        <Link
+          href="/users"
+          onClick={(e) => {
+            if (!dirty) return;
+            if (!window.confirm('Discard the new user form?')) e.preventDefault();
+          }}
+          className="text-um-link"
+        >
+          Back to list
+        </Link>
+      </p>
+      <form
+        onSubmit={onSubmit}
+        onInput={() => setDirty(true)}
+        className="space-y-4"
+      >
         <fieldset>
           <legend className="text-um-heading text-sm font-semibold mb-2 block">Required</legend>
           <div>

@@ -23,7 +23,12 @@ export async function middleware(request: NextRequest) {
 
   const loginUrl = new URL('/login', request.url);
   if (request.nextUrl.pathname !== '/login') {
-    loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    const path = request.nextUrl.pathname;
+    const search = request.nextUrl.search;
+    // After login, land on /users when the user hit the app root
+    const redirectTarget =
+      path === '/' ? '/users' : `${path}${search}`;
+    loginUrl.searchParams.set('redirect', redirectTarget);
   }
   return NextResponse.redirect(loginUrl);
 }

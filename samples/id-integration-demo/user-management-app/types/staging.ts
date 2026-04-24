@@ -4,6 +4,7 @@ export type StagingUserItem = {
   id: string;
   imported: boolean;
   verified: boolean;
+  importBatchId?: string;
   error?: string;
   errorMessage?: string;
   data: Record<string, unknown>;

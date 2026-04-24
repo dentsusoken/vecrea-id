@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Source_Sans_3 } from 'next/font/google';
 import { ConfigureAmplify } from '@/components/ConfigureAmplify';
 import { AppNav } from './components/AppNav';
+import { AppProviders } from './app-providers';
 import './globals.css';
 
 const sourceSans = Source_Sans_3({
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sourceSans.variable} h-full`}>
       <body className={`min-h-full flex flex-col font-sans antialiased`}>
-        <ConfigureAmplify />
-        <AppNav />
-        <main className="flex-1 bg-white text-um-text">{children}</main>
+        <AppProviders>
+          <ConfigureAmplify />
+          <AppNav />
+          <main className="flex-1 bg-white text-um-text">{children}</main>
+        </AppProviders>
       </body>
     </html>
   );

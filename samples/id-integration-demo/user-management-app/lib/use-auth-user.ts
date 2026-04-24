@@ -39,7 +39,7 @@ export function useAuthUser() {
 
   const doSignOut = useCallback(async () => {
     await signOut();
-    window.location.assign('/login');
+    window.location.assign('/login?signedOut=1');
   }, []);
 
   const signedIn = ready && label !== null;

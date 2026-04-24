@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
+import { useToast } from '@/lib/toast-context';
 import {
   extraAttributesToRows,
   pickExtraAttributes,
@@ -25,6 +26,7 @@ type ExtraRow = { id: string; key: string; value: string };
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { show: showToast } = useToast();
   /** Cognito `Username` (API path segment), not `sub`. */
   const rawId = params.userId;
   const usernameParam =
@@ -45,12 +47,29 @@ export default function UserDetailPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [showDeleteStep1, setShowDeleteStep1] = useState(false);
+  const [showDeleteStep2, setShowDeleteStep2] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+
+  const markDirty = useCallback(() => {
+    setDirty(true);
+  }, []);
 
   useEffect(() => {
     if (!saveSuccess) return;
     const t = globalThis.setTimeout(() => setSaveSuccess(false), 4000);
     return () => globalThis.clearTimeout(t);
   }, [saveSuccess]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    globalThis.addEventListener('beforeunload', onBeforeUnload);
+    return () => globalThis.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
 
   useEffect(() => {
     if (!usernameParam) return;
@@ -102,6 +121,7 @@ export default function UserDetailPage() {
   }, [usernameParam]);
 
   function addExtraRow() {
+    markDirty();
     setExtraRows((rows) => [
       ...rows,
       { id: crypto.randomUUID(), key: '', value: '' },
@@ -109,10 +129,12 @@ export default function UserDetailPage() {
   }
 
   function removeExtraRow(id: string) {
+    markDirty();
     setExtraRows((rows) => rows.filter((r) => r.id !== id));
   }
 
   function updateExtraRow(id: string, patch: Partial<Pick<ExtraRow, 'key' | 'value'>>) {
+    markDirty();
     setExtraRows((rows) =>
       rows.map((r) => (r.id === id ? { ...r, ...patch } : r))
     );
@@ -172,6 +194,8 @@ export default function UserDetailPage() {
       }
       const u = JSON.parse(text) as User;
       setSaveSuccess(true);
+      setDirty(false);
+      showToast('Changes saved');
       setUser(u);
       setEmail(u.email ?? '');
       setPhoneNumber(u.phoneNumber ?? '');
@@ -191,8 +215,11 @@ export default function UserDetailPage() {
   }
 
   async function onDelete() {
-    if (!usernameParam) return;
-    if (!globalThis.confirm('Delete this user? This cannot be undone.')) return;
+    if (!usernameParam || !user) return;
+    if (deleteConfirmInput !== user.username) {
+      setActionError('Username does not match — type the exact username to delete.');
+      return;
+    }
     setActionError(null);
     setSaving(true);
     try {
@@ -209,7 +236,10 @@ export default function UserDetailPage() {
         }
         return;
       }
-      router.push('/users');
+      const u = encodeURIComponent(user.username);
+      setShowDeleteStep1(false);
+      setShowDeleteStep2(false);
+      router.push(`/users?toast=userDeleted&u=${u}`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -285,7 +315,7 @@ export default function UserDetailPage() {
             role="status"
             className="text-sm text-green-800 bg-green-50 border border-green-200 px-3 py-2"
           >
-            Changes saved successfully.
+            Changes saved.
           </p>
         ) : null}
         <p className="text-xs text-um-text">
@@ -303,7 +333,10 @@ export default function UserDetailPage() {
             type="email"
             className={inputClass}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              markDirty();
+              setEmail(e.target.value);
+            }}
           />
         </div>
         <div>
@@ -316,7 +349,10 @@ export default function UserDetailPage() {
             placeholder="+819012345678"
             className={inputClass}
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            onChange={(e) => {
+              markDirty();
+              setPhoneNumber(e.target.value);
+            }}
           />
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -324,7 +360,10 @@ export default function UserDetailPage() {
             <input
               type="checkbox"
               checked={emailVerified}
-              onChange={(e) => setEmailVerified(e.target.checked)}
+              onChange={(e) => {
+                markDirty();
+                setEmailVerified(e.target.checked);
+              }}
             />
             Email verified
           </label>
@@ -332,7 +371,10 @@ export default function UserDetailPage() {
             <input
               type="checkbox"
               checked={phoneNumberVerified}
-              onChange={(e) => setPhoneNumberVerified(e.target.checked)}
+              onChange={(e) => {
+                markDirty();
+                setPhoneNumberVerified(e.target.checked);
+              }}
             />
             Phone verified
           </label>
@@ -340,7 +382,10 @@ export default function UserDetailPage() {
             <input
               type="checkbox"
               checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
+              onChange={(e) => {
+                markDirty();
+                setEnabled(e.target.checked);
+              }}
             />
             Enabled
           </label>
@@ -356,7 +401,10 @@ export default function UserDetailPage() {
               id="given_name"
               className={inputClass}
               value={givenName}
-              onChange={(e) => setGivenName(e.target.value)}
+              onChange={(e) => {
+                markDirty();
+                setGivenName(e.target.value);
+              }}
             />
           </div>
           <div>
@@ -367,7 +415,10 @@ export default function UserDetailPage() {
               id="family_name"
               className={inputClass}
               value={familyName}
-              onChange={(e) => setFamilyName(e.target.value)}
+              onChange={(e) => {
+                markDirty();
+                setFamilyName(e.target.value);
+              }}
             />
           </div>
           <div>
@@ -378,7 +429,10 @@ export default function UserDetailPage() {
               id="name"
               className={inputClass}
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => {
+                markDirty();
+                setFullName(e.target.value);
+              }}
             />
           </div>
         </fieldset>
@@ -438,13 +492,23 @@ export default function UserDetailPage() {
           <button
             type="button"
             disabled={saving}
-            onClick={onDelete}
+            onClick={() => {
+              setActionError(null);
+              setDeleteConfirmInput('');
+              setShowDeleteStep1(true);
+            }}
             className="inline-flex justify-center min-w-[150px] px-0 py-3 text-sm font-medium text-white bg-um-deny border-0 cursor-pointer hover:bg-um-deny-hover active:bg-red-600 disabled:opacity-50"
           >
             Delete user
           </button>
           <Link
             href="/users"
+            onClick={(e) => {
+              if (!dirty) return;
+              if (!window.confirm('Discard unsaved changes?')) {
+                e.preventDefault();
+              }
+            }}
             className="inline-flex items-center justify-center min-w-[150px] px-0 py-3 text-sm border border-um-border text-black bg-white no-underline hover:bg-gray-50"
           >
             Back
@@ -496,6 +560,99 @@ export default function UserDetailPage() {
           {attributesJson}
         </pre>
       </details>
+
+      {showDeleteStep1 ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal
+          aria-labelledby="del1-title"
+        >
+          <div className="w-full max-w-md rounded border border-um-border bg-white p-5 shadow-lg">
+            <h2
+              id="del1-title"
+              className="text-lg font-semibold text-red-800"
+            >
+              Delete this user?
+            </h2>
+            <p className="text-sm text-um-text mt-2">
+              This cannot be undone. The next step will ask you to type the
+              username <strong className="text-black font-mono">{user.username}</strong>{' '}
+              to confirm.
+            </p>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="px-3 py-2 text-sm border border-um-border bg-white"
+                onClick={() => {
+                  setShowDeleteStep1(false);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 text-sm font-medium text-white bg-red-700"
+                onClick={() => {
+                  setShowDeleteStep1(false);
+                  setShowDeleteStep2(true);
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showDeleteStep2 ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal
+          aria-labelledby="del2-title"
+        >
+          <div className="w-full max-w-md rounded border border-um-border bg-white p-5 shadow-lg">
+            <h2
+              id="del2-title"
+              className="text-lg font-semibold text-red-800"
+            >
+              Confirm by typing username
+            </h2>
+            <p className="text-sm text-um-text mt-2">
+              Type <span className="font-mono font-medium text-black">{user.username}</span> to
+              enable delete.
+            </p>
+            <input
+              className="mt-3 w-full border border-um-border px-2 py-1.5 text-sm font-mono"
+              value={deleteConfirmInput}
+              onChange={(e) => setDeleteConfirmInput(e.target.value)}
+              autoComplete="off"
+              aria-label="Username to confirm deletion"
+            />
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="px-3 py-2 text-sm border border-um-border bg-white"
+                onClick={() => {
+                  setShowDeleteStep2(false);
+                  setDeleteConfirmInput('');
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 text-sm font-medium text-white bg-red-800 disabled:opacity-50"
+                disabled={saving || deleteConfirmInput !== user.username}
+                onClick={() => void onDelete()}
+              >
+                {saving ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

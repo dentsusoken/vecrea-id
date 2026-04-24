@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
+import { ImportWizardStepper } from '@/app/components/ImportWizardStepper';
 import type { ListStagingUsersResponse } from '@/types/staging';
 
 function stagingDataPreview(data: Record<string, unknown>): string {
@@ -15,9 +16,22 @@ function stagingDataPreview(data: Record<string, unknown>): string {
   return parts.length > 0 ? parts.join(' · ') : JSON.stringify(data).slice(0, 120);
 }
 
+function buildStagingListUrl(
+  next: { token?: string; importBatchId?: string; fromImport?: boolean }
+): string {
+  const qs = new URLSearchParams();
+  if (next.fromImport) qs.set('fromImport', '1');
+  if (next.importBatchId) qs.set('importBatchId', next.importBatchId);
+  if (next.token) qs.set('paginationToken', next.token);
+  const s = qs.toString();
+  return s ? `/import/staging?${s}` : '/import/staging';
+}
+
 function StagingListInner() {
   const searchParams = useSearchParams();
   const token = searchParams.get('paginationToken');
+  const importBatchId = searchParams.get('importBatchId') ?? undefined;
+  const fromImport = searchParams.get('fromImport') === '1';
   const [data, setData] = useState<ListStagingUsersResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +44,7 @@ function StagingListInner() {
       try {
         const qs = new URLSearchParams();
         if (token) qs.set('paginationToken', token);
+        if (importBatchId) qs.set('importBatchId', importBatchId);
         const res = await fetch(`/api/staging/users${qs.size ? `?${qs}` : ''}`);
         const text = await res.text();
         if (!res.ok) {
@@ -55,7 +70,7 @@ function StagingListInner() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, importBatchId]);
 
   if (loading) {
     return <p className="px-5 py-6 text-um-text opacity-80">Loading…</p>;
@@ -68,32 +83,61 @@ function StagingListInner() {
   }
 
   const nextHref = data.paginationToken
-    ? `/staging?paginationToken=${encodeURIComponent(data.paginationToken)}`
+    ? buildStagingListUrl({
+        token: data.paginationToken,
+        importBatchId,
+        fromImport: fromImport || undefined,
+      })
     : null;
 
   return (
     <div className="px-5 py-6 space-y-4">
+      {fromImport ? (
+        <p
+          className="text-sm border border-amber-200 bg-amber-50 text-amber-950 px-3 py-2 max-w-3xl"
+          role="status"
+        >
+          You uploaded a CSV. Review staging rows below.{' '}
+          {importBatchId
+            ? 'Showing the current import batch when available (rows tagged with the same `importBatchId`). Open “All rows” to see the full table.'
+            : 'Older imports may also appear in this Scan; use a batch filter from a fresh upload if needed.'}
+        </p>
+      ) : null}
+
       <p className="text-sm text-um-text max-w-3xl">
-        DynamoDB staging rows for the user-import pipeline. Rows are created from{' '}
-        <Link href="/users/import" className="text-um-link no-underline hover:underline">
-          Import CSV
+        Staging: <strong className="text-black">{data.items.length}</strong> row(s) on
+        this page. Rows are created from{' '}
+        <Link href="/import" className="text-um-link no-underline hover:underline">
+          Import
         </Link>
-        .{' '}
-        <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
-          imported
-        </code>{' '}
-        is set when Cognito import or User Migration has completed;{' '}
-        <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">
-          verified
-        </code>{' '}
-        reflects CSV email/phone verification flags. DynamoDB Scan paging — load additional
-        chunks only when needed.
+        . <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">imported</code> is
+        set when migration completes; <code className="text-xs bg-[#f4f4f4] px-1 border border-um-border text-black">verified</code> reflects CSV
+        flags.
       </p>
+
+      <div className="flex flex-wrap gap-2 text-sm">
+        {importBatchId ? (
+          <Link
+            href={fromImport ? '/import/staging?fromImport=1' : '/import/staging'}
+            className="text-um-link underline"
+          >
+            All rows
+          </Link>
+        ) : null}
+        {importBatchId ? <span className="text-um-text">|</span> : null}
+        {importBatchId ? (
+          <span className="text-um-text">Filtered by import batch</span>
+        ) : (
+          <span className="text-um-text">Full table (no import batch filter)</span>
+        )}
+      </div>
+
       <div className="overflow-x-auto border border-um-border">
         <table className="w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-um-table-header">
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">id</th>
+              <th className="px-2.5 py-2.5 font-semibold border border-um-border">Batch</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Imported</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Verified</th>
               <th className="px-2.5 py-2.5 font-semibold border border-um-border">Data (preview)</th>
@@ -103,23 +147,38 @@ function StagingListInner() {
           <tbody>
             {data.items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-um-text text-center border border-um-border">
-                  <p className="text-black font-medium mb-2">No staging rows in this scan page</p>
+                <td
+                  colSpan={6}
+                  className="px-4 py-10 text-um-text text-center border border-um-border"
+                >
+                  <p className="text-black font-medium mb-2">No rows on this page</p>
                   <p className="text-sm mb-4">
-                    Import a CSV to populate staging, or load the next page if more data exists.
+                    Import a CSV or try “All rows” if a batch filter returned nothing.
                   </p>
                   <Link
-                    href="/users/import"
+                    href="/import"
                     className="inline-flex justify-center min-w-[150px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover"
                   >
-                    Import CSV
+                    + New CSV import
                   </Link>
                 </td>
               </tr>
             ) : (
               data.items.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border">{row.id}</td>
+                <tr
+                  key={row.id}
+                  className={
+                    row.error || row.errorMessage
+                      ? 'bg-amber-50/80 hover:bg-amber-50'
+                      : 'hover:bg-gray-50'
+                  }
+                >
+                  <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border">
+                    {row.id}
+                  </td>
+                  <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border text-um-text">
+                    {row.importBatchId ?? '—'}
+                  </td>
                   <td className="px-2.5 py-2.5 border border-um-border text-black">
                     {row.imported ? 'yes' : 'no'}
                   </td>
@@ -146,26 +205,37 @@ function StagingListInner() {
           >
             Load next page
           </Link>
-          <p className="text-xs text-um-text max-w-xl">
-            Fetches the next DynamoDB Scan segment; order is not guaranteed across pages.
-          </p>
         </div>
       ) : null}
+
+      <div className="pt-2 border-t border-um-border">
+        <p className="text-sm font-medium text-black mb-2">Step 3 — Users</p>
+        <Link
+          href="/users"
+          className="inline-flex justify-center min-w-[180px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover"
+        >
+          Open user list
+        </Link>
+      </div>
     </div>
   );
 }
 
-export default function StagingPage() {
+export default function ImportStagingPage() {
   return (
     <>
       <div className="px-5 pt-6 pb-0">
         <PageBreadcrumb
           items={[
             { label: 'Users', href: '/users' },
-            { label: 'Import staging' },
+            { label: 'Import', href: '/import' },
+            { label: 'Staging' },
           ]}
         />
-        <h1 className="text-um-heading text-xl font-semibold">Import staging</h1>
+        <div className="space-y-2">
+          <h1 className="text-um-heading text-xl font-semibold">Staging (review)</h1>
+          <ImportWizardStepper current={2} />
+        </div>
       </div>
       <Suspense fallback={<p className="px-5 py-6 text-um-text opacity-80">Loading…</p>}>
         <StagingListInner />
