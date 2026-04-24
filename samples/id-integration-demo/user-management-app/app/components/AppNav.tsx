@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useId, useRef, useState } from 'react';
 import { AuthUserBar } from '@/components/AuthUserBar';
 import { useAuthUser } from '@/lib/use-auth-user';
 
@@ -22,9 +23,41 @@ export function AppNav() {
   const adminActive =
     pathname.startsWith('/import/staging') || pathname.startsWith('/admin/');
 
+  const [adminOpen, setAdminOpen] = useState(false);
+  const adminWrapRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!adminOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const el = adminWrapRef.current;
+      const t = e.target;
+      if (t == null || !(t instanceof Node)) {
+        setAdminOpen(false);
+        return;
+      }
+      if (el && !el.contains(t)) {
+        setAdminOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAdminOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [adminOpen]);
+
+  useEffect(() => {
+    setAdminOpen(false);
+  }, [pathname]);
+
   return (
-    <header className="bg-um-titlebar text-white px-4 py-3 shadow-sm">
-      <div className="flex flex-wrap gap-x-6 gap-y-2 items-center w-full">
+    <header className="relative z-50 bg-um-titlebar text-white px-4 py-3 shadow-sm">
+      <div className="flex flex-wrap gap-x-6 gap-y-2 items-center w-full min-w-0">
         {signedIn ? (
           <Link
             href="/users"
@@ -40,7 +73,7 @@ export function AppNav() {
 
         {ready && signedIn ? (
           <nav
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+            className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-sm"
             aria-label="Main"
           >
             <Link
@@ -55,13 +88,19 @@ export function AppNav() {
             >
               Import
             </Link>
-            <details className="relative [&_summary::-webkit-details-marker]:hidden">
-              <summary
+            <div className="relative" ref={adminWrapRef}>
+              <button
+                type="button"
                 className={
                   adminActive
-                    ? `${linkBase} ${linkActive} list-none cursor-pointer pr-0`
-                    : `${linkBase} list-none cursor-pointer pr-0`
+                    ? `${linkBase} ${linkActive} text-left`
+                    : `${linkBase} text-left`
                 }
+                aria-haspopup="menu"
+                aria-expanded={adminOpen}
+                aria-controls={adminOpen ? menuId : undefined}
+                id={`${menuId}-button`}
+                onClick={() => setAdminOpen((o) => !o)}
               >
                 <span className="inline-flex items-center gap-0.5">
                   Admin
@@ -69,41 +108,47 @@ export function AppNav() {
                     ▾
                   </span>
                 </span>
-              </summary>
-              <ul
-                className="absolute right-0 z-20 mt-1 min-w-[11rem] rounded border border-white/20 bg-um-titlebar py-1 shadow-md"
-                role="menu"
-              >
-                <li role="none">
-                  <Link
-                    href="/import/staging"
-                    className={
-                      pathname === '/import/staging' ||
-                      pathname.startsWith('/import/staging/')
-                        ? 'block px-3 py-2 text-white font-semibold bg-white/15 no-underline'
-                        : 'block px-3 py-2 text-white/95 no-underline hover:bg-white/10'
-                    }
-                    role="menuitem"
-                  >
-                    Staging
-                  </Link>
-                </li>
-                <li role="none">
-                  <Link
-                    href="/admin/data-init"
-                    className={
-                      pathname === '/admin/data-init' ||
-                      pathname.startsWith('/admin/data-init/')
-                        ? 'block px-3 py-2 text-white font-semibold bg-white/15 no-underline'
-                        : 'block px-3 py-2 text-white/95 no-underline hover:bg-white/10'
-                    }
-                    role="menuitem"
-                  >
-                    Data reset
-                  </Link>
-                </li>
-              </ul>
-            </details>
+              </button>
+              {adminOpen ? (
+                <ul
+                  id={menuId}
+                  role="menu"
+                  aria-labelledby={`${menuId}-button`}
+                  className="absolute right-0 z-20 mt-1 min-w-[11rem] rounded border border-white/20 bg-um-titlebar py-1 shadow-md"
+                >
+                  <li role="none">
+                    <Link
+                      href="/import/staging"
+                      className={
+                        pathname === '/import/staging' ||
+                        pathname.startsWith('/import/staging/')
+                          ? 'block px-3 py-2 text-white font-semibold bg-white/15 no-underline'
+                          : 'block px-3 py-2 text-white/95 no-underline hover:bg-white/10'
+                      }
+                      role="menuitem"
+                      onClick={() => setAdminOpen(false)}
+                    >
+                      Staging
+                    </Link>
+                  </li>
+                  <li role="none">
+                    <Link
+                      href="/admin/data-init"
+                      className={
+                        pathname === '/admin/data-init' ||
+                        pathname.startsWith('/admin/data-init/')
+                          ? 'block px-3 py-2 text-white font-semibold bg-white/15 no-underline'
+                          : 'block px-3 py-2 text-white/95 no-underline hover:bg-white/10'
+                      }
+                      role="menuitem"
+                      onClick={() => setAdminOpen(false)}
+                    >
+                      Data reset
+                    </Link>
+                  </li>
+                </ul>
+              ) : null}
+            </div>
           </nav>
         ) : null}
 

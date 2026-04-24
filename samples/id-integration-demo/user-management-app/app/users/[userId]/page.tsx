@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import { useToast } from '@/lib/toast-context';
@@ -25,7 +25,6 @@ type ExtraRow = { id: string; key: string; value: string };
 
 export default function UserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { show: showToast } = useToast();
   /** Cognito `Username` (API path segment), not `sub`. */
   const rawId = params.userId;
@@ -51,6 +50,10 @@ export default function UserDetailPage() {
   const [showDeleteStep1, setShowDeleteStep1] = useState(false);
   const [showDeleteStep2, setShowDeleteStep2] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  /** Set after successful DELETE — show completion screen only (no immediate navigation). */
+  const [deleteSucceededUsername, setDeleteSucceededUsername] = useState<
+    string | null
+  >(null);
 
   const markDirty = useCallback(() => {
     setDirty(true);
@@ -236,10 +239,11 @@ export default function UserDetailPage() {
         }
         return;
       }
-      const u = encodeURIComponent(user.username);
+      const name = user.username;
       setShowDeleteStep1(false);
       setShowDeleteStep2(false);
-      router.push(`/users?toast=userDeleted&u=${u}`);
+      setDeleteConfirmInput('');
+      setDeleteSucceededUsername(name);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -250,6 +254,47 @@ export default function UserDetailPage() {
   if (!usernameParam) {
     return <p className="px-5 py-6 text-red-600">Invalid user</p>;
   }
+
+  if (deleteSucceededUsername) {
+    const listHref = `/users?toast=userDeleted&u=${encodeURIComponent(deleteSucceededUsername)}`;
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-5 py-12">
+        <div
+          className="w-full max-w-md rounded-lg border border-um-border bg-white p-8 shadow-sm text-center"
+          role="dialog"
+          aria-modal
+          aria-labelledby="delete-done-title"
+        >
+          <h1
+            id="delete-done-title"
+            className="text-xl font-semibold text-emerald-900"
+          >
+            User deleted
+          </h1>
+          <p className="text-sm text-um-text mt-3">
+            User{' '}
+            <span className="font-mono font-medium text-black">
+              {deleteSucceededUsername}
+            </span>{' '}
+            was removed from the user pool.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href={listHref}
+              className="inline-flex justify-center min-w-[200px] px-4 py-2.5 text-sm font-medium text-white bg-um-primary no-underline hover:bg-um-primary-hover"
+            >
+              Back to user list
+            </Link>
+          </div>
+          <p className="text-xs text-um-text mt-4">
+            You can return to the list when ready; a short confirmation will appear
+            there.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <p className="px-5 py-6 text-um-text opacity-80">Loading…</p>;
   }
