@@ -31,6 +31,7 @@ export function registerStagingRoutes(
       const result = await listStagingUsers(dynamo, tableName, {
         limit: query.limit,
         paginationToken: query.paginationToken,
+        importBatchId: query.importBatchId,
       });
       return c.json(result, 200);
     } catch (err) {

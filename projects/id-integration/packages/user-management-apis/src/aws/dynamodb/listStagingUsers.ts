@@ -11,6 +11,7 @@ export type StagingUserSummary = {
   id: string;
   imported: boolean;
   verified: boolean;
+  importBatchId?: string;
   error?: string;
   errorMessage?: string;
   data: Record<string, unknown>;
@@ -40,6 +41,9 @@ function mapRawItem(item: Record<string, unknown>): StagingUserSummary {
   }
   if (typeof item.errorMessage === 'string' && item.errorMessage !== '') {
     summary.errorMessage = item.errorMessage;
+  }
+  if (typeof item.importBatchId === 'string' && item.importBatchId !== '') {
+    summary.importBatchId = item.importBatchId;
   }
   return summary;
 }
@@ -76,15 +80,24 @@ export function encodeStagingPaginationToken(
 export async function listStagingUsers(
   ddb: DynamoDBDocumentClient,
   tableName: string,
-  query: { limit?: number; paginationToken?: string }
+  query: { limit?: number; paginationToken?: string; importBatchId?: string }
 ): Promise<{ items: StagingUserSummary[]; paginationToken?: string }> {
   const limit = query.limit ?? DEFAULT_LIMIT;
   const exclusiveStartKey = decodeStagingPaginationToken(query.paginationToken);
+  const filterBatch = query.importBatchId;
+  const filterExpr =
+    filterBatch !== undefined && filterBatch !== ''
+      ? {
+          FilterExpression: 'importBatchId = :b',
+          ExpressionAttributeValues: { ':b': filterBatch },
+        }
+      : {};
 
   const out = await ddb.send(
     new ScanCommand({
       TableName: tableName,
       Limit: limit,
+      ...filterExpr,
       ...(exclusiveStartKey !== undefined
         ? { ExclusiveStartKey: exclusiveStartKey }
         : {}),

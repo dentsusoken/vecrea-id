@@ -107,7 +107,8 @@ function parseCognitoUserExportToRecords(csvText: string): {
 export async function importUsersCsvToStaging(
   ddb: DynamoDBDocumentClient,
   tableName: string,
-  csvText: string
+  csvText: string,
+  options?: { importBatchId: string }
 ): Promise<ImportUsersCsvResponse> {
   const normalizedText = normalizeCsvText(csvText);
   const { records: rawData, parseErrors } =
@@ -145,6 +146,8 @@ export async function importUsersCsvToStaging(
     );
   }
 
+  const batchId = options?.importBatchId;
+
   const outcomes = await Promise.allSettled(
     validUsers.map(({ user }) =>
       ddb.send(
@@ -155,6 +158,7 @@ export async function importUsersCsvToStaging(
             data: user,
             imported: false,
             verified: isVerifiedUser(user),
+            ...(batchId !== undefined ? { importBatchId: batchId } : {}),
           },
         })
       )
@@ -183,6 +187,7 @@ export async function importUsersCsvToStaging(
     totalRows,
     successCount,
     failureCount,
+    ...(batchId !== undefined ? { importBatchId: batchId } : {}),
     ...(errors.length > 0 ? { errors } : {}),
   };
 }

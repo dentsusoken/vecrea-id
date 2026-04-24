@@ -32,6 +32,17 @@ export const importUsersCsvRoute = createRoute({
     'Each valid row is persisted to the staging table; actual Cognito migration happens on first sign-in via the Migrate user trigger.',
   security: [{ bearerAuth: [] }],
   request: {
+    query: z.object({
+      importBatchId: z
+        .string()
+        .min(1)
+        .optional()
+        .openapi({
+          param: { name: 'importBatchId', in: 'query' },
+          description:
+            'Optional. When omitted, the server generates a new UUID; all valid CSV rows are tagged with it for `GET /staging/users?importBatchId=...`.',
+        }),
+    }),
     body: {
       required: true,
       content: {

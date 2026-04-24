@@ -297,6 +297,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       totalRows: 2,
       successCount: 2,
       failureCount: 0,
+      importBatchId: expect.any(String),
     });
 
     expect(ddbMock).toHaveReceivedCommandTimes(PutCommand, 2);
@@ -304,6 +305,7 @@ describe('createManagementApis (Cognito mocked)', () => {
       TableName: TEST_STAGING_TABLE,
       Item: expect.objectContaining({
         id: 'user-one',
+        importBatchId: expect.any(String),
         imported: false,
         verified: false,
         data: expect.objectContaining({

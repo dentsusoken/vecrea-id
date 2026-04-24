@@ -25,6 +25,14 @@ export const listStagingUsersQuerySchema = z.object({
       description:
         'Opaque token from a prior response encoding DynamoDB `LastEvaluatedKey`.',
     }),
+  importBatchId: z
+    .string()
+    .min(1)
+    .optional()
+    .openapi({
+      param: { name: 'importBatchId', in: 'query' },
+      description: 'If set, only rows with this `importBatchId` attribute are returned (Scan with filter).',
+    }),
 });
 
 /**
@@ -57,6 +65,10 @@ export const stagingUserItemSchema = z
       .optional()
       .openapi({ description: 'Error message from failed import' }),
     data: stagingUserDataSanitizedSchema,
+    importBatchId: z
+      .string()
+      .optional()
+      .openapi({ description: 'Set when the row was created by a batched CSV import' }),
   })
   .openapi('StagingUserItem');
 

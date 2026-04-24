@@ -14,6 +14,7 @@ import { cognitoErrorResponse } from '../aws/cognito/cognitoHttp';
 import { getUser } from '../aws/cognito/getUser';
 import { listUsers } from '../aws/cognito/listUsers';
 import { patchUser } from '../aws/cognito/patchUser';
+import { randomUUID } from 'node:crypto';
 import { importUsersCsvToStaging } from '../aws/dynamodb/importUsersCsvToStaging';
 import { requireStagingTableName } from '../aws/env';
 import { createUserRoute } from '../openapi/users/create-user';
@@ -114,6 +115,12 @@ export function registerUsersRoutes(
     const scopeDenied = requiredScopesResponse(c, [USER_MANAGEMENT_SCOPES.IMPORT]);
     if (scopeDenied) return scopeDenied as never;
     try {
+      const query = c.req.valid('query');
+      const importBatchId =
+        query.importBatchId && query.importBatchId.length > 0
+          ? query.importBatchId
+          : randomUUID();
+
       const body = await c.req.parseBody();
       const file = body['file'];
 
@@ -127,8 +134,10 @@ export function registerUsersRoutes(
       const csvText = await file.text();
       const tableName = requireStagingTableName();
 
-      const result = await importUsersCsvToStaging(dynamo, tableName, csvText);
-      return c.json(result, 200);
+      const result = await importUsersCsvToStaging(dynamo, tableName, csvText, {
+        importBatchId,
+      });
+      return c.json({ ...result, importBatchId }, 200);
     } catch (err) {
       return cognitoErrorResponse(c, err) as never;
     }

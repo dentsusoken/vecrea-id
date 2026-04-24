@@ -211,6 +211,13 @@ export const importUsersCsvResponseSchema = z
       .number()
       .int()
       .openapi({ description: 'Number of rows that failed to import' }),
+    importBatchId: z
+      .string()
+      .optional()
+      .openapi({
+        description:
+          'When present, this ID was written on every staged row for filtering in `GET /staging/users`',
+      }),
     errors: z
       .array(importUsersCsvErrorRowSchema)
       .optional()
