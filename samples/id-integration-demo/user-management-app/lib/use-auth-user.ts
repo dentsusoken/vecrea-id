@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 function userLabel(
@@ -15,7 +15,8 @@ export function useAuthUser() {
   const [ready, setReady] = useState(false);
 
   const syncUser = useCallback(() => {
-    return getCurrentUser()
+    return fetchAuthSession()
+      .then(() => getCurrentUser())
       .then((user) => setLabel(userLabel(user)))
       .catch(() => setLabel(null))
       .finally(() => setReady(true));
