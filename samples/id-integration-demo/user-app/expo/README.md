@@ -6,7 +6,7 @@ This is the Expo / Expo Router demo app for **Better Auth + Generic OAuth** (`pr
 
 - **Client**: Expo app (iOS / Android / Web via `expo start --web`)
 - **Auth**: Better Auth client (`better-auth/react`) + Expo plugin (`@better-auth/expo/client`)
-- **Server**: Better Auth handler is mounted as Expo Router **API Routes** under `app/api/auth/[...auth]+api.ts` (served at `/api/auth/`* during dev)
+- **Server**: Better Auth API is hosted by the sibling web app at [../web](../web) (NOT by Expo Router API routes)
 - **IdP**: Any OIDC provider (example: Cognito Hosted UI), configured via env vars (see below)
 
 TypeScript + `pnpm` configuration follows the sibling [../web](../web) sample (package manager, path alias `@/`* → `./src/`*, etc.), extended with `expo/tsconfig.base`.
@@ -37,21 +37,21 @@ For **local development** (`pnpm dev`), you can either:
 
 | Variable                                    | Purpose                                                                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_BETTER_AUTH_URL`               | Public base URL of this app (server + redirects). Example dev: `http://localhost:8081` (Expo dev server; use your LAN IP from a physical device). |
+| `EXPO_PUBLIC_BETTER_AUTH_URL`               | Base URL of the Better Auth server (the sibling web app). Example dev: `http://localhost:3000`                                                     |
 | `EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                                                                                                  |
 | `EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL` | OpenID configuration URL                                                                                                                          |
 
 Example values:
 
 ```bash
-EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:8081
+EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
 
 # Your IdP settings (Cognito / OIDC)
 EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID=replace-me
 EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL=https://example.com/.well-known/openid-configuration
 ```
 
-IdP redirect URI (must match `EXPO_PUBLIC_BETTER_AUTH_URL`):
+IdP redirect URI (must match the Better Auth server base URL, i.e. `EXPO_PUBLIC_BETTER_AUTH_URL`):
 
 `{EXPO_PUBLIC_BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
 
@@ -116,6 +116,15 @@ pnpm eas:update
 pnpm dev
 ```
 
+`pnpm dev` starts the Expo dev server. Since the authentication UI + Better Auth API live in the sibling web app, you must also run the web app during local development.
+
+In another terminal (from the sibling web project), start the web app as well:
+
+```bash
+cd ../web
+pnpm dev
+```
+
 Then you can use the Expo CLI shortcuts in the terminal:
 
 - Press `a` to launch Android (requires a running Android emulator)
@@ -138,7 +147,9 @@ pnpm run typecheck
 
 ## Android (Emulator): accessing `localhost`
 
-This app (including the Better Auth handler on API routes) runs on the Expo dev server port (default: `8081`). If the Android emulator cannot reach your machine at `http://localhost:8081`, the OAuth callback + cookie handoff will fail.
+This app runs on the Expo dev server port (default: `8081`), but Better Auth is hosted by the sibling web app (see [../web](../web)).
+
+If you point `EXPO_PUBLIC_BETTER_AUTH_URL` to `http://localhost:3000` on Android, remember that the Android emulator cannot reach your Mac at `localhost`. Use `http://10.0.2.2:3000` (Android emulator) or your LAN IP (physical devices).
 
 ### Install `adb` (Android Platform Tools)
 

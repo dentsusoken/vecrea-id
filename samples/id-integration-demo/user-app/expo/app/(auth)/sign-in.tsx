@@ -1,88 +1,118 @@
-import { useMemo } from "react";
-import { Redirect, useLocalSearchParams } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { getSetCookie, normalizeCookieName } from "@better-auth/expo/client";
 
-import { SignInButton } from "@/components/auth/SignInButton";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
+import { logAuthSession } from "@/lib/session-debug";
 
-const APP_SCHEME = "id-integration-demo-expo:";
-const OIDC_PROMPT_NONE_ERRORS = new Set([
-  "login_required",
-  "interaction_required",
-  "consent_required",
-  "account_selection_required",
-]);
+const STORAGE_PREFIX = "id-integration-demo-expo";
+const COOKIE_KEY = normalizeCookieName(`${STORAGE_PREFIX}_cookie`);
 
-function firstSearchParam(v: string | string[] | undefined): string | undefined {
-  if (typeof v === "string") return v;
-  if (Array.isArray(v) && typeof v[0] === "string") return v[0];
-  return undefined;
+function resolveAppOrigin(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_BETTER_AUTH_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  return "http://localhost:8081";
 }
 
-function isExpoGoCallbackUrl(url: string): boolean {
-  // Expo Go often uses `exp://.../--/...` or `exp+<slug>://.../--/...`
-  if (url.startsWith("exp://")) return true;
-  return /^exp\+[^:]+:\/\//.test(url);
+function truncateUrl(u: string, max = 200): string {
+  if (u.length <= max) return u;
+  return `${u.slice(0, max)}…`;
 }
 
-function parseTrustedOauthCallback(raw: string | undefined): string | undefined {
-  if (!raw) return undefined;
-  let decoded: string;
+async function saveCookieFromDeepLink(cookieHeaderValue: string): Promise<void> {
+  const prevCookie = (await SecureStore.getItemAsync(COOKIE_KEY)) ?? undefined;
+  const nextCookie = getSetCookie(cookieHeaderValue, prevCookie);
+  await SecureStore.setItemAsync(COOKIE_KEY, nextCookie);
+  authClient.$store.notify("$sessionSignal");
+}
+
+function parseResultUrl(url: string): { cookie: string | null } {
   try {
-    decoded = decodeURIComponent(raw);
+    const u = new URL(url);
+    return { cookie: u.searchParams.get("cookie") };
   } catch {
-    return undefined;
+    return { cookie: null };
   }
-  if (!decoded.startsWith(APP_SCHEME) && !isExpoGoCallbackUrl(decoded)) return undefined;
-  return decoded;
 }
 
 /**
- * Dedicated sign-in screen (card layout) so it is visually distinct from the demo home.
+ * Native: open the web sign-in UI inside an in-app browser session and return
+ * to the app via deep link.
  */
 export default function SignInPage() {
-  const { data: session, isPending } = useSession();
-  const params = useLocalSearchParams<{
-    oauthCallback?: string | string[];
-    error?: string | string[];
-  }>();
-  const oauthCallbackURL = useMemo(
-    () => parseTrustedOauthCallback(firstSearchParam(params.oauthCallback)),
-    [params.oauthCallback],
-  );
-  const error = useMemo(() => firstSearchParam(params.error), [params.error]);
-  const shouldAutoInteractive = useMemo(
-    () => (error ? OIDC_PROMPT_NONE_ERRORS.has(error) : false),
-    [error],
-  );
+  const [error, setError] = useState<string | null>(null);
+  const returnUrl = useMemo(() => Linking.createURL("/page"), []);
+  const signInBrowserUrl = useMemo(() => {
+    const origin = resolveAppOrigin();
+    const q = new URLSearchParams({
+      oauthCallback: returnUrl,
+    }).toString();
+    return `${origin}/sign-in?${q}`;
+  }, [returnUrl]);
 
-  // Web UX: if already signed in, skip the sign-in screen and go straight to /page.
-  //
-  // Native in-app-browser UX: when `oauthCallback` is present we intentionally
-  // keep showing the sign-in page (even if the browser has cookies) so the user
-  // doesn't land on the app's authenticated /page inside the browser.
-  if (!isPending && session?.user && !oauthCallbackURL) {
-    return <Redirect href="/page" />;
-  }
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      // Web sign-in is hosted elsewhere; go back to the home page.
+      router.replace("/");
+      return;
+    }
+
+    void (async () => {
+      try {
+        logAuthSession("sign-in:begin", {
+          signInBrowserUrl: truncateUrl(signInBrowserUrl),
+          returnUrl: truncateUrl(returnUrl),
+        });
+        const result = await WebBrowser.openAuthSessionAsync(signInBrowserUrl, returnUrl);
+        if (result.type !== "success") {
+          logAuthSession("SIGNIN_FLOW:authSession:done", {
+            at: new Date().toISOString(),
+            ok: false,
+            resultType: result.type,
+          });
+          setError(result.type);
+          return;
+        }
+        const { cookie } = parseResultUrl(result.url);
+        if (cookie) await saveCookieFromDeepLink(cookie);
+        logAuthSession("SIGNIN_FLOW:authSession:done", {
+          at: new Date().toISOString(),
+          ok: true,
+          hasCookie: Boolean(cookie),
+        });
+        router.replace("/page");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    })();
+  }, [returnUrl, signInBrowserUrl]);
 
   return (
     <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Sign in</Text>
-          <Text style={styles.subtitle}>
-            Continue with your identity provider to access protected pages in this
-            demo.
-          </Text>
-        </View>
-        <View style={styles.actions}>
-          <SignInButton
-            oauthCallbackURL={oauthCallbackURL}
-            startMode={shouldAutoInteractive ? "interactive" : "silent"}
-            autoStart={shouldAutoInteractive}
-          />
-        </View>
+      <View style={styles.center}>
+        <ActivityIndicator />
+        <Text style={styles.hint}>Opening sign in…</Text>
+        <Text style={styles.subhint}>Continue in the in-app browser.</Text>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.error}>{error}</Text>
+            <Pressable
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.homeButton,
+                pressed && styles.homeButtonPressed,
+              ]}
+              onPress={() => router.replace("/")}
+            >
+              <Text style={styles.homeButtonText}>Back to Home</Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -91,40 +121,46 @@ export default function SignInPage() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#fafafa",
+    backgroundColor: "#fff",
+  },
+  center: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
+    gap: 10,
   },
-  card: {
-    width: "100%",
-    maxWidth: 400,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    backgroundColor: "#fff",
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  header: {
-    marginBottom: 22,
-    gap: 8,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#18181b",
-  },
-  subtitle: {
+  hint: {
     fontSize: 14,
-    color: "#52525b",
-    lineHeight: 20,
+    color: "#18181b",
+    fontWeight: "600",
   },
-  actions: {
+  subhint: {
+    fontSize: 12,
+    color: "#52525b",
+  },
+  errorBox: {
     alignItems: "center",
+    gap: 10,
+    marginTop: 4,
+  },
+  error: {
+    fontSize: 12,
+    color: "#dc2626",
+  },
+  homeButton: {
+    borderRadius: 8,
+    backgroundColor: "#18181b",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  homeButtonPressed: {
+    opacity: 0.85,
+  },
+  homeButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
+

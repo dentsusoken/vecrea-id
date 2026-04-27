@@ -29,7 +29,7 @@ Create `.env.local` (or `.env`) and set the variables below.
 pnpm dev
 ```
 
-Open **[https://localhost:3000](https://localhost:3000)** (dev uses `next dev --experimental-https`; you may need to accept a self-signed certificate warning).
+Open **[http://localhost:3000](http://localhost:3000)** (`pnpm dev` uses plain HTTP by default).
 
 ## Environment variables (minimal)
 
@@ -38,7 +38,7 @@ Open **[https://localhost:3000](https://localhost:3000)** (dev uses `next dev --
 
 | Variable             | Purpose                                                                             |
 | -------------------- | ----------------------------------------------------------------------------------- |
-| `BETTER_AUTH_URL`    | Public base URL of this app (client + redirects). Example: `https://localhost:3000` |
+| `BETTER_AUTH_URL`    | Public base URL of this app (client + redirects). Example: `http://localhost:3000` |
 | `BETTER_AUTH_SECRET` | Server secret for Better Auth. Generate a value with the command below.             |
 
 
@@ -72,7 +72,7 @@ Register this **exact** redirect URI on your OAuth/OIDC client (must match `BETT
 
 `{BETTER_AUTH_URL}/api/auth/oauth2/callback/custom`
 
-Example (local): `https://localhost:3000/api/auth/oauth2/callback/custom`
+Example (local): `http://localhost:3000/api/auth/oauth2/callback/custom`
 
 Mismatch causes `redirect_uri` errors from the IdP.
 
@@ -99,7 +99,7 @@ Better Auth’s Generic OAuth handler requires a non-empty `**name`** after mapp
 | Generic OAuth `custom` | `src/lib/providers/custom-provider.ts`                                                   |
 | Route handlers         | `src/app/api/auth/[...all]/route.ts` → `/api/auth/`*                                     |
 | Client                 | `src/lib/auth-client.ts` (`createAuthClient` + `genericOAuthClient` for `signIn.oauth2`) |
-| UI                     | `src/components/auth/SignInButton.tsx` → `CustomSignInButton.tsx`                        |
+| UI                     | `src/components/auth/SignInButton.tsx`                                                   |
 
 
 ## Protected route gating (demo)

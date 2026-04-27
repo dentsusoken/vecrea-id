@@ -104,9 +104,9 @@ export default function AfterSignInPage() {
       );
     }
     logAuthSession("page/(main)/page:redirect", {
-      to: Platform.OS === "web" ? "/sign-in" : "/mobile-sign-in",
+      to: "/sign-in",
     });
-    return <Redirect href={Platform.OS === "web" ? "/sign-in" : "/mobile-sign-in"} />;
+    return <Redirect href="/sign-in" />;
   }
 
   const user = session.user as Record<string, unknown>;

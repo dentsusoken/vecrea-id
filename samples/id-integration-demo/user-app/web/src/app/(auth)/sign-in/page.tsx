@@ -1,28 +1,18 @@
-"use client";
-
-import { SignInButton } from "@/components/auth/SignInButton";
+import { SignInContent } from "./SignInContent";
 
 /**
  * Dedicated sign-in screen (card layout) so it is visually distinct from the demo home.
  */
-export default function SignInPage() {
+export default async function SignInPage(props: {
+  searchParams: Promise<{ oauthCallback?: string; error?: string }>;
+}) {
+  const sp = await props.searchParams;
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Sign in
-          </h1>
-          <p className="text-sm text-zinc-600">
-            Continue with your identity provider to access protected pages in
-            this demo.
-          </p>
-        </div>
-
-        <div className="flex justify-center">
-          <SignInButton />
-        </div>
-      </div>
-    </div>
+    <SignInContent
+      error={typeof sp.error === "string" ? sp.error : null}
+      oauthCallback={
+        typeof sp.oauthCallback === "string" ? sp.oauthCallback : null
+      }
+    />
   );
 }
