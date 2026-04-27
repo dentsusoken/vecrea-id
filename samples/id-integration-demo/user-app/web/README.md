@@ -36,10 +36,10 @@ Open **[http://localhost:3000](http://localhost:3000)** (`pnpm dev` uses plain H
 ### Better Auth
 
 
-| Variable             | Purpose                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------- |
+| Variable             | Purpose                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------- |
 | `BETTER_AUTH_URL`    | Public base URL of this app (client + redirects). Example: `http://localhost:3000` |
-| `BETTER_AUTH_SECRET` | Server secret for Better Auth. Generate a value with the command below.             |
+| `BETTER_AUTH_SECRET` | Server secret for Better Auth. Generate a value with the command below.            |
 
 
 Generate `BETTER_AUTH_SECRET` with:
