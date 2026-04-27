@@ -1,12 +1,14 @@
-"use client";
-
 import Link from "next/link";
 import { SignOutButton } from "./auth/SignOutButton";
-import { useSession } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export function AppHeader() {
-  const { data: session } = useSession();
-  if (!session) {
+export async function AppHeader() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
     return (
       <header className="flex items-center justify-end gap-3 border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
         <Link

@@ -1,10 +1,7 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useMemo, useEffect } from "react";
-
 import { SignInButton } from "@/components/auth/SignInButton";
-import { useSession } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const APP_SCHEME = "id-integration-demo-expo:";
 const OIDC_PROMPT_NONE_ERRORS = new Set([
@@ -33,43 +30,30 @@ function parseTrustedOauthCallback(raw: string | null): string | undefined {
 }
 
 /**
- * Sign-in UI: session redirect and OAuth button options (aligned with Expo
- * `app/(auth)/sign-in.tsx`).
+ * Sign-in UI (SSR): redirects when already signed in, otherwise renders a card
+ * with a client-side `SignInButton`.
  */
-export function SignInContent({
+export async function SignInContent({
   oauthCallback,
   error,
 }: {
   oauthCallback: string | null;
   error: string | null;
 }) {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
-  const oauthCallbackURL = useMemo(
-    () => parseTrustedOauthCallback(oauthCallback),
-    [oauthCallback],
-  );
-  const shouldAutoInteractive = useMemo(
-    () => (error ? OIDC_PROMPT_NONE_ERRORS.has(error) : false),
-    [error],
-  );
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  useEffect(() => {
-    if (isPending) return;
-    if (session?.user && !oauthCallbackURL) {
-      router.replace("/page");
-    }
-  }, [isPending, session?.user, oauthCallbackURL, router]);
+  const oauthCallbackURL = parseTrustedOauthCallback(oauthCallback);
+  const shouldAutoInteractive = error
+    ? OIDC_PROMPT_NONE_ERRORS.has(error)
+    : false;
 
-  if (!isPending && session?.user && !oauthCallbackURL) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-4">
-        <div
-          className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-700"
-          aria-label="Redirecting"
-        />
-      </div>
-    );
+  // Web UX: if already signed in, skip the sign-in screen and go straight to /page.
+  // If `oauthCallback` is present, we intentionally keep showing the sign-in page
+  // (mirrors the Expo behavior when running sign-in in an in-app browser).
+  if (session?.user && !oauthCallbackURL) {
+    redirect("/page");
   }
 
   return (
