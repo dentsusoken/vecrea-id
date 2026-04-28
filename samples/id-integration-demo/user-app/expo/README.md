@@ -147,9 +147,9 @@ pnpm run typecheck
 
 ## Android (Emulator): accessing `localhost`
 
-This app runs on the Expo dev server port (default: `8081`), but Better Auth is hosted by the sibling web app (see [../web](../web)).
+Better Auth is hosted by the sibling web app (see [../web](../web)).
 
-If you point `EXPO_PUBLIC_BETTER_AUTH_URL` to `http://localhost:3000` on Android, remember that the Android emulator cannot reach your Mac at `localhost`. Use `http://10.0.2.2:3000` (Android emulator) or your LAN IP (physical devices).
+If you point `EXPO_PUBLIC_BETTER_AUTH_URL` to `http://localhost:3000` on Android, remember that the Android emulator cannot reach your Mac at `localhost`. Use `adb reverse` to forward port `3000` to your Mac.
 
 ### Install `adb` (Android Platform Tools)
 
@@ -166,12 +166,12 @@ adb version
 adb devices
 ```
 
-### Required: use `adb reverse`
+### Required: use `adb reverse` (port 3000)
 
-The Android emulator must be able to reach the dev server at `http://localhost:8081`. Make sure the emulator is running, then run:
+The Android emulator must be able to reach the web app / Better Auth server. Make sure the emulator is running, then run:
 
 ```bash
-adb reverse tcp:8081 tcp:8081
+adb reverse tcp:3000 tcp:3000
 ```
 
 ## iOS / Android: end-to-end runbook (local dev)
