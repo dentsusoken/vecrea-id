@@ -35,20 +35,16 @@ For **local development** (`pnpm dev`), you can either:
 - use EAS variables locally via `eas env:pull --environment preview`, or
 - create `.env.local` in this directory with the same variable names.
 
-| Variable                                    | Purpose                                                                                                                                           |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EXPO_PUBLIC_BETTER_AUTH_URL`               | Base URL of the Better Auth server (the sibling web app). Example dev: `http://localhost:3000`                                                     |
-| `EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                                                                                                  |
-| `EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL` | OpenID configuration URL                                                                                                                          |
+| Variable                      | Purpose                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_BETTER_AUTH_URL` | Base URL of the Better Auth server (the sibling web app). Example dev: `http://localhost:3000` |
 
-Example values:
+OAuth client id, discovery URL, and IdP redirect URIs are configured on the sibling web app ([../web](../web)), not in this Expo app.
+
+Example (this app only):
 
 ```bash
 EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-
-# Your IdP settings (Cognito / OIDC)
-EXPO_PUBLIC_CUSTOM_PROVIDER_CLIENT_ID=replace-me
-EXPO_PUBLIC_CUSTOM_PROVIDER_DISCOVERY_URL=https://example.com/.well-known/openid-configuration
 ```
 
 IdP redirect URI (must match the Better Auth server base URL, i.e. `EXPO_PUBLIC_BETTER_AUTH_URL`):
