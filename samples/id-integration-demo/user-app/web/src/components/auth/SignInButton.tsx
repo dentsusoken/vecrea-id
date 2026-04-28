@@ -121,7 +121,7 @@ export type SignInButtonProps = {
    * `router.replace("/page")` after success — the host handles navigation.
    */
   oauthCallbackURL?: string;
-  /** Expo 用ホーム URL（`sessionStorage` に一緒に保存する）。 */
+  /** Expo app-home URL (persisted in `sessionStorage` alongside `oauthCallbackURL`). */
   expoAppHomeForStorage?: string;
   startMode?: "silent" | "interactive";
   autoStart?: boolean;

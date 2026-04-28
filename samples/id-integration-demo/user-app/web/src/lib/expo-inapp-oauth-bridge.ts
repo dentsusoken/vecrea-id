@@ -1,14 +1,16 @@
 /**
- * Expo のインナーブラウザで OAuth 中に `prompt=none` 失敗などで
- * `/sign-in?error=...` へ飛ばされると、クエリの `oauthCallback` が落ちる。
- * そのままだと次の `sign-in/oauth2` が `callbackURL=/page` になり Web の `/page` に留まるため、
- * 同一 WebView 内で `sessionStorage` に戻り URL を保持する。
+ * During Expo in-app-browser OAuth, an IdP can reject `prompt=none` and trigger
+ * a redirect to `/sign-in?error=...`, which drops the `oauthCallback` query.
+ *
+ * Without that deep link, the next `sign-in/oauth2` falls back to `callbackURL=/page`
+ * and the flow stays in the WebView. Persist the trusted return URL in
+ * `sessionStorage` so we can restore it within the same WebView session.
  */
 
 const STORAGE_OAUTH_RETURN = "id-integration-demo:expo-oauth-return-url";
 const STORAGE_APP_HOME = "id-integration-demo:expo-app-home-url";
 
-/** `Linking.createURL("/page")` 由来の戻り URL からデモルート (`/`) を推測する。 */
+/** Infer the demo root (`/`) from `Linking.createURL("/page")`-style return URLs. */
 export function inferAppHomeFromOAuthReturn(returnUrl: string): string | undefined {
   if (returnUrl.includes("--/page")) {
     return returnUrl.replace("--/page", "--/");
@@ -58,7 +60,7 @@ export function clearPersistedExpoInappOAuthBridge(): void {
   }
 }
 
-/** `/sign-in` をクエリなしで開いたときだけ古い Expo 用 URL を消す。 */
+/** Clear persisted values only when `/sign-in` is opened without query params. */
 export function shouldClearPersistedExpoBridgeForSignInUrl(): boolean {
   if (typeof window === "undefined") return false;
   const sp = new URLSearchParams(window.location.search);

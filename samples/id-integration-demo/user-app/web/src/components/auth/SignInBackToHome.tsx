@@ -13,8 +13,10 @@ const linkClassName =
   "text-sm font-medium text-zinc-600 underline underline-offset-2 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 rounded-sm";
 
 /**
- * Web: デモホーム (`/`)。インナーブラウザ（Expo）では信頼済みディープリンクで
- * アプリのルートへ戻す。`?error=` のみに戻ったあとも sessionStorage から復元する。
+ * Web: return to the demo home (`/`).
+ * Expo in-app browser: use a trusted deep link back to the app root.
+ * If we come back as `/sign-in?error=...` (missing query params), restore the
+ * deep link from `sessionStorage`.
  */
 export function SignInBackToHome({
   oauthReturnUrl,
