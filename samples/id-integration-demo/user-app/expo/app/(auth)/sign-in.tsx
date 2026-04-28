@@ -47,13 +47,15 @@ function parseResultUrl(url: string): { cookie: string | null } {
 export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const returnUrl = useMemo(() => Linking.createURL("/page"), []);
+  const homeUrl = useMemo(() => Linking.createURL("/"), []);
   const signInBrowserUrl = useMemo(() => {
     const origin = resolveAppOrigin();
     const q = new URLSearchParams({
       oauthCallback: returnUrl,
+      appHomeCallback: homeUrl,
     }).toString();
     return `${origin}/sign-in?${q}`;
-  }, [returnUrl]);
+  }, [returnUrl, homeUrl]);
 
   useEffect(() => {
     if (Platform.OS === "web") {

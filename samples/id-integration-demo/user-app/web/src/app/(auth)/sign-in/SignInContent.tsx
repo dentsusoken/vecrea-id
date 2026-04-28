@@ -1,3 +1,4 @@
+import { SignInBackToHome } from "@/components/auth/SignInBackToHome";
 import { SignInButton } from "@/components/auth/SignInButton";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -16,7 +17,7 @@ function isExpoGoCallbackUrl(url: string): boolean {
   return /^exp\+[^:]+:\/\//.test(url);
 }
 
-function parseTrustedOauthCallback(raw: string | null): string | undefined {
+function parseTrustedAppDeepLink(raw: string | null): string | undefined {
   if (!raw) return undefined;
   let decoded: string;
   try {
@@ -29,22 +30,42 @@ function parseTrustedOauthCallback(raw: string | null): string | undefined {
   return decoded;
 }
 
+/** `Linking.createURL("/page")` 由来の戻り URL からデモルート (`/`) を推測する。 */
+function inferAppHomeFromOAuthReturn(returnUrl: string): string | undefined {
+  if (returnUrl.includes("--/page")) {
+    return returnUrl.replace("--/page", "--/");
+  }
+  const m = returnUrl.match(/\/page(?=\?|#|$)/);
+  if (!m || m.index === undefined) return undefined;
+  return (
+    returnUrl.slice(0, m.index) + "/" + returnUrl.slice(m.index + "/page".length)
+  );
+}
+
 /**
  * Sign-in UI (SSR): redirects when already signed in, otherwise renders a card
  * with a client-side `SignInButton`.
  */
 export async function SignInContent({
   oauthCallback,
+  appHomeCallback,
   error,
 }: {
   oauthCallback: string | null;
+  appHomeCallback: string | null;
   error: string | null;
 }) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  const oauthCallbackURL = parseTrustedOauthCallback(oauthCallback);
+  const oauthCallbackURL = parseTrustedAppDeepLink(oauthCallback);
+  const appHomeDeepLink = parseTrustedAppDeepLink(appHomeCallback);
+  const resolvedAppHomeHref =
+    appHomeDeepLink ??
+    (oauthCallbackURL
+      ? inferAppHomeFromOAuthReturn(oauthCallbackURL)
+      : undefined);
   const shouldAutoInteractive = error
     ? OIDC_PROMPT_NONE_ERRORS.has(error)
     : false;
@@ -69,12 +90,21 @@ export async function SignInContent({
           </p>
         </div>
 
-        <div className="flex justify-center">
-          <SignInButton
-            oauthCallbackURL={oauthCallbackURL}
-            startMode={shouldAutoInteractive ? "interactive" : "silent"}
-            autoStart={shouldAutoInteractive}
-          />
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex justify-center">
+            <SignInButton
+              oauthCallbackURL={oauthCallbackURL}
+              startMode={shouldAutoInteractive ? "interactive" : "silent"}
+              autoStart={shouldAutoInteractive}
+            />
+          </div>
+          {oauthCallbackURL ? (
+            resolvedAppHomeHref ? (
+              <SignInBackToHome mode="app" href={resolvedAppHomeHref} />
+            ) : null
+          ) : (
+            <SignInBackToHome mode="web" />
+          )}
         </div>
       </div>
     </div>
