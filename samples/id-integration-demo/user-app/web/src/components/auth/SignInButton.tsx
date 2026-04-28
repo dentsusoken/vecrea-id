@@ -1,9 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { authClient, signIn, useSession } from "@/lib/auth-client";
+import {
+  clearPersistedExpoInappOAuthBridge,
+  persistExpoInappOAuthBridge,
+  readPersistedExpoOauthReturnUrl,
+  shouldClearPersistedExpoBridgeForSignInUrl,
+} from "@/lib/expo-inapp-oauth-bridge";
 import { logAuthSession } from "@/lib/session-debug";
 
 const buttonClassName =
@@ -115,20 +121,45 @@ export type SignInButtonProps = {
    * `router.replace("/page")` after success — the host handles navigation.
    */
   oauthCallbackURL?: string;
+  /** Expo 用ホーム URL（`sessionStorage` に一緒に保存する）。 */
+  expoAppHomeForStorage?: string;
   startMode?: "silent" | "interactive";
   autoStart?: boolean;
 };
 
 export function SignInButton({
   oauthCallbackURL,
+  expoAppHomeForStorage,
   startMode = "silent",
   autoStart = false,
 }: SignInButtonProps) {
   const [busy, setBusy] = useState(false);
+  const [expoOauthReturnUrl, setExpoOauthReturnUrl] = useState<
+    string | undefined
+  >(oauthCallbackURL);
+  const expoReturnRef = useRef(expoOauthReturnUrl);
   const router = useRouter();
   const { data: session, refetch } = useSession();
   const sessionRef = useRef(session);
   const autoStartRanRef = useRef(false);
+
+  expoReturnRef.current = expoOauthReturnUrl;
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    if (shouldClearPersistedExpoBridgeForSignInUrl()) {
+      clearPersistedExpoInappOAuthBridge();
+      setExpoOauthReturnUrl(undefined);
+      return;
+    }
+    if (oauthCallbackURL) {
+      setExpoOauthReturnUrl(oauthCallbackURL);
+      persistExpoInappOAuthBridge(oauthCallbackURL, expoAppHomeForStorage);
+      return;
+    }
+    const stored = readPersistedExpoOauthReturnUrl();
+    if (stored) setExpoOauthReturnUrl(stored);
+  }, [oauthCallbackURL, expoAppHomeForStorage]);
 
   useEffect(() => {
     sessionRef.current = session;
@@ -153,7 +184,8 @@ export function SignInButton({
   }
 
   async function runSignInFlow() {
-    const callbackURL = oauthCallbackURL ?? "/page";
+    const effectiveExpoReturn = expoReturnRef.current;
+    const callbackURL = effectiveExpoReturn ?? "/page";
     const result = await signInCustomWithPromptNoneFallback({
       hasUserAfterRefetch,
       callbackURL,
@@ -166,14 +198,14 @@ export function SignInButton({
     }
 
     const returnToHostApp =
-      oauthCallbackURL != null &&
-      !/^https?:\/\//i.test(oauthCallbackURL.trim());
+      effectiveExpoReturn != null &&
+      !/^https?:\/\//i.test(effectiveExpoReturn.trim());
     const hasUser = await hasUserAfterRefetch();
     if (!hasUser) {
       logAuthSession("SIGNIN_FLOW:missing_session", {
         at: now(),
         callbackURL,
-        oauthCallbackURL: oauthCallbackURL ?? null,
+        oauthCallbackURL: effectiveExpoReturn ?? null,
       });
       console.warn(
         "[SignInButton] OAuth finished but no session was detected after refetch",
@@ -181,6 +213,7 @@ export function SignInButton({
       return;
     }
 
+    clearPersistedExpoInappOAuthBridge();
     if (!returnToHostApp) {
       await refetchAndWaitForSessionPropagation();
       router.replace("/page");
@@ -208,7 +241,7 @@ export function SignInButton({
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot autoStart; deps mirror Expo
-  }, [autoStart, startMode, oauthCallbackURL]);
+  }, [autoStart, startMode, expoOauthReturnUrl]);
 
   return (
     <button

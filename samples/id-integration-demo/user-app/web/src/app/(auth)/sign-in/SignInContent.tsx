@@ -1,6 +1,7 @@
 import { SignInBackToHome } from "@/components/auth/SignInBackToHome";
 import { SignInButton } from "@/components/auth/SignInButton";
 import { auth } from "@/lib/auth";
+import { inferAppHomeFromOAuthReturn } from "@/lib/expo-inapp-oauth-bridge";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -28,18 +29,6 @@ function parseTrustedAppDeepLink(raw: string | null): string | undefined {
   if (!decoded.startsWith(APP_SCHEME) && !isExpoGoCallbackUrl(decoded))
     return undefined;
   return decoded;
-}
-
-/** `Linking.createURL("/page")` 由来の戻り URL からデモルート (`/`) を推測する。 */
-function inferAppHomeFromOAuthReturn(returnUrl: string): string | undefined {
-  if (returnUrl.includes("--/page")) {
-    return returnUrl.replace("--/page", "--/");
-  }
-  const m = returnUrl.match(/\/page(?=\?|#|$)/);
-  if (!m || m.index === undefined) return undefined;
-  return (
-    returnUrl.slice(0, m.index) + "/" + returnUrl.slice(m.index + "/page".length)
-  );
 }
 
 /**
@@ -94,17 +83,15 @@ export async function SignInContent({
           <div className="flex justify-center">
             <SignInButton
               oauthCallbackURL={oauthCallbackURL}
+              expoAppHomeForStorage={resolvedAppHomeHref}
               startMode={shouldAutoInteractive ? "interactive" : "silent"}
               autoStart={shouldAutoInteractive}
             />
           </div>
-          {oauthCallbackURL ? (
-            resolvedAppHomeHref ? (
-              <SignInBackToHome mode="app" href={resolvedAppHomeHref} />
-            ) : null
-          ) : (
-            <SignInBackToHome mode="web" />
-          )}
+          <SignInBackToHome
+            oauthReturnUrl={oauthCallbackURL}
+            appHomeUrl={appHomeDeepLink}
+          />
         </div>
       </div>
     </div>

@@ -87,7 +87,10 @@ export default function SignInPage() {
           ok: true,
           hasCookie: Boolean(cookie),
         });
-        router.replace("/page");
+        // Same app scheme as `returnUrl` can still complete as `success` (e.g. "Back to
+        // app home" on the hosted sign-in page). Without `cookie`, do not send users to
+        // gated `/page` or they bounce back to `/sign-in`.
+        router.replace(cookie ? "/page" : "/");
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
