@@ -4,14 +4,18 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 
 import { useSession } from "@/lib/auth-client";
 import { logAuthSession } from "@/lib/session-debug";
+import { buildPasskeyRegisterUrl } from "@/lib/passkey-register-url";
 
 function formatMaybeString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
@@ -36,6 +40,8 @@ export default function AfterSignInPage() {
   const pendingSinceRef = useRef<number | null>(null);
   const instanceId = useMemo(() => Math.random().toString(16).slice(2, 8), []);
   const nativeVerifyInFlightRef = useRef(false);
+  const passkeyReturnUrl = useMemo(() => Linking.createURL("/page"), []);
+  const passkeyRegisterHref = useMemo(() => buildPasskeyRegisterUrl(), []);
 
   useEffect(() => {
     logAuthSession("page/(main)/page:gate", {
@@ -125,6 +131,23 @@ export default function AfterSignInPage() {
     formatMaybeString(user.avatar_url) ||
     formatMaybeString(user.avatarUrl);
 
+  async function handleAddPasskey() {
+    if (!passkeyRegisterHref) return;
+    logAuthSession("page/(main)/page:passkey:add:open", {
+      instanceId,
+      platform: Platform.OS,
+    });
+
+    const returnUrl =
+      process.env.EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI?.trim() ||
+      passkeyReturnUrl;
+    const result = await WebBrowser.openAuthSessionAsync(passkeyRegisterHref, returnUrl);
+    logAuthSession("page/(main)/page:passkey:add:result", {
+      instanceId,
+      resultType: result.type,
+    });
+  }
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -157,6 +180,21 @@ export default function AfterSignInPage() {
           <Text style={styles.kvValue}>{toPrettyJson(user)}</Text>
         </View>
       </View>
+
+      {passkeyRegisterHref ? (
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            pressed && styles.secondaryButtonPressed,
+          ]}
+          onPress={() => {
+            void handleAddPasskey();
+          }}
+        >
+          <Text style={styles.secondaryButtonText}>Add a passkey (Cognito)</Text>
+        </Pressable>
+      ) : null}
 
       <Link href="/" style={styles.primaryLink}>
         <Text style={styles.primaryLinkText}>Back to Home</Text>
@@ -264,5 +302,20 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  secondaryButton: {
+    marginTop: 2,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  secondaryButtonPressed: {
+    opacity: 0.7,
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#3f3f46",
+    textDecorationLine: "underline",
   },
 });
