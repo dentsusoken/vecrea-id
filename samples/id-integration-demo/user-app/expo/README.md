@@ -207,3 +207,17 @@ pnpm android
 
 - **Scheme**: `id-integration-demo-expo` (see `app.json`). It must stay aligned with `trustedOrigins` in `src/lib/auth.ts` and `scheme` in `src/lib/auth-client.ts`.
 
+## SSO notes (app ↔ browser)
+
+- **iOS**: SSO between Safari and apps can be tricky to validate because authentication sessions inside apps may use a different cookie store from Safari (depending on the API and settings). As a result, you might not be able to reproduce a "Safari is signed in → app is automatically signed in" flow reliably. See: `https://qiita.com/TAKATSU-Qiita/items/517ba966b6f27c6ef975`.
+- **Android**: On Android, if the user signs in in the app first, the web app may also appear signed in afterwards (shared IdP session/cookies depending on the browser surface).
+
+## Passkeys: testing on Android Emulator / iOS Simulator
+
+This repo uses Cognito managed login `/passkeys/add` for passkey registration. For device/simulator setup and testing tips, refer to:
+
+- Android Emulator: [Corbado guide](https://docs.corbado.com/corbado-connect/helpful-guides/android-testing)
+- iOS Simulator: [Corbado guide](https://docs.corbado.com/corbado-connect/helpful-guides/ios-testing#1-testing-on-simulator)
+
+Note (Android Emulator): you don't need a physical fingerprint sensor. The Corbado guide suggests enabling fingerprint authentication in Settings, but fingerprint "touch" can be simulated via `adb emu finger touch <finger_id>`.
+
