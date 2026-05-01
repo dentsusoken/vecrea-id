@@ -18,7 +18,7 @@ export function shouldShowPasskeyRegisterLink(): boolean {
 }
 
 function cognitoBaseUrlFromEnv(): string | undefined {
-  const raw = trimEnv("EXPO_PUBLIC_COGNITO_DOMAIN");
+  const raw = trimEnv("EXPO_PUBLIC_PASSKEY_REGISTER_LINK");
   if (!raw) return undefined;
   if (/^https?:\/\//i.test(raw)) {
     return raw.replace(/\/$/, "");
@@ -35,7 +35,7 @@ function defaultRedirectUri(): string | undefined {
 export function buildPasskeyRegisterUrl(): string | null {
   if (!shouldShowPasskeyRegisterLink()) return null;
 
-  const clientId = trimEnv("EXPO_PUBLIC_COGNITO_CLIENT_ID");
+  const clientId = trimEnv("EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID");
   const base = cognitoBaseUrlFromEnv();
   const redirectUri = defaultRedirectUri();
   if (!clientId || !base || !redirectUri) return null;

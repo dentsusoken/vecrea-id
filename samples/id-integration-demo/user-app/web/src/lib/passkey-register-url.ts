@@ -21,11 +21,12 @@ export function shouldShowPasskeyRegisterLink(): boolean {
 }
 
 /**
- * Cognito domain or origin from env (e.g. `myapp.auth.ap-northeast-1.amazoncognito.com`
- * or `https://myapp.auth.ap-northeast-1.amazoncognito.com`).
+ * Base URL (domain or origin) for managed login passkey registration.
+ * Example: `myapp.auth.ap-northeast-1.amazoncognito.com` or
+ * `https://myapp.auth.ap-northeast-1.amazoncognito.com`.
  */
-function cognitoBaseUrlFromEnv(): string | undefined {
-  const raw = trimEnv("COGNITO_DOMAIN");
+function passkeyRegisterBaseUrlFromEnv(): string | undefined {
+  const raw = trimEnv("PASSKEY_REGISTER_LINK");
   if (!raw) return undefined;
   if (/^https?:\/\//i.test(raw)) {
     return raw.replace(/\/$/, "");
@@ -45,8 +46,8 @@ function defaultRedirectUri(): string | undefined {
 export function buildPasskeyRegisterUrl(): string | null {
   if (!shouldShowPasskeyRegisterLink()) return null;
 
-  const clientId = trimEnv("COGNITO_CLIENT_ID");
-  const base = cognitoBaseUrlFromEnv();
+  const clientId = trimEnv("PASSKEY_REGISTER_CLIENT_ID");
+  const base = passkeyRegisterBaseUrlFromEnv();
   const redirectUri = defaultRedirectUri();
   if (!clientId || !base || !redirectUri) return null;
 

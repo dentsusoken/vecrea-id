@@ -38,7 +38,7 @@ Open **[http://localhost:3000](http://localhost:3000)** (`pnpm dev` uses plain H
 
 | Variable             | Purpose                                                                            |
 | -------------------- | ---------------------------------------------------------------------------------- |
-| `BETTER_AUTH_URL`    | Public base URL of this app (client + redirects). Example: `http://localhost:3000` |
+| `BETTER_AUTH_URL`    | Public base URL of this app (used by Better Auth and for redirects). Example: `http://localhost:3000` |
 | `BETTER_AUTH_SECRET` | Server secret for Better Auth. Generate a value with the command below.            |
 
 
@@ -56,7 +56,6 @@ Configured in `src/lib/providers/custom-provider.ts` and used by **Sign in** (`s
 | Variable                        | Purpose                                                                      |
 | ------------------------------- | ---------------------------------------------------------------------------- |
 | `CUSTOM_PROVIDER_CLIENT_ID`     | OAuth/OIDC client id at your IdP                                             |
-| `CUSTOM_PROVIDER_CLIENT_SECRET` | Client secret                                                                |
 | `CUSTOM_PROVIDER_DISCOVERY_URL` | Full URL to OpenID Configuration (e.g. `…/.well-known/openid-configuration`) |
 
 
@@ -75,6 +74,17 @@ Register this **exact** redirect URI on your OAuth/OIDC client (must match `BETT
 Example (local): `http://localhost:3000/api/auth/oauth2/callback/custom`
 
 Mismatch causes `redirect_uri` errors from the IdP.
+
+## Passkey registration (Cognito managed login)
+
+This demo can optionally show an "Add a passkey (Cognito)" link on `/page` that sends signed-in users to Cognito managed login `/passkeys/add`.
+
+| Variable                       | Purpose |
+| ------------------------------ | ------- |
+| `SHOW_PASSKEY_REGISTER_LINK`   | When truthy, show the passkey registration link on `/page` |
+| `PASSKEY_REGISTER_LINK`        | Cognito managed login domain or origin (e.g. `myapp.auth.ap-northeast-1.amazoncognito.com`) |
+| `PASSKEY_REGISTER_CLIENT_ID`   | Cognito app client id used in the `/passkeys/add` query |
+| `PASSKEY_REGISTER_REDIRECT_URI` | Optional override for the `redirect_uri` query. Default: `${BETTER_AUTH_URL}/page` |
 
 #### Notes on `name` vs `email`
 

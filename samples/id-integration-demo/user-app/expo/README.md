@@ -39,7 +39,18 @@ For **local development** (`pnpm dev`), you can either:
 | ----------------------------- | ----------------------------------------------------------------------------------------------- |
 | `EXPO_PUBLIC_BETTER_AUTH_URL` | Base URL of the Better Auth server (the sibling web app). Example dev: `http://localhost:3000` |
 
-OAuth client id, discovery URL, and IdP redirect URIs are configured on the sibling web app ([../web](../web)), not in this Expo app.
+OAuth client id, discovery URL, and IdP redirect URIs for **sign-in** are configured on the sibling web app ([../web](../web)), not in this Expo app.
+
+### Passkey registration (Cognito managed login)
+
+The Expo app can optionally show an "Add a passkey (Cognito)" button on the after-sign-in page. This opens Cognito managed login `/passkeys/add` in an in-app browser.
+
+| Variable                                    | Purpose |
+| ------------------------------------------- | ------- |
+| `EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK`    | When truthy, show the passkey registration button |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_LINK`         | Cognito managed login domain or origin |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID`    | Cognito app client id used in the `/passkeys/add` query |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI` | Redirect URI after passkey registration (typically a deep link like `id-integration-demo-expo:///page`) |
 
 Example (this app only):
 
