@@ -39,12 +39,30 @@ For **local development** (`pnpm dev`), you can either:
 | ----------------------------- | ----------------------------------------------------------------------------------------------- |
 | `EXPO_PUBLIC_BETTER_AUTH_URL` | Base URL of the Better Auth server (the sibling web app). Example dev: `http://localhost:3000` |
 
-OAuth client id, discovery URL, and IdP redirect URIs are configured on the sibling web app ([../web](../web)), not in this Expo app.
+OAuth client id, discovery URL, and IdP redirect URIs for **sign-in** are configured on the sibling web app ([../web](../web)), not in this Expo app.
+
+### Passkey registration (Cognito managed login)
+
+The Expo app can optionally show an "Add a passkey (Cognito)" button on the after-sign-in page. This opens Cognito managed login `/passkeys/add` in an in-app browser.
+
+| Variable                                    | Purpose |
+| ------------------------------------------- | ------- |
+| `EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK`    | When truthy, show the passkey registration button |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_LINK`         | Cognito managed login domain or origin |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID`    | Cognito app client id used in the `/passkeys/add` query |
+| `EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI` | Redirect URI after passkey registration (typically a deep link like `id-integration-demo-expo:///page`) |
 
 Example (this app only):
 
 ```bash
 EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# Optional: show passkey registration CTA (Cognito managed login /passkeys/add)
+EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK=true
+EXPO_PUBLIC_PASSKEY_REGISTER_LINK=https://<your-cognito-domain>
+EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID=replace-me
+# Optional: override redirect after passkey registration (defaults to a deep link)
+# EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI=id-integration-demo-expo:///page
 ```
 
 IdP redirect URI (must match the Better Auth server base URL, i.e. `EXPO_PUBLIC_BETTER_AUTH_URL`):
@@ -195,4 +213,18 @@ pnpm android
 ## Notes
 
 - **Scheme**: `id-integration-demo-expo` (see `app.json`). It must stay aligned with `trustedOrigins` in `src/lib/auth.ts` and `scheme` in `src/lib/auth-client.ts`.
+
+## SSO notes (app ↔ browser)
+
+- **iOS**: SSO between Safari and apps can be tricky to validate because authentication sessions inside apps may use a different cookie store from Safari (depending on the API and settings). As a result, you might not be able to reproduce a "Safari is signed in → app is automatically signed in" flow reliably. See: `https://qiita.com/TAKATSU-Qiita/items/517ba966b6f27c6ef975`.
+- **Android**: On Android, if the user signs in in the app first, the web app may also appear signed in afterwards (shared IdP session/cookies depending on the browser surface).
+
+## Passkeys: testing on Android Emulator / iOS Simulator
+
+This repo uses Cognito managed login `/passkeys/add` for passkey registration. For device/simulator setup and testing tips, refer to:
+
+- Android Emulator: [Corbado guide](https://docs.corbado.com/corbado-connect/helpful-guides/android-testing)
+- iOS Simulator: [Corbado guide](https://docs.corbado.com/corbado-connect/helpful-guides/ios-testing#1-testing-on-simulator)
+
+Note (Android Emulator): you don't need a physical fingerprint sensor. The Corbado guide suggests enabling fingerprint authentication in Settings, but fingerprint "touch" can be simulated via `adb emu finger touch <finger_id>`.
 

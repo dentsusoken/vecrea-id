@@ -5,6 +5,7 @@ import { headers } from "next/headers";
  * Post–sign-in landing page for the demo (SSR).
  */
 import { auth } from "@/lib/auth";
+import { buildPasskeyRegisterUrl } from "@/lib/passkey-register-url";
 
 function formatMaybeString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
@@ -60,6 +61,8 @@ export default async function Page() {
     formatMaybeString(user.avatar_url) ||
     formatMaybeString(user.avatarUrl);
 
+  const passkeyRegisterHref = buildPasskeyRegisterUrl();
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-10">
       <div className="space-y-2 text-center">
@@ -102,6 +105,16 @@ export default async function Page() {
           </pre>
         </div>
       </div>
+
+      {passkeyRegisterHref ? (
+        <a
+          className="text-sm font-medium text-zinc-700 underline underline-offset-2 transition-colors hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 rounded-sm"
+          href={passkeyRegisterHref}
+          target="_self"
+        >
+          Add a passkey (Cognito)
+        </a>
+      ) : null}
 
       <Link
         className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-px hover:bg-zinc-800 hover:shadow-md active:translate-y-0 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
