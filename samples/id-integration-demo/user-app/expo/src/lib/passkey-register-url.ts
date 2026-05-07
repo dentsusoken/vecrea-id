@@ -6,19 +6,12 @@ function truthyEnv(value: string | undefined): boolean {
   return v === "1" || v === "true" || v === "yes";
 }
 
-function trimEnv(name: string): string | undefined {
-  const v = process.env[name];
-  if (typeof v !== "string") return undefined;
-  const t = v.trim();
-  return t ? t : undefined;
-}
-
 export function shouldShowPasskeyRegisterLink(): boolean {
-  return truthyEnv(trimEnv("EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK"));
+  return truthyEnv(process.env.EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK);
 }
 
 function cognitoBaseUrlFromEnv(): string | undefined {
-  const raw = trimEnv("EXPO_PUBLIC_PASSKEY_REGISTER_LINK");
+  const raw = process.env.EXPO_PUBLIC_PASSKEY_REGISTER_LINK?.trim();
   if (!raw) return undefined;
   if (/^https?:\/\//i.test(raw)) {
     return raw.replace(/\/$/, "");
@@ -27,7 +20,7 @@ function cognitoBaseUrlFromEnv(): string | undefined {
 }
 
 function defaultRedirectUri(): string | undefined {
-  const explicit = trimEnv("EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI");
+  const explicit = process.env.EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI?.trim();
   if (explicit) return explicit;
   return Linking.createURL("/page");
 }
@@ -35,7 +28,7 @@ function defaultRedirectUri(): string | undefined {
 export function buildPasskeyRegisterUrl(): string | null {
   if (!shouldShowPasskeyRegisterLink()) return null;
 
-  const clientId = trimEnv("EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID");
+  const clientId = process.env.EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID?.trim();
   const base = cognitoBaseUrlFromEnv();
   const redirectUri = defaultRedirectUri();
   if (!clientId || !base || !redirectUri) return null;

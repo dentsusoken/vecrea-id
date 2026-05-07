@@ -30,6 +30,11 @@ function toPrettyJson(value: unknown): string {
   }
 }
 
+function truthyEnv(value: string | undefined): boolean {
+  const v = value?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
 /**
  * Post–sign-in landing page for the demo. Unauthenticated users are sent to
  * `/sign-in` (same idea as the Next.js middleware gate on `/page`).
@@ -42,6 +47,28 @@ export default function AfterSignInPage() {
   const nativeVerifyInFlightRef = useRef(false);
   const passkeyReturnUrl = useMemo(() => Linking.createURL("/page"), []);
   const passkeyRegisterHref = useMemo(() => buildPasskeyRegisterUrl(), []);
+  const showPasskeyDebugUi = useMemo(
+    () => truthyEnv(process.env.EXPO_PUBLIC_DEBUG_PASSKEY_UI),
+    [],
+  );
+  const passkeyEnvDebug = useMemo(() => {
+    if (!showPasskeyDebugUi) return null;
+    const showFlag = process.env.EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK?.trim();
+    const link = process.env.EXPO_PUBLIC_PASSKEY_REGISTER_LINK?.trim();
+    const clientId = process.env.EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID?.trim();
+    const explicitRedirectUri =
+      process.env.EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI?.trim();
+    return {
+      showFlag,
+      showFlagTruthy: truthyEnv(showFlag),
+      link,
+      hasClientId: Boolean(clientId),
+      clientIdLength: clientId ? clientId.length : 0,
+      explicitRedirectUri,
+      defaultRedirectUri: passkeyReturnUrl,
+      passkeyRegisterHref,
+    };
+  }, [passkeyRegisterHref, passkeyReturnUrl, showPasskeyDebugUi]);
 
   useEffect(() => {
     logAuthSession("page/(main)/page:gate", {
@@ -196,6 +223,13 @@ export default function AfterSignInPage() {
         </Pressable>
       ) : null}
 
+      {passkeyEnvDebug ? (
+        <View style={styles.debugCard}>
+          <Text style={styles.debugTitle}>Passkey debug</Text>
+          <Text style={styles.debugBody}>{toPrettyJson(passkeyEnvDebug)}</Text>
+        </View>
+      ) : null}
+
       <Link href="/" style={styles.primaryLink}>
         <Text style={styles.primaryLinkText}>Back to Home</Text>
       </Link>
@@ -317,5 +351,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#3f3f46",
     textDecorationLine: "underline",
+  },
+  debugCard: {
+    width: "100%",
+    maxWidth: 520,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    backgroundColor: "#fafafa",
+    padding: 12,
+  },
+  debugTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#18181b",
+    marginBottom: 8,
+  },
+  debugBody: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#3f3f46",
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: undefined }),
   },
 });
