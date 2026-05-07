@@ -56,6 +56,13 @@ Example (this app only):
 
 ```bash
 EXPO_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# Optional: show passkey registration CTA (Cognito managed login /passkeys/add)
+EXPO_PUBLIC_SHOW_PASSKEY_REGISTER_LINK=true
+EXPO_PUBLIC_PASSKEY_REGISTER_LINK=https://<your-cognito-domain>
+EXPO_PUBLIC_PASSKEY_REGISTER_CLIENT_ID=replace-me
+# Optional: override redirect after passkey registration (defaults to a deep link)
+# EXPO_PUBLIC_PASSKEY_REGISTER_REDIRECT_URI=id-integration-demo-expo:///page
 ```
 
 IdP redirect URI (must match the Better Auth server base URL, i.e. `EXPO_PUBLIC_BETTER_AUTH_URL`):
