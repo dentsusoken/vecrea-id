@@ -625,6 +625,9 @@ export default function UserDetailPage() {
               username <strong className="text-black font-mono">{user.username}</strong>{' '}
               to confirm.
             </p>
+            {actionError ? (
+              <p className="text-sm text-red-600 mt-3">{actionError}</p>
+            ) : null}
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
@@ -675,6 +678,9 @@ export default function UserDetailPage() {
               autoComplete="off"
               aria-label="Username to confirm deletion"
             />
+            {actionError ? (
+              <p className="text-sm text-red-600 mt-3">{actionError}</p>
+            ) : null}
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
