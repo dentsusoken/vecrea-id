@@ -32,7 +32,7 @@ export default function ImportPage() {
       if (!res.ok) {
         try {
           const j = JSON.parse(text) as { message?: string };
-          setError(j.message ?? text);
+          setError(j.message || text || `HTTP ${res.status}`);
         } catch {
           setError(text || res.statusText);
         }

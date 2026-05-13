@@ -25,7 +25,7 @@ const DELETE_PHRASE = 'DELETE ALL';
 function parseErrorBody(text: string): string {
   try {
     const j = JSON.parse(text) as { message?: string };
-    return j.message ?? text;
+    return j.message || text;
   } catch {
     return text;
   }

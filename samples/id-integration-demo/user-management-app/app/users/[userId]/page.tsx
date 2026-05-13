@@ -83,7 +83,7 @@ export default function UserDetailPage() {
         if (!res.ok) {
           try {
             const j = JSON.parse(text) as { message?: string };
-            setLoadError(j.message ?? text);
+            setLoadError(j.message || text || `HTTP ${res.status}`);
           } catch {
             setLoadError(text || res.statusText);
           }
@@ -186,7 +186,7 @@ export default function UserDetailPage() {
       if (!res.ok) {
         try {
           const j = JSON.parse(text) as { message?: string };
-          setActionError(j.message ?? text);
+          setActionError(j.message || text || `HTTP ${res.status}`);
         } catch {
           setActionError(text || res.statusText);
         }
