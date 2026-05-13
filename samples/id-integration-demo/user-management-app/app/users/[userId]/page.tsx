@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import { useToast } from '@/lib/toast-context';
 import {
@@ -22,6 +22,30 @@ function formatDateTime(iso: string | undefined): string {
 }
 
 type ExtraRow = { id: string; key: string; value: string };
+
+function trapFocus(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== 'Tab') return;
+  const container = e.currentTarget;
+  const focusable = Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'input:not([disabled]), button:not([disabled]), a[href]'
+    )
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.shiftKey) {
+    if (document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    }
+  } else {
+    if (document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+}
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -52,6 +76,22 @@ export default function UserDetailPage() {
   const [showDeleteStep2, setShowDeleteStep2] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
 
+  const actionErrorRef = useRef<HTMLParagraphElement>(null);
+
+  const duplicateKeys = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of extraRows) {
+      const k = row.key.trim();
+      if (!k) continue;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+    const dups = new Set<string>();
+    for (const [k, count] of counts) {
+      if (count > 1) dups.add(k);
+    }
+    return dups;
+  }, [extraRows]);
+
   const markDirty = useCallback(() => {
     setDirty(true);
   }, []);
@@ -70,6 +110,12 @@ export default function UserDetailPage() {
     globalThis.addEventListener('beforeunload', onBeforeUnload);
     return () => globalThis.removeEventListener('beforeunload', onBeforeUnload);
   }, [dirty]);
+
+  useEffect(() => {
+    if (actionError && !showDeleteStep1 && !showDeleteStep2) {
+      actionErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [actionError, showDeleteStep1, showDeleteStep2]);
 
   useEffect(() => {
     if (!usernameParam) return;
@@ -308,7 +354,14 @@ export default function UserDetailPage() {
       </div>
 
       <form onSubmit={onSave} className="space-y-4 border border-um-border p-4">
-        <h2 className="text-um-heading text-sm font-semibold">Edit</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-um-heading text-sm font-semibold">Edit</h2>
+          {dirty ? (
+            <span className="text-xs text-amber-700 border border-amber-200 bg-amber-50 px-2 py-1">
+              Unsaved changes
+            </span>
+          ) : null}
+        </div>
         {saveSuccess ? (
           <p
             role="status"
@@ -444,30 +497,40 @@ export default function UserDetailPage() {
             <p className="text-xs text-um-text">No extra attributes.</p>
           ) : (
             <ul className="space-y-2">
-              {extraRows.map((row) => (
-                <li key={row.id} className="flex flex-wrap items-center gap-2">
-                  <input
-                    aria-label="Attribute name"
-                    className="flex-1 min-w-[10rem] max-w-[14rem] border border-um-border px-2 py-1.5 text-sm text-black font-mono"
-                    value={row.key}
-                    onChange={(e) => updateExtraRow(row.id, { key: e.target.value })}
-                    placeholder="custom:field"
-                  />
-                  <input
-                    aria-label="Attribute value"
-                    className="flex-1 min-w-[10rem] border border-um-border px-2 py-1.5 text-sm text-black"
-                    value={row.value}
-                    onChange={(e) => updateExtraRow(row.id, { value: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="text-sm text-red-700 border border-red-300 px-2 py-1 bg-white hover:bg-red-50"
-                    onClick={() => removeExtraRow(row.id)}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
+              {extraRows.map((row) => {
+                const isDup = row.key.trim() !== '' && duplicateKeys.has(row.key.trim());
+                return (
+                  <li key={row.id} className="flex flex-col gap-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        aria-label="Attribute name"
+                        className={`flex-1 min-w-[10rem] max-w-[14rem] border px-2 py-1.5 text-sm text-black font-mono ${isDup ? 'border-amber-500' : 'border-um-border'}`}
+                        value={row.key}
+                        onChange={(e) => updateExtraRow(row.id, { key: e.target.value })}
+                        placeholder="custom:field"
+                      />
+                      <input
+                        aria-label="Attribute value"
+                        className="flex-1 min-w-[10rem] border border-um-border px-2 py-1.5 text-sm text-black"
+                        value={row.value}
+                        onChange={(e) => updateExtraRow(row.id, { value: e.target.value })}
+                      />
+                      <button
+                        type="button"
+                        className="text-sm text-red-700 border border-red-300 px-2 py-1 bg-white hover:bg-red-50"
+                        onClick={() => removeExtraRow(row.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    {isDup ? (
+                      <p className="text-xs text-amber-700" role="alert">
+                        Duplicate key: already used above
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
           <button
@@ -479,7 +542,11 @@ export default function UserDetailPage() {
           </button>
         </fieldset>
 
-        {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
+        {actionError ? (
+          <p ref={actionErrorRef} role="alert" className="text-sm text-red-600">
+            {actionError}
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-3 mt-5">
           <button
             type="submit"
@@ -566,6 +633,7 @@ export default function UserDetailPage() {
           role="dialog"
           aria-modal
           aria-labelledby="del1-title"
+          onKeyDown={trapFocus}
         >
           <div className="w-full max-w-md rounded border border-um-border bg-white p-5 shadow-lg">
             <h2
@@ -585,6 +653,7 @@ export default function UserDetailPage() {
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
+                autoFocus
                 className="px-3 py-2 text-sm border border-um-border bg-white"
                 onClick={() => {
                   setShowDeleteStep1(false);
@@ -613,6 +682,7 @@ export default function UserDetailPage() {
           role="dialog"
           aria-modal
           aria-labelledby="del2-title"
+          onKeyDown={trapFocus}
         >
           <div className="w-full max-w-md rounded border border-um-border bg-white p-5 shadow-lg">
             <h2
@@ -622,10 +692,20 @@ export default function UserDetailPage() {
               Confirm by typing username
             </h2>
             <p className="text-sm text-um-text mt-2">
-              Type <span className="font-mono font-medium text-black">{user.username}</span> to
-              enable delete.
+              Type{' '}
+              <span className="font-mono font-medium text-black">{user.username}</span>
+              <button
+                type="button"
+                className="ml-1.5 text-xs border border-um-border px-1.5 py-0.5 bg-white hover:bg-gray-50 text-black"
+                onClick={() => void navigator.clipboard.writeText(user.username)}
+                aria-label="Copy username to clipboard"
+              >
+                Copy
+              </button>
+              {' '}to enable delete.
             </p>
             <input
+              autoFocus
               className="mt-3 w-full border border-um-border px-2 py-1.5 text-sm font-mono"
               value={deleteConfirmInput}
               onChange={(e) => setDeleteConfirmInput(e.target.value)}

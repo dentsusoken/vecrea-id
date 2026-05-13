@@ -220,7 +220,7 @@ function UsersListInner() {
                   <p className="text-black font-medium mb-2">
                     {q
                       ? 'No matches on this page for your filter'
-                      : 'No users in this pool page'}
+                      : 'No users found'}
                   </p>
                   <p className="text-sm mb-4">
                     Create a user or use Import to get started.
@@ -237,7 +237,6 @@ function UsersListInner() {
               filtered.map((u) => (
                 <tr
                   key={u.userId}
-                  role="link"
                   tabIndex={0}
                   aria-label={`User ${u.username}, open detail`}
                   className="cursor-pointer hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-um-primary"
@@ -255,7 +254,7 @@ function UsersListInner() {
                   <td className="px-2.5 py-2.5 border border-um-border text-black">
                     {u.username}
                   </td>
-                  <td className="px-2.5 py-2.5 border border-um-border text-um-text">
+                  <td className="px-2.5 py-2.5 border border-um-border text-um-text max-w-[12rem] truncate" title={u.email ?? undefined}>
                     {u.email ?? '—'}
                   </td>
                   <td className="px-2.5 py-2.5 border border-um-border text-black">
