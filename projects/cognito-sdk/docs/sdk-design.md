@@ -25,13 +25,14 @@ cognito-sdk
 
 ```typescript
 // フロントエンド
-import { createCognitoClient } from 'cognito-sdk/client'
+import { createCognitoClient } from "cognito-sdk/client";
 
 // サーバーサイド
-import { createCognitoAdmin } from 'cognito-sdk/admin'
+import { createCognitoAdmin } from "cognito-sdk/admin";
 ```
 
 **分割の理由:**
+
 - `admin/` は AWS Credentials（SigV4）が必要なため、フロントエンドバンドルに含めるべきでない
 - `client/` はブラウザ環境で動作する必要がある（Node.js 依存なし）
 
@@ -43,10 +44,10 @@ import { createCognitoAdmin } from 'cognito-sdk/admin'
 
 ```typescript
 const cognito = createCognitoClient({
-  region: 'ap-northeast-1',
-  userPoolId: 'ap-northeast-1_xxxxxxxxx',
-  clientId: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
-})
+  region: "ap-northeast-1",
+  userPoolId: "ap-northeast-1_xxxxxxxxx",
+  clientId: "xxxxxxxxxxxxxxxxxxxxxxxxxx",
+});
 ```
 
 ### 認証
@@ -57,21 +58,21 @@ SRP フローを自動処理し、チャレンジが発生した場合はコー�
 
 ```typescript
 const tokens = await cognito.signIn({
-  username: 'user@example.com',
-  password: 'password',
+  username: "user@example.com",
+  password: "password",
   onChallenge: {
-    mfaCode: async (type: 'SMS' | 'TOTP') => {
+    mfaCode: async (type: "SMS" | "TOTP") => {
       // 呼び出し元が UI を制御して入力を受け取る
-      return prompt(`${type} コードを入力:`)
+      return prompt(`${type} コードを入力:`);
     },
     newPassword: async () => {
-      return prompt('新しいパスワードを入力:')
+      return prompt("新しいパスワードを入力:");
     },
     customChallenge: async (parameters) => {
-      return prompt('チャレンジ回答を入力:')
+      return prompt("チャレンジ回答を入力:");
     },
   },
-})
+});
 // tokens: AuthTokens
 ```
 
@@ -79,11 +80,11 @@ const tokens = await cognito.signIn({
 
 ```typescript
 interface AuthTokens {
-  accessToken: string
-  idToken: string
-  refreshToken: string
-  expiresIn: number       // 秒（デフォルト 3600）
-  tokenType: 'Bearer'
+  accessToken: string;
+  idToken: string;
+  refreshToken: string;
+  expiresIn: number; // 秒（デフォルト 3600）
+  tokenType: "Bearer";
 }
 ```
 
@@ -91,8 +92,8 @@ interface AuthTokens {
 
 ```typescript
 const tokens = await cognito.refreshTokens({
-  refreshToken: 'xxx',
-})
+  refreshToken: "xxx",
+});
 ```
 
 #### signOut
@@ -100,8 +101,8 @@ const tokens = await cognito.refreshTokens({
 ```typescript
 await cognito.signOut({
   accessToken: tokens.accessToken,
-  global: true,  // 全デバイスからサインアウト（GlobalSignOut）。false なら RevokeToken のみ
-})
+  global: true, // 全デバイスからサインアウト（GlobalSignOut）。false なら RevokeToken のみ
+});
 ```
 
 ### サインアップ
@@ -109,22 +110,22 @@ await cognito.signOut({
 ```typescript
 // 登録
 await cognito.signUp({
-  username: 'user@example.com',
-  password: 'password',
+  username: "user@example.com",
+  password: "password",
   attributes: {
-    email: 'user@example.com',
-    given_name: '太郎',
+    email: "user@example.com",
+    given_name: "太郎",
   },
-})
+});
 
 // メール確認コード送信
-await cognito.resendConfirmationCode({ username: 'user@example.com' })
+await cognito.resendConfirmationCode({ username: "user@example.com" });
 
 // 確認
 await cognito.confirmSignUp({
-  username: 'user@example.com',
-  code: '123456',
-})
+  username: "user@example.com",
+  code: "123456",
+});
 ```
 
 ### パスワード管理
@@ -133,46 +134,46 @@ await cognito.confirmSignUp({
 // 変更（ログイン済みユーザー）
 await cognito.changePassword({
   accessToken: tokens.accessToken,
-  previousPassword: 'old',
-  proposedPassword: 'new',
-})
+  previousPassword: "old",
+  proposedPassword: "new",
+});
 
 // リセット開始（未ログイン）
-await cognito.forgotPassword({ username: 'user@example.com' })
+await cognito.forgotPassword({ username: "user@example.com" });
 
 // リセット確認
 await cognito.confirmForgotPassword({
-  username: 'user@example.com',
-  code: '123456',
-  newPassword: 'newPassword',
-})
+  username: "user@example.com",
+  code: "123456",
+  newPassword: "newPassword",
+});
 ```
 
 ### ユーザー属性
 
 ```typescript
 // 取得
-const user = await cognito.getUser({ accessToken: tokens.accessToken })
+const user = await cognito.getUser({ accessToken: tokens.accessToken });
 // user.attributes: Record<string, string>
 
 // 更新（変更した属性に検証が必要な場合はコードを送信）
 await cognito.updateUserAttributes({
   accessToken: tokens.accessToken,
-  attributes: { email: 'new@example.com' },
-})
+  attributes: { email: "new@example.com" },
+});
 
 // メール/電話番号の確認コード再送信
 await cognito.getAttributeVerificationCode({
   accessToken: tokens.accessToken,
-  attributeName: 'email',
-})
+  attributeName: "email",
+});
 
 // 確認
 await cognito.verifyAttribute({
   accessToken: tokens.accessToken,
-  attributeName: 'email',
-  code: '123456',
-})
+  attributeName: "email",
+  code: "123456",
+});
 ```
 
 ### MFA
@@ -181,21 +182,21 @@ await cognito.verifyAttribute({
 // TOTP 登録開始 → シークレットキー取得
 const { secretCode } = await cognito.associateTotpToken({
   accessToken: tokens.accessToken,
-})
+});
 
 // TOTP 登録完了
 await cognito.verifyTotpToken({
   accessToken: tokens.accessToken,
-  code: '123456',
-  friendlyDeviceName: 'My Authenticator',
-})
+  code: "123456",
+  friendlyDeviceName: "My Authenticator",
+});
 
 // MFA 設定変更
 await cognito.setMfaPreference({
   accessToken: tokens.accessToken,
-  totp: 'PREFERRED',  // 'ENABLED' | 'PREFERRED' | 'DISABLED'
-  sms: 'DISABLED',
-})
+  totp: "PREFERRED", // 'ENABLED' | 'PREFERRED' | 'DISABLED'
+  sms: "DISABLED",
+});
 ```
 
 ### WebAuthn / パスキー
@@ -204,18 +205,18 @@ await cognito.setMfaPreference({
 // パスキー登録開始
 const options = await cognito.startPasskeyRegistration({
   accessToken: tokens.accessToken,
-})
+});
 
 // パスキー登録完了（WebAuthn API のレスポンスを渡す）
 await cognito.completePasskeyRegistration({
   accessToken: tokens.accessToken,
   credential: navigatorCredential,
-  credentialName: 'My Passkey',
-})
+  credentialName: "My Passkey",
+});
 
 // パスキー一覧・削除
-const credentials = await cognito.listPasskeys({ accessToken: tokens.accessToken })
-await cognito.deletePasskey({ accessToken: tokens.accessToken, credentialId: 'xxx' })
+const credentials = await cognito.listPasskeys({ accessToken: tokens.accessToken });
+await cognito.deletePasskey({ accessToken: tokens.accessToken, credentialId: "xxx" });
 ```
 
 ---
@@ -226,14 +227,14 @@ await cognito.deletePasskey({ accessToken: tokens.accessToken, credentialId: 'xx
 
 ```typescript
 const admin = createCognitoAdmin({
-  region: 'ap-northeast-1',
-  userPoolId: 'ap-northeast-1_xxxxxxxxx',
+  region: "ap-northeast-1",
+  userPoolId: "ap-northeast-1_xxxxxxxxx",
   credentials: {
-    accessKeyId: 'xxx',
-    secretAccessKey: 'xxx',
-    sessionToken: 'xxx',  // optional（STS 一時認証情報用）
+    accessKeyId: "xxx",
+    secretAccessKey: "xxx",
+    sessionToken: "xxx", // optional（STS 一時認証情報用）
   },
-})
+});
 ```
 
 ### ユーザー管理
@@ -268,14 +269,14 @@ await admin.users.signOutGlobally({ username })
 ### グループ管理
 
 ```typescript
-await admin.groups.create({ groupName: 'admins', description: '管理者', precedence: 1 })
-await admin.groups.delete({ groupName: 'admins' })
-const groups = await admin.groups.list()
+await admin.groups.create({ groupName: "admins", description: "管理者", precedence: 1 });
+await admin.groups.delete({ groupName: "admins" });
+const groups = await admin.groups.list();
 
-await admin.groups.addUser({ groupName: 'admins', username })
-await admin.groups.removeUser({ groupName: 'admins', username })
-const userGroups = await admin.groups.listForUser({ username })
-const groupUsers = await admin.groups.listUsers({ groupName: 'admins' })
+await admin.groups.addUser({ groupName: "admins", username });
+await admin.groups.removeUser({ groupName: "admins", username });
+const userGroups = await admin.groups.listForUser({ username });
+const groupUsers = await admin.groups.listUsers({ groupName: "admins" });
 ```
 
 ### Admin 認証
@@ -283,10 +284,10 @@ const groupUsers = await admin.groups.listUsers({ groupName: 'admins' })
 ```typescript
 // サーバーサイドで直接認証（SRP なし）
 const tokens = await admin.auth.signIn({
-  username: 'user@example.com',
-  password: 'password',
-  clientId: 'xxx',  // UserPool Client ID
-})
+  username: "user@example.com",
+  password: "password",
+  clientId: "xxx", // UserPool Client ID
+});
 ```
 
 ---
@@ -333,13 +334,13 @@ try {
 
 ## 確定した追加決定事項
 
-| # | 項目 | 決定 | 理由 |
-| --- | --- | --- | --- |
-| 6 | パッケージ名 | `@vecrea/cognito-sdk` | スコープ付きで名前衝突を防ぐ |
-| 7 | `listAll*` | **提供する** | ページネーションのボイラープレートを毎回書くのを避けるため |
-| 8 | デバイス管理 | **client に含める** | リメンバードデバイスは MFA スキップと連動するため auth フローの一部 |
-| 9 | Identity Pool | **今回のスコープ外** | User Pool に集中。後で `@vecrea/cognito-sdk/identity` として追加可能 |
-| 10 | 動作環境 | **ブラウザ・Node.js 両対応** | `client/` は SSR や Lambda オーソライザーでも使えるようにする |
+| #   | 項目          | 決定                         | 理由                                                                 |
+| --- | ------------- | ---------------------------- | -------------------------------------------------------------------- |
+| 6   | パッケージ名  | `@vecrea/cognito-sdk`        | スコープ付きで名前衝突を防ぐ                                         |
+| 7   | `listAll*`    | **提供する**                 | ページネーションのボイラープレートを毎回書くのを避けるため           |
+| 8   | デバイス管理  | **client に含める**          | リメンバードデバイスは MFA スキップと連動するため auth フローの一部  |
+| 9   | Identity Pool | **今回のスコープ外**         | User Pool に集中。後で `@vecrea/cognito-sdk/identity` として追加可能 |
+| 10  | 動作環境      | **ブラウザ・Node.js 両対応** | `client/` は SSR や Lambda オーソライザーでも使えるようにする        |
 
 ---
 
