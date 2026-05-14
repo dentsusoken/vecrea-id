@@ -13,3 +13,9 @@
 [submodule "projects/eudi-web-verifier"]
 	path = projects/eudi-web-verifier
 	url = https://github.com/dentsusoken/eudi-web-verifier
+[submodule "projects/id-integration/packages/au3te-ts-common"]
+	path = projects/id-integration/packages/au3te-ts-common
+	url = https://github.com/dentsusoken/au3te-ts-common
+[submodule "projects/id-integration/packages/au3te-ts-server"]
+	path = projects/id-integration/packages/au3te-ts-server
+	url = https://github.com/dentsusoken/au3te-ts-server

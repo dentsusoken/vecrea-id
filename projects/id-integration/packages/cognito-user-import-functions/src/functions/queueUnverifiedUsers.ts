@@ -1,0 +1,148 @@
+/**
+ * Step Functions task (parallel branch): scans DynamoDB for `verified === false` and `imported === false`,
+ * and sends one SQS message per row. Message body is JSON of `Item.data` only (same shape as `CognitoImportData` for `importUnVerifiedUsers`).
+ */
+
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import {
+  DynamoDBDocumentClient,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
+import type { Handler } from 'aws-lambda';
+
+/** Lambda event: staging table and target queue URL. */
+interface EventInput {
+  /** DynamoDB table containing user staging items (`verified` / `imported` / `data`). */
+  DDB_TABLE: string;
+  /** SQS queue URL for messages consumed by the unverified-user import worker. */
+  SQS_QUEUE_URL: string;
+}
+
+/** Result returned after enqueue attempts (for callers / Step Functions). */
+export type QueueUnverifiedUsersResult = { queuedCount: number };
+
+/**
+ * Writes a structured log line, then rethrows so the Lambda invocation fails.
+ * @param context Step label included in the log prefix.
+ * @param error Original error or value to log and throw.
+ */
+function logErrorAndRethrow(context: string, error: unknown): never {
+  console.error(`[queueUnverifiedUsers] ${context}`, error);
+  throw error;
+}
+
+/** DynamoDB scan filter: `verified` is false and `imported` is false (staging item shape). */
+const SCAN_UNVERIFIED_NOT_IMPORTED = {
+  FilterExpression: 'verified = :verified AND imported = :imported',
+  ExpressionAttributeValues: { ':verified': false, ':imported': false },
+} as const;
+
+/**
+ * Scans the staging table for all pages (unverified, not imported) and returns raw items.
+ * @throws On DynamoDB errors (logged, then rethrown).
+ */
+async function loadUnverifiedPendingItems(
+  ddbClient: DynamoDBDocumentClient,
+  table: string
+): Promise<Record<string, unknown>[]> {
+  const items: Record<string, unknown>[] = [];
+  let exclusiveStartKey: Record<string, unknown> | undefined;
+
+  try {
+    do {
+      const command = new ScanCommand({
+        TableName: table,
+        ...SCAN_UNVERIFIED_NOT_IMPORTED,
+        ...(exclusiveStartKey !== undefined
+          ? { ExclusiveStartKey: exclusiveStartKey }
+          : {}),
+      });
+
+      const { Items, LastEvaluatedKey } = await ddbClient.send(command);
+
+      if (Items?.length) {
+        items.push(...Items);
+      }
+      exclusiveStartKey = LastEvaluatedKey as Record<string, unknown> | undefined;
+    } while (exclusiveStartKey);
+  } catch (e) {
+    logErrorAndRethrow('loadUnverifiedPendingItems', e);
+  }
+
+  return items;
+}
+
+/**
+ * @returns JSON string of `item.data`.
+ * @throws If `data` is missing (after `console.error`).
+ */
+function messageBodyFromStagingItem(item: Record<string, unknown>): string {
+  const data = item['data'];
+  if (data === undefined || data === null) {
+    const err = new Error(
+      `Staging item missing required "data" (id=${String(item['id'])})`
+    );
+    logErrorAndRethrow('messageBodyFromStagingItem', err);
+  }
+  return JSON.stringify(data);
+}
+
+/**
+ * Sends one SQS message per staging item (JSON body = `item.data`).
+ * @throws If any send fails (failures logged, then thrown as `Error` with JSON message).
+ */
+async function sendMessagesToQueue(
+  sqsClient: SQSClient,
+  queueUrl: string,
+  stagingItems: Record<string, unknown>[]
+): Promise<void> {
+  const outcomes = await Promise.allSettled(
+    stagingItems.map((item) =>
+      sqsClient.send(
+        new SendMessageCommand({
+          QueueUrl: queueUrl,
+          MessageBody: messageBodyFromStagingItem(item),
+        })
+      )
+    )
+  );
+
+  const failures = outcomes.flatMap((outcome, index) => {
+    if (outcome.status === 'fulfilled') {
+      return [];
+    }
+    const id = stagingItems[index]?.['id'];
+    return [`id:${String(id)} :>> ${outcome.reason}`];
+  });
+
+  if (failures.length > 0) {
+    console.error(
+      '[queueUnverifiedUsers] sendMessagesToQueue: SQS send failures',
+      failures
+    );
+    throw new Error(JSON.stringify(failures, null, 2));
+  }
+}
+
+/**
+ * @param event - `DDB_TABLE`, `SQS_QUEUE_URL`.
+ * @returns `{ queuedCount }` — messages successfully sent (0 if scan returned no items).
+ * @throws On DynamoDB scan errors or any SQS `SendMessage` failure (after `console.error`).
+ */
+export const handler: Handler<
+  EventInput,
+  QueueUnverifiedUsersResult
+> = async (event) => {
+  const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
+  const items = await loadUnverifiedPendingItems(ddbClient, event.DDB_TABLE);
+
+  if (items.length === 0) {
+    return { queuedCount: 0 };
+  }
+
+  const sqsClient = new SQSClient({});
+  await sendMessagesToQueue(sqsClient, event.SQS_QUEUE_URL, items);
+
+  return { queuedCount: items.length };
+};

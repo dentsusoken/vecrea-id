@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Tests
+__tests__
+*.spec.ts
+*.test.ts
+coverage
+
+# Build artifacts
+*.tsbuildinfo
+
+# Config
+eslint.config.js
+.prettierrc*
+.editorconfig
+tsconfig.tsbuildinfo
+
+# Git
+.git
+.gitignore
+
+# CI / scripts
+.github
+scripts
+
+# Environment
+.env
+.env.*
+*.log

@@ -1,0 +1,36 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm i -g pnpm@10.33.2
+            - pnpm install
+        build:
+          commands:
+            # 公開オリジン（NEXT_*）のみ。`AMPLIFY_APP_ORIGIN` は書き込まない:
+            # 設定すると @aws-amplify/adapter-nextjs が「サーバー専用 HttpOnly セッション」へ切り替わり、
+            # クライアント signIn + getCurrentUser（このアプリ）と不整合（Cookie重複・ナビ非表示等）になる。
+            # @see https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html
+            - |
+              set -e
+              if [ -z "${NEXT_PUBLIC_APP_ORIGIN:-}" ]; then
+                export NEXT_PUBLIC_APP_ORIGIN="https://${AWS_BRANCH}.${AWS_APP_ID}.amplifyapp.com"
+              fi
+              rm -f .env.production
+              echo "USER_MANAGEMENT_API_BASE_URL=$USER_MANAGEMENT_API_BASE_URL" >> .env.production
+              echo "OAUTH_TOKEN_URL=$OAUTH_TOKEN_URL" >> .env.production
+              echo "OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID" >> .env.production
+              echo "OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET" >> .env.production
+              echo "OAUTH_SCOPE=$OAUTH_SCOPE" >> .env.production
+              env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
+            - pnpm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - .next/cache/**/*
+          - node_modules/**/*
+    appRoot: samples/id-integration-demo/user-management-app

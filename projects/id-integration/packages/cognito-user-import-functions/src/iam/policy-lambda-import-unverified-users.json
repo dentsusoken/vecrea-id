@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:__REGION__:__ACCOUNT_ID__:log-group:/aws/lambda/*"
+    },
+    {
+      "Sid": "SQSConsumeUnverifiedImportQueue",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:__REGION__:__ACCOUNT_ID__:__SQS_UNVERIFIED_IMPORT_QUEUE_NAME__"
+    },
+    {
+      "Sid": "DynamoDBUpdateStagingUsers",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": "arn:aws:dynamodb:__REGION__:__ACCOUNT_ID__:table/__DDB_STAGING_TABLE_NAME__"
+    },
+    {
+      "Sid": "CognitoAdminUserLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminCreateUser"
+      ],
+      "Resource": "arn:aws:cognito-idp:__REGION__:__ACCOUNT_ID__:userpool/__COGNITO_USER_POOL_ID__"
+    }
+  ]
+}

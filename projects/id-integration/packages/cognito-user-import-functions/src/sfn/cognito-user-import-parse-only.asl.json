@@ -1,0 +1,41 @@
+{
+  "Comment": "CSV → DynamoDB parse only (parseUserInfoCsv Lambda). No Cognito import, polling, or SQS. For ad-hoc staging loads you can also invoke the Lambda directly and skip Step Functions. Input: { USER_INFO_CSV }. Replace __PLACEHOLDER_*__ before deploy.",
+  "StartAt": "EnrichConfig",
+  "States": {
+    "EnrichConfig": {
+      "Type": "Pass",
+      "Comment": "Merge CSV from execution input with staging table name.",
+      "Parameters": {
+        "USER_INFO_CSV.$": "$.USER_INFO_CSV",
+        "DDB_TABLE": "__PLACEHOLDER_DDB_TABLE_NAME__"
+      },
+      "Next": "ParseUserInfoCsv"
+    },
+    "ParseUserInfoCsv": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "__PLACEHOLDER_LAMBDA_ARN_PARSE_USER_INFO_CSV__",
+        "Payload": {
+          "USER_INFO_CSV.$": "$.USER_INFO_CSV",
+          "DDB_TABLE.$": "$.DDB_TABLE"
+        }
+      },
+      "ResultPath": null,
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ]
+    }
+  }
+}

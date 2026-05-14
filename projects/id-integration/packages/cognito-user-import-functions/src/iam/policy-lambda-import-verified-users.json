@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:__REGION__:__ACCOUNT_ID__:log-group:/aws/lambda/*"
+    },
+    {
+      "Sid": "DynamoDBScanStagingUsers",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan"
+      ],
+      "Resource": "arn:aws:dynamodb:__REGION__:__ACCOUNT_ID__:table/__DDB_STAGING_TABLE_NAME__"
+    },
+    {
+      "Sid": "CognitoUserImportJob",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:CreateUserImportJob",
+        "cognito-idp:StartUserImportJob"
+      ],
+      "Resource": "arn:aws:cognito-idp:__REGION__:__ACCOUNT_ID__:userpool/__COGNITO_USER_POOL_ID__"
+    },
+    {
+      "Sid": "PassRoleForCognitoImportLogs",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::__ACCOUNT_ID__:role/__COGNITO_IMPORT_CLOUDWATCH_LOGS_ROLE_NAME__"
+    }
+  ]
+}

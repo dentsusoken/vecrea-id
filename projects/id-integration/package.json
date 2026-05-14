@@ -1,0 +1,22 @@
+{
+  "name": "id-integration",
+  "pnpm": {
+    "overrides": {
+      "graphql": "15.10.1",
+      "chokidar":"4.0.1",
+      "semver":"7.7.4",
+      "ua-parser-js": "1.0.39"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.0",
+    "typescript-eslint": "^8.56.0"
+  },
+  "dependencies": {
+    "@vecrea/au3te-ts-common": "workspace:*",
+    "@vecrea/au3te-ts-server": "workspace:*",
+    "@vecrea/user-management-apis": "workspace:*",
+    "user-management-apis": "workspace:@vecrea/user-management-apis@*"
+  }
+}

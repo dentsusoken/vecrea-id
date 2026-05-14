@@ -1,0 +1,44 @@
+{
+  "name": "cognito-user-import-functions",
+  "version": "0.0.0",
+  "scripts": {
+    "build:parseUserInfoCsv": "esbuild --bundle --outfile=./build/parseUserInfoCsv/index.js --platform=node --target=node20 ./src/functions/parseUserInfoCsv.ts",
+    "build:importVerifiedUsers": "esbuild --bundle --outfile=./build/importVerifiedUsers/index.js --platform=node --target=node20 ./src/functions/importVerifiedUsers.ts",
+    "build:checkImportStatus": "esbuild --bundle --outfile=./build/checkImportStatus/index.js --platform=node --target=node20 ./src/functions/checkImportStatus.ts",
+    "build:startUserImportPipeline": "esbuild --bundle --outfile=./build/startUserImportPipeline/index.js --platform=node --target=node20 ./src/functions/startUserImportPipeline.ts",
+    "build:queueUnverifiedUsers": "esbuild --bundle --outfile=./build/queueUnverifiedUsers/index.js --platform=node --target=node20 ./src/functions/queueUnverifiedUsers.ts",
+    "build:importUnVerifiedUsers": "esbuild --bundle --outfile=./build/importUnVerifiedUsers/index.js --platform=node --target=node20 ./src/functions/importUnVerifiedUsers.ts",
+    "build:userMigrationTrigger": "esbuild --bundle --outfile=./build/userMigrationTrigger/index.js --platform=node --target=node20 ./src/functions/userMigrationTrigger.ts",
+    "zip:parseUserInfoCsv": "mkdir -p ./dist && rm -f ./dist/parseUserInfoCsv.zip && zip -j ./dist/parseUserInfoCsv.zip ./build/parseUserInfoCsv/index.js",
+    "zip:importVerifiedUsers": "mkdir -p ./dist && rm -f ./dist/importVerifiedUsers.zip && zip -j ./dist/importVerifiedUsers.zip ./build/importVerifiedUsers/index.js",
+    "zip:checkImportStatus": "mkdir -p ./dist && rm -f ./dist/checkImportStatus.zip && zip -j ./dist/checkImportStatus.zip ./build/checkImportStatus/index.js",
+    "zip:startUserImportPipeline": "mkdir -p ./dist && rm -f ./dist/startUserImportPipeline.zip && zip -j ./dist/startUserImportPipeline.zip ./build/startUserImportPipeline/index.js",
+    "zip:queueUnverifiedUsers": "mkdir -p ./dist && rm -f ./dist/queueUnverifiedUsers.zip && zip -j ./dist/queueUnverifiedUsers.zip ./build/queueUnverifiedUsers/index.js",
+    "zip:importUnVerifiedUsers": "mkdir -p ./dist && rm -f ./dist/importUnVerifiedUsers.zip && zip -j ./dist/importUnVerifiedUsers.zip ./build/importUnVerifiedUsers/index.js",
+    "zip:userMigrationTrigger": "mkdir -p ./dist && rm -f ./dist/userMigrationTrigger.zip && zip -j ./dist/userMigrationTrigger.zip ./build/userMigrationTrigger/index.js",
+    "build": "run-p build:*",
+    "zip": "run-p zip:*",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1016.0",
+    "@aws-sdk/client-dynamodb": "^3.1016.0",
+    "@aws-sdk/client-sfn": "^3.1016.0",
+    "@aws-sdk/client-sqs": "^3.1016.0",
+    "@aws-sdk/lib-dynamodb": "^3.1016.0",
+    "hash-wasm": "^4.12.0",
+    "papaparse": "^5.5.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.5.0",
+    "@types/papaparse": "^5.5.2",
+    "aws-sdk-client-mock": "^4.1.0",
+    "aws-sdk-client-mock-vitest": "^7.0.1",
+    "esbuild": "^0.27.4",
+    "npm-run-all2": "^8.0.4",
+    "vitest": "^4.1.1"
+  }
+}
