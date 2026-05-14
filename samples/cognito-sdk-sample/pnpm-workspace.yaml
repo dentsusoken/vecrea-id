@@ -1,0 +1,8 @@
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+overrides:
+  tailwindcss: "4.2.4"
+  "@tailwindcss/postcss": "4.2.4"
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
