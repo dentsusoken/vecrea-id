@@ -281,14 +281,6 @@ Accessible automatically after a CSV upload, or directly from the navigation.
 | Data (preview) | Preview of username and email |
 | Import error | Error message if import failed |
 
-### Batch Filter
-
-Immediately after a CSV upload, the view is filtered to that upload's batch ID. Click **All rows** to remove the filter and show all staging rows.
-
-### Next Steps
-
-After reviewing the staging data, click the **Open user list** button at the bottom of the page to go to the user list and verify the users created in Cognito.
-
 ---
 
 ## 8. Data Reset (Admin Only)
