@@ -106,7 +106,7 @@ Click the **+ New user** button on the user list to open this page.
 
 | Field | Description |
 | --- | --- |
-| Temporary password | A temporary password (8+ characters) that the user must change on first sign-in. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
+| Temporary password | A temporary password that the user must change on first sign-in. Must be at least 8 characters and include uppercase, lowercase, a number, and a symbol. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
 | Suppress invitation message | Check to suppress the Cognito invitation email. |
 
 ### Create
@@ -167,9 +167,9 @@ Click the **Delete user** button on the user detail page. Deletion requires two 
 
 1. Click **Delete user**.
 2. A confirmation dialog (Step 1) appears. Review the details and click **Continue**.
-3. A second confirmation dialog (Step 2) appears. Type the exact **Username** of the user in the text field.
+3. A second confirmation dialog (Step 2) appears. Type the exact **Username** of the user in the text field. Use the **Copy** button next to the username to copy it to your clipboard.
 4. Click **Delete permanently** once it becomes active.
-5. When deletion is complete, a "User deleted" screen is shown. Click **Back to user list** to return.
+5. When deletion is complete, you are automatically redirected to the user list where a "User deleted" notification is shown.
 
 > **Warning:** Deletion is permanent and cannot be undone.
 
@@ -223,7 +223,7 @@ The generated CSV is saved to `data/generate-<random>.csv` and the corresponding
 
 ### Steps
 
-1. Select a `.csv` file in the **CSV file** field.
+1. Select a `.csv` file in the **CSV file** field. Files must be 5 MB or smaller.
 2. Click **Upload**.
 3. After a successful upload, you will be automatically redirected to the staging review page (`/import/staging`).
 
