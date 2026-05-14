@@ -228,6 +228,8 @@ export const handler: UserMigrationTriggerHandler = async (event) => {
   );
 
   event.response.userAttributes = userToAttributes(user);
+  event.response.finalUserStatus = 'CONFIRMED';
+  event.response.messageAction = 'SUPPRESS';
   await markStagingImportedBestEffort(ddbClient, tableName, event.userName);
   return event;
 };
