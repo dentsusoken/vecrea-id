@@ -20,6 +20,10 @@ export default function ImportPage() {
       setError('Choose a CSV file');
       return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Maximum 5 MB.`);
+      return;
+    }
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -32,7 +36,7 @@ export default function ImportPage() {
       if (!res.ok) {
         try {
           const j = JSON.parse(text) as { message?: string };
-          setError(j.message ?? text);
+          setError(j.message || text || `HTTP ${res.status}`);
         } catch {
           setError(text || res.statusText);
         }

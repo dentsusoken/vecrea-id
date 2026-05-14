@@ -202,6 +202,8 @@ async function markStagingImportedBestEffort(
   }
 }
 
+const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
+
 /**
  * @param event - Cognito user migration trigger event.
  * @returns The event with `response.userAttributes` set on successful authentication migration.
@@ -215,7 +217,6 @@ export const handler: UserMigrationTriggerHandler = async (event) => {
   const tableName = requireEnvDdbTable();
   const hashAlg = resolveHashAlgFromEnv();
   const hashSalt = resolveHashSaltFromEnv();
-  const ddbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
 
   const user = await loadUserForMigration(
     ddbClient,
@@ -227,6 +228,8 @@ export const handler: UserMigrationTriggerHandler = async (event) => {
   );
 
   event.response.userAttributes = userToAttributes(user);
+  event.response.finalUserStatus = 'CONFIRMED';
+  event.response.messageAction = 'SUPPRESS';
   await markStagingImportedBestEffort(ddbClient, tableName, event.userName);
   return event;
 };

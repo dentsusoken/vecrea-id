@@ -50,7 +50,7 @@ function StagingListInner() {
         if (!res.ok) {
           try {
             const j = JSON.parse(text) as { message?: string };
-            setError(j.message ?? (text || res.statusText));
+            setError(j.message || text || res.statusText || `HTTP ${res.status}`);
           } catch {
             setError(text || res.statusText);
           }
@@ -174,6 +174,9 @@ function StagingListInner() {
                   }
                 >
                   <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border">
+                    {(row.error || row.errorMessage) ? (
+                      <span aria-label="Import error" title="This row has an import error" className="mr-1 text-amber-600">⚠</span>
+                    ) : null}
                     {row.id}
                   </td>
                   <td className="px-2.5 py-2.5 font-mono text-xs border border-um-border text-um-text">
@@ -188,7 +191,10 @@ function StagingListInner() {
                   <td className="px-2.5 py-2.5 text-um-text max-w-md truncate border border-um-border">
                     {stagingDataPreview(row.data)}
                   </td>
-                  <td className="px-2.5 py-2.5 text-red-700 text-xs border border-um-border">
+                  <td
+                    className="px-2.5 py-2.5 text-red-700 text-xs border border-um-border max-w-[16rem] truncate"
+                    title={row.errorMessage ?? row.error ?? undefined}
+                  >
                     {row.errorMessage ?? row.error ?? '—'}
                   </td>
                 </tr>

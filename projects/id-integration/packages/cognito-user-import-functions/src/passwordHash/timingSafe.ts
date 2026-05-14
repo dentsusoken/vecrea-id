@@ -1,13 +1,14 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
-/** Constant-time UTF-8 string comparison. */
+/**
+ * Constant-time UTF-8 string comparison.
+ * Both strings are SHA-256 hashed before comparison to normalise length and
+ * prevent the early-return length side-channel.
+ */
 export function timingSafeEqualUtf8(a: string, b: string): boolean {
-  const ba = Buffer.from(a, 'utf8');
-  const bb = Buffer.from(b, 'utf8');
-  if (ba.length !== bb.length) {
-    return false;
-  }
-  return timingSafeEqual(ba, bb);
+  const ha = createHash('sha256').update(Buffer.from(a, 'utf8')).digest();
+  const hb = createHash('sha256').update(Buffer.from(b, 'utf8')).digest();
+  return timingSafeEqual(ha, hb);
 }
 
 /**

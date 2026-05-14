@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { PageBreadcrumb } from '@/app/components/PageBreadcrumb';
 import { useToast } from '@/lib/toast-context';
 import type { CreateUserRequest, User } from '@/types/user';
@@ -25,6 +25,11 @@ export default function NewUserPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [error]);
 
   useEffect(() => {
     if (!dirty) return;
@@ -68,7 +73,7 @@ export default function NewUserPage() {
       if (!res.ok) {
         try {
           const j = JSON.parse(text) as { message?: string };
-          setError(j.message ?? text);
+          setError(j.message || text || `HTTP ${res.status}`);
         } catch {
           setError(text || res.statusText);
         }
@@ -247,8 +252,8 @@ export default function NewUserPage() {
               onChange={(e) => setTemporaryPassword(e.target.value)}
             />
             <p className="text-xs text-um-text mt-1 max-w-[28rem]">
-              When set, user is often in <strong>FORCE_CHANGE_PASSWORD</strong> until first sign-in.
-              Minimum 8 characters if provided.
+              Must include uppercase, lowercase, number, and symbol (≥ 8 chars). When set, the user
+              is often in <strong>FORCE_CHANGE_PASSWORD</strong> status until first sign-in.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -264,7 +269,7 @@ export default function NewUserPage() {
           </div>
         </fieldset>
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p ref={errorRef} role="alert" className="text-sm text-red-600">{error}</p> : null}
         <div className="flex flex-wrap gap-3 mt-5">
           <button
             type="submit"

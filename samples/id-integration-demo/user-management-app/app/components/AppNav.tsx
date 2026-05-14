@@ -25,6 +25,8 @@ export function AppNav() {
 
   const [adminOpen, setAdminOpen] = useState(false);
   const adminWrapRef = useRef<HTMLDivElement>(null);
+  const adminButtonRef = useRef<HTMLButtonElement>(null);
+  const menuItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const menuId = useId();
 
   useEffect(() => {
@@ -41,7 +43,27 @@ export function AppNav() {
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setAdminOpen(false);
+      if (e.key === 'Escape') {
+        setAdminOpen(false);
+        adminButtonRef.current?.focus();
+        return;
+      }
+      const items = menuItemRefs.current.filter((r): r is HTMLAnchorElement => r !== null);
+      if (!items.length) return;
+      const idx = items.indexOf(document.activeElement as HTMLAnchorElement);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        items[idx === -1 ? 0 : (idx + 1) % items.length]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        items[idx <= 0 ? items.length - 1 : idx - 1]?.focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        items[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+      }
     };
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('keydown', onKeyDown);
@@ -49,6 +71,16 @@ export function AppNav() {
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('keydown', onKeyDown);
     };
+  }, [adminOpen]);
+
+  useEffect(() => {
+    if (adminOpen) {
+      const id = globalThis.setTimeout(
+        () => menuItemRefs.current.find(Boolean)?.focus(),
+        0
+      );
+      return () => globalThis.clearTimeout(id);
+    }
   }, [adminOpen]);
 
   useEffect(() => {
@@ -90,6 +122,7 @@ export function AppNav() {
             </Link>
             <div className="relative" ref={adminWrapRef}>
               <button
+                ref={adminButtonRef}
                 type="button"
                 className={
                   adminActive
@@ -101,6 +134,12 @@ export function AppNav() {
                 aria-controls={adminOpen ? menuId : undefined}
                 id={`${menuId}-button`}
                 onClick={() => setAdminOpen((o) => !o)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setAdminOpen(true);
+                  }
+                }}
               >
                 <span className="inline-flex items-center gap-0.5">
                   Admin
@@ -119,6 +158,7 @@ export function AppNav() {
                   <li role="none">
                     <Link
                       href="/import/staging"
+                      ref={(el) => { menuItemRefs.current[0] = el; }}
                       className={
                         pathname === '/import/staging' ||
                         pathname.startsWith('/import/staging/')
@@ -134,6 +174,7 @@ export function AppNav() {
                   <li role="none">
                     <Link
                       href="/admin/data-init"
+                      ref={(el) => { menuItemRefs.current[1] = el; }}
                       className={
                         pathname === '/admin/data-init' ||
                         pathname.startsWith('/admin/data-init/')

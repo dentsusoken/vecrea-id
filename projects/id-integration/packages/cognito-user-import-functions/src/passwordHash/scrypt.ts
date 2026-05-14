@@ -12,25 +12,35 @@ function parsePositiveInt(name: string, raw: string | undefined, defaultVal: num
   return n;
 }
 
+function parseScryptN(): number {
+  const n = parsePositiveInt('SCRYPT_N', process.env.SCRYPT_N, 16_384);
+  if ((n & (n - 1)) !== 0) {
+    throw new Error('SCRYPT_N must be a power of 2');
+  }
+  return n;
+}
+
 /**
- * `scryptSync(password, salt, keylen, { N, r, p })` — compares derived key to `storedHex`.
- * Requires non-empty `HASH_SALT` (used as scrypt salt, UTF-8).
+ * Parses `salt_hex:dk_hex` from `storedHex`, re-derives with scrypt, and compares.
+ * The salt is embedded in the stored value (written by `generate-import-csv.mjs`).
+ * Params from env: `SCRYPT_N` (must be power of 2, default 16384), `SCRYPT_R` (8),
+ * `SCRYPT_P` (1), `SCRYPT_KEYLEN` (64).
  */
 export function verifyScryptHex(
   plainPassword: string,
   storedHex: string,
-  salt: string | undefined
 ): boolean {
-  if (salt === undefined || salt === '') {
-    throw new Error('HASH_SALT is required for SCRYPT');
-  }
-
+  const trimmed = storedHex.trim();
+  const colon = trimmed.indexOf(':');
+  if (colon === -1) return false;
+  const saltHex = trimmed.slice(0, colon);
+  const dkHex = trimmed.slice(colon + 1);
+  if (!saltHex || !dkHex) return false;
   const keylen = parsePositiveInt('SCRYPT_KEYLEN', process.env.SCRYPT_KEYLEN, 64);
-  const N = parsePositiveInt('SCRYPT_N', process.env.SCRYPT_N, 16_384);
+  const N = parseScryptN();
   const r = parsePositiveInt('SCRYPT_R', process.env.SCRYPT_R, 8);
   const p = parsePositiveInt('SCRYPT_P', process.env.SCRYPT_P, 1);
-
-  const saltBuf = Buffer.from(salt, 'utf8');
+  const saltBuf = Buffer.from(saltHex, 'hex');
   const derived = scryptSync(plainPassword, saltBuf, keylen, { N, r, p });
-  return timingSafeEqualHex(derived.toString('hex'), storedHex.trim());
+  return timingSafeEqualHex(derived.toString('hex'), dkHex);
 }

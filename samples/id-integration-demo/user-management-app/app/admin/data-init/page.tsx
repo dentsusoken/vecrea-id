@@ -25,7 +25,7 @@ const DELETE_PHRASE = 'DELETE ALL';
 function parseErrorBody(text: string): string {
   try {
     const j = JSON.parse(text) as { message?: string };
-    return j.message ?? text;
+    return j.message || text;
   } catch {
     return text;
   }
@@ -190,6 +190,8 @@ export default function DataInitPage() {
       setResults(steps);
       setProgress('done');
       setMessage('Completed.');
+      setUnderstand(false);
+      setConfirmText('');
       const anyFailure = steps.some((s) => s.failedItems > 0);
       if (!anyFailure) {
         router.push('/users?toast=dataInit');
@@ -388,6 +390,7 @@ export default function DataInitPage() {
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
+                autoFocus
                 className="px-3 py-2 text-sm border border-um-border bg-white"
                 onClick={() => setShowModal(false)}
               >

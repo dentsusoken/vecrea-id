@@ -23,18 +23,23 @@ function pbkdf2Iterations(): number {
 }
 
 /**
- * Derives a key with PBKDF2; compares to `storedHex` (lowercase hex of derived bytes).
- * Uses `HASH_SALT` as the PBKDF2 salt (UTF-8); empty salt is allowed for weak legacy schemes.
+ * Parses `salt_hex:dk_hex` from `storedHex`, re-derives with PBKDF2, and compares.
+ * The salt is embedded in the stored value (written by `generate-import-csv.mjs`).
+ * `PBKDF2_ITERATIONS` env var overrides the iteration count (default 100 000).
  */
 export function verifyPbkdf2Hex(
   alg: keyof typeof PBKDF2_DIGEST,
   plainPassword: string,
   storedHex: string,
-  salt: string | undefined
 ): boolean {
+  const trimmed = storedHex.trim();
+  const colon = trimmed.indexOf(':');
+  if (colon === -1) return false;
+  const saltHex = trimmed.slice(0, colon);
+  const dkHex = trimmed.slice(colon + 1);
+  if (!saltHex || !dkHex) return false;
+  const saltBuf = Buffer.from(saltHex, 'hex');
   const { name, keylen } = PBKDF2_DIGEST[alg];
-  const saltBuf = Buffer.from(salt ?? '', 'utf8');
-  const iterations = pbkdf2Iterations();
-  const derived = pbkdf2Sync(plainPassword, saltBuf, iterations, keylen, name);
-  return timingSafeEqualHex(derived.toString('hex'), storedHex.trim());
+  const derived = pbkdf2Sync(plainPassword, saltBuf, pbkdf2Iterations(), keylen, name);
+  return timingSafeEqualHex(derived.toString('hex'), dkHex);
 }

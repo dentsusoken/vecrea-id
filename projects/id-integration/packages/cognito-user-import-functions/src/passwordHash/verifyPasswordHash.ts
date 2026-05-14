@@ -9,10 +9,10 @@ import { verifyScryptHex } from './scrypt';
 /**
  * Checks whether `plainPassword` matches the legacy `storedHash` using `hashAlg` and optional `pepper` (`HASH_SALT`).
  *
- * - **PLAIN_TEXT** (also when `hashAlg` is `undefined`): timing-safe equality with stored value; pepper ignored.
+ * - **PLAIN_TEXT** (also when `hashAlg` is `undefined`): timing-safe equality; pepper ignored.
  * - **MD5 / SHA_***: hex digest of `pepper || password` (UTF-8), compared to stored hex.
- * - **PBKDF2_***: `plainPassword` + salt = pepper as UTF-8; iterations from `PBKDF2_ITERATIONS` (default 100000).
- * - **SCRYPT**: `plainPassword` + `HASH_SALT` required; params from `SCRYPT_N` / `SCRYPT_R` / `SCRYPT_P` / `SCRYPT_KEYLEN`.
+ * - **PBKDF2_***: `storedHash` must be `salt_hex:dk_hex`; salt is embedded, pepper ignored.
+ * - **SCRYPT**: `storedHash` must be `salt_hex:dk_hex`; salt is embedded, pepper ignored.
  * - **BCRYPT / ARGON2***: library verify on PHC string; pepper ignored.
  */
 export async function verifyPasswordHash(
@@ -37,10 +37,10 @@ export async function verifyPasswordHash(
     case 'PBKDF2_SHA1':
     case 'PBKDF2_SHA256':
     case 'PBKDF2_SHA512':
-      return verifyPbkdf2Hex(alg, plainPassword, storedHash, pepper);
+      return verifyPbkdf2Hex(alg, plainPassword, storedHash);
 
     case 'SCRYPT':
-      return verifyScryptHex(plainPassword, storedHash, pepper);
+      return verifyScryptHex(plainPassword, storedHash);
 
     case 'BCRYPT':
       return await verifyBcrypt(plainPassword, storedHash);
