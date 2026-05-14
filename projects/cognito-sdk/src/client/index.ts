@@ -1,6 +1,6 @@
 import { CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
 import type { AuthTokens, ChallengeHandlers } from "../shared/types.ts";
-import { signIn, refreshTokens, signOut } from "./auth.ts";
+import { signIn, signInWithPassword, signInWithUserAuth, refreshTokens, signOut } from "./auth.ts";
 import { signUp, confirmSignUp, resendConfirmationCode } from "./signup.ts";
 import { changePassword, forgotPassword, confirmForgotPassword } from "./password.ts";
 import {
@@ -34,9 +34,29 @@ export interface CognitoClientConfig {
 
 export interface CognitoClient {
   // Auth
+  /** SRP password authentication (USER_SRP_AUTH). Recommended for browser clients. */
   signIn(params: {
     username: string;
     password: string;
+    onChallenge?: ChallengeHandlers;
+  }): Promise<AuthTokens>;
+  /**
+   * Plain-text password authentication (USER_PASSWORD_AUTH).
+   * Simpler than SRP but requires HTTPS. Suitable for server-side use.
+   */
+  signInWithPassword(params: {
+    username: string;
+    password: string;
+    onChallenge?: ChallengeHandlers;
+  }): Promise<AuthTokens>;
+  /**
+   * Unified authentication flow (USER_AUTH) supporting WebAuthn, email OTP,
+   * SMS OTP, plain-text password, and SRP password via challenge handlers.
+   */
+  signInWithUserAuth(params: {
+    username: string;
+    preferredChallenge?: "WEB_AUTHN" | "EMAIL_OTP" | "SMS_OTP" | "PASSWORD" | "PASSWORD_SRP";
+    password?: string;
     onChallenge?: ChallengeHandlers;
   }): Promise<AuthTokens>;
   refreshTokens(params: { refreshToken: string }): Promise<AuthTokens>;
@@ -128,6 +148,8 @@ export function createCognitoClient(config: CognitoClientConfig): CognitoClient 
 
   return {
     signIn: (p) => signIn(awsClient, clientId, userPoolId, p),
+    signInWithPassword: (p) => signInWithPassword(awsClient, clientId, p),
+    signInWithUserAuth: (p) => signInWithUserAuth(awsClient, clientId, userPoolId, p),
     refreshTokens: (p) => refreshTokens(awsClient, clientId, p),
     signOut: (p) => signOut(awsClient, clientId, p),
 
