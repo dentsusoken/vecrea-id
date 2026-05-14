@@ -65,7 +65,8 @@ export interface CognitoClient {
   // Sign-up
   signUp(params: {
     username: string;
-    password: string;
+    /** Omit for passwordless sign-in (email OTP / SMS OTP user pools). */
+    password?: string;
     attributes?: Record<string, string>;
   }): Promise<{ userSub: string; userConfirmed: boolean }>;
   confirmSignUp(params: {

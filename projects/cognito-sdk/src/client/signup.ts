@@ -11,7 +11,7 @@ export async function signUp(
   clientId: string,
   params: {
     username: string;
-    password: string;
+    password?: string;
     attributes?: Record<string, string>;
   },
 ): Promise<{ userSub: string; userConfirmed: boolean }> {
