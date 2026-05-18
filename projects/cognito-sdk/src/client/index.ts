@@ -198,7 +198,9 @@ export interface CognitoClient {
    *   `{ email: "user@example.com", given_name: "Alice" }`.
    *   Custom attributes must be prefixed with `custom:`.
    * @returns `userSub` — the immutable UUID for this user; `userConfirmed` — `true`
-   *   if the pool is configured for auto-confirmation.
+   *   if the pool is configured for auto-confirmation; `session` — pass to
+   *   {@link confirmSignUp} to enable seamless auto sign-in after confirmation
+   *   (no second OTP required).
    * @throws {CognitoError} `UsernameExists` — account already exists.
    * @throws {CognitoError} `InvalidPassword` — password policy violation.
    * @throws {CognitoError} `InvalidParameter` — required attribute missing.
@@ -208,26 +210,46 @@ export interface CognitoClient {
     /** Omit for passwordless sign-in (email OTP / SMS OTP user pools). */
     password?: string;
     attributes?: Record<string, string>;
-  }): Promise<{ userSub: string; userConfirmed: boolean }>;
+  }): Promise<{ userSub: string; userConfirmed: boolean; session?: string }>;
 
   /**
-   * Confirms a new user account with the verification code sent after {@link signUp}.
+   * Confirms a new user account and, by default, immediately signs them in.
    *
-   * For email/SMS OTP user pools the confirmation code is the OTP itself.
+   * Pass the `session` from the {@link signUp} response to enable seamless auto sign-in:
+   * Cognito treats the OTP already submitted at confirmation as the primary auth factor,
+   * so the user is not asked to enter a code a second time.
+   *
+   * Set `autoSignIn: false` to skip auto sign-in and return `void` instead.
    *
    * @param params.username - The username used during sign-up.
    * @param params.code - The confirmation code from email or SMS.
+   * @param params.session - The `session` returned by {@link signUp}. Pass this to
+   *   enable seamless auto sign-in (no second OTP entry). Requires `USER_AUTH` flow
+   *   to be enabled on the App Client.
+   * @param params.autoSignIn - Pass `false` to skip auto sign-in and return `void`.
+   *   Defaults to `true`.
    * @param params.forceAliasCreation - If `true`, moves the alias (email/phone) from
    *   an existing unconfirmed account to this one.
    * @throws {CognitoError} `CodeMismatch` — wrong code.
    * @throws {CognitoError} `CodeExpired` — code has expired; call {@link resendConfirmationCode}.
    * @throws {CognitoError} `UserNotFound` — user does not exist.
+   * @throws {CognitoError} `AutoSignInFailed` — session was not returned by Cognito,
+   *   or `USER_AUTH` flow is not enabled on the App Client.
    */
   confirmSignUp(params: {
     username: string;
     code: string;
+    session?: string;
     forceAliasCreation?: boolean;
+    autoSignIn: false;
   }): Promise<void>;
+  confirmSignUp(params: {
+    username: string;
+    code: string;
+    session?: string;
+    forceAliasCreation?: boolean;
+    autoSignIn?: true;
+  }): Promise<AuthTokens>;
 
   /**
    * Resends the confirmation code for an `UNCONFIRMED` user.
@@ -514,7 +536,14 @@ export function createCognitoClient(config: CognitoClientConfig): CognitoClient 
     signOut: (p) => signOut(awsClient, clientId, p),
 
     signUp: (p) => signUp(awsClient, clientId, p),
-    confirmSignUp: (p) => confirmSignUp(awsClient, clientId, p),
+    // confirmSignUp has overloaded signatures; the cast is necessary because TypeScript
+    // cannot propagate overload types through a lambda wrapper in an object literal.
+    confirmSignUp: ((p: Parameters<CognitoClient["confirmSignUp"]>[0]) =>
+      confirmSignUp(
+        awsClient,
+        clientId,
+        p as Parameters<typeof confirmSignUp>[2],
+      )) as unknown as CognitoClient["confirmSignUp"],
     resendConfirmationCode: (p) => resendConfirmationCode(awsClient, clientId, p),
 
     changePassword: (p) => changePassword(awsClient, p),
