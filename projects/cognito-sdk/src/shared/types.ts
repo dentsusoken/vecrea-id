@@ -85,44 +85,6 @@ export interface ChallengeHandlers {
   smsOtp?: () => Promise<string>;
 
   /**
-   * `USER_AUTH` flow only — called when a `WEB_AUTHN` challenge is returned.
-   *
-   * The callback receives the `PublicKeyCredentialRequestOptions` parsed from
-   * Cognito's `CREDENTIAL_REQUEST_OPTIONS_JSON` challenge parameter.
-   * Your implementation should call `navigator.credentials.get({ publicKey: options })`
-   * and return the resulting `AuthenticationResponseJSON`.
-   *
-   * @remarks Requires a browser environment with WebAuthn support (`window.PublicKeyCredential`).
-   * The origin must match the Relying Party ID configured on the User Pool.
-   *
-   * @param credentialRequestOptions - Parsed `PublicKeyCredentialRequestOptions`.
-   * @returns The `AuthenticationResponseJSON` to send back to Cognito as `CREDENTIAL`.
-   *
-   * @example
-   * ```typescript
-   * webAuthn: async (options) => {
-   *   const credential = await navigator.credentials.get({
-   *     publicKey: options as PublicKeyCredentialRequestOptions,
-   *   }) as PublicKeyCredential;
-   *   const resp = credential.response as AuthenticatorAssertionResponse;
-   *   return {
-   *     id: credential.id,
-   *     rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
-   *     type: credential.type,
-   *     response: {
-   *       clientDataJSON:    btoa(String.fromCharCode(...new Uint8Array(resp.clientDataJSON))),
-   *       authenticatorData: btoa(String.fromCharCode(...new Uint8Array(resp.authenticatorData))),
-   *       signature:         btoa(String.fromCharCode(...new Uint8Array(resp.signature))),
-   *     },
-   *   };
-   * },
-   * ```
-   */
-  webAuthn?: (
-    credentialRequestOptions: Record<string, unknown>,
-  ) => Promise<Record<string, unknown>>;
-
-  /**
    * `USER_AUTH` flow only — called when a `SELECT_CHALLENGE` challenge is returned.
    * This happens when no `preferredChallenge` was specified, or when the preferred
    * method is unavailable for the user.

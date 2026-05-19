@@ -19,6 +19,7 @@ import {
   listDevices,
   updateDeviceStatus,
 } from "./device.ts";
+import { registerPasskey } from "./webauthn.ts";
 import type { DeviceInfo } from "./device.ts";
 import type { UserInfo } from "./user.ts";
 import type { MfaSetting } from "./mfa.ts";
@@ -439,6 +440,30 @@ export interface CognitoClient {
     sms?: MfaSetting;
   }): Promise<void>;
 
+  // ---- WebAuthn / Passkey ----
+
+  /**
+   * Registers a passkey (WebAuthn credential) for the signed-in user.
+   *
+   * Calls `StartWebAuthnRegistration` to obtain credential creation options,
+   * invokes `navigator.credentials.create()` via `@simplewebauthn/browser`,
+   * then calls `CompleteWebAuthnRegistration` to finalize registration.
+   *
+   * Requires `@simplewebauthn/browser` to be installed in your application.
+   * Requires a browser environment with WebAuthn support.
+   * The origin must match the Relying Party ID configured on the User Pool.
+   *
+   * @param params.accessToken - The user's access token.
+   * @throws {CognitoError} If the User Pool is not configured for WebAuthn,
+   *   or the browser/authenticator rejects the credential creation.
+   *
+   * @example
+   * ```typescript
+   * await client.registerPasskey({ accessToken });
+   * ```
+   */
+  registerPasskey(params: { accessToken: string }): Promise<void>;
+
   // ---- Device tracking ----
 
   /**
@@ -560,6 +585,8 @@ export function createCognitoClient(config: CognitoClientConfig): CognitoClient 
     associateTotpToken: (p) => associateTotpToken(awsClient, p),
     verifyTotpToken: (p) => verifyTotpToken(awsClient, p),
     setMfaPreference: (p) => setMfaPreference(awsClient, p),
+
+    registerPasskey: (p) => registerPasskey(awsClient, p),
 
     confirmDevice: (p) => confirmDevice(awsClient, p),
     getDevice: (p) => getDevice(awsClient, p),

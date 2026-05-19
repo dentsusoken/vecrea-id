@@ -6,6 +6,8 @@ import {
   RevokeTokenCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import type { ChallengeNameType } from "@aws-sdk/client-cognito-identity-provider";
+import { startAuthentication } from "@simplewebauthn/browser";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import type { AuthTokens, ChallengeHandlers } from "../shared/types.ts";
 import { wrapError } from "../shared/errors.ts";
 import { createSrpSession, srpAHex, computeSrpVerification } from "../shared/srp.ts";
@@ -286,9 +288,10 @@ export async function signInWithUserAuth(
           responses["SRP_A"] = srpAHex(srpSession);
         }
       } else if (challengeName === "WEB_AUTHN") {
-        const optionsJSON = JSON.parse(challengeParams["CREDENTIAL_REQUEST_OPTIONS_JSON"] ?? "{}");
-        const credential = await onChallenge?.webAuthn?.(optionsJSON);
-        if (!credential) throw new Error("WebAuthn credential required");
+        const optionsJSON = JSON.parse(
+          challengeParams["CREDENTIAL_REQUEST_OPTIONS_JSON"] ?? "{}",
+        ) as PublicKeyCredentialRequestOptionsJSON;
+        const credential = await startAuthentication({ optionsJSON });
         responses = { USERNAME: username, CREDENTIAL: JSON.stringify(credential) };
       } else if (challengeName === "EMAIL_OTP") {
         const code = await onChallenge?.emailOtp?.();
