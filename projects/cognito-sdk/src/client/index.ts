@@ -19,12 +19,13 @@ import {
   listDevices,
   updateDeviceStatus,
 } from "./device.ts";
-import { registerPasskey } from "./webauthn.ts";
+import { registerPasskey, listPasskeys, deletePasskey } from "./webauthn.ts";
+import type { PasskeyInfo } from "./webauthn.ts";
 import type { DeviceInfo } from "./device.ts";
 import type { UserInfo } from "./user.ts";
 import type { MfaSetting } from "./mfa.ts";
 
-export type { AuthTokens, ChallengeHandlers, UserInfo, DeviceInfo, MfaSetting };
+export type { AuthTokens, ChallengeHandlers, UserInfo, DeviceInfo, MfaSetting, PasskeyInfo };
 export { CognitoError, CognitoErrorCode } from "../shared/errors.ts";
 
 /**
@@ -464,6 +465,26 @@ export interface CognitoClient {
    */
   registerPasskey(params: { accessToken: string }): Promise<void>;
 
+  /**
+   * Lists all passkeys (WebAuthn credentials) registered for the signed-in user.
+   *
+   * @param params.accessToken - The user's access token.
+   * @param params.nextToken - Pagination token from a previous response.
+   * @returns List of {@link PasskeyInfo} and an optional `nextToken` for the next page.
+   */
+  listPasskeys(params: {
+    accessToken: string;
+    nextToken?: string;
+  }): Promise<{ credentials: PasskeyInfo[]; nextToken?: string }>;
+
+  /**
+   * Deletes a passkey registered for the signed-in user.
+   *
+   * @param params.accessToken - The user's access token.
+   * @param params.credentialId - The credential ID from {@link listPasskeys}.
+   */
+  deletePasskey(params: { accessToken: string; credentialId: string }): Promise<void>;
+
   // ---- Device tracking ----
 
   /**
@@ -587,6 +608,8 @@ export function createCognitoClient(config: CognitoClientConfig): CognitoClient 
     setMfaPreference: (p) => setMfaPreference(awsClient, p),
 
     registerPasskey: (p) => registerPasskey(awsClient, p),
+    listPasskeys: (p) => listPasskeys(awsClient, p),
+    deletePasskey: (p) => deletePasskey(awsClient, p),
 
     confirmDevice: (p) => confirmDevice(awsClient, p),
     getDevice: (p) => getDevice(awsClient, p),
