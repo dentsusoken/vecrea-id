@@ -33,11 +33,13 @@ export async function registerPasskey(
       }),
     );
 
-    const credential = await startRegistration({
-      // CredentialCreationOptions is __DocumentType (generic AWS JSON); cast through unknown
-      optionsJSON:
-        startRes.CredentialCreationOptions as unknown as PublicKeyCredentialCreationOptionsJSON,
-    });
+    const rawCreation = startRes.CredentialCreationOptions as unknown as {
+      publicKey?: PublicKeyCredentialCreationOptionsJSON;
+    } & PublicKeyCredentialCreationOptionsJSON;
+    // Cognito may wrap options in a `publicKey` envelope matching the browser API shape.
+    const creationOptionsJSON: PublicKeyCredentialCreationOptionsJSON =
+      rawCreation.publicKey ?? rawCreation;
+    const credential = await startRegistration({ optionsJSON: creationOptionsJSON });
 
     await client.send(
       new CompleteWebAuthnRegistrationCommand({
