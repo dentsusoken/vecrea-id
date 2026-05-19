@@ -210,7 +210,7 @@ export function DemoApp() {
           {activeTab === "Auth" && (
             <AuthSection config={config} tokens={tokens} onTokens={setTokens} />
           )}
-          {activeTab === "Sign Up" && <SignUpSection config={config} />}
+          {activeTab === "Sign Up" && <SignUpSection config={config} onTokens={setTokens} />}
           {activeTab === "Password" && <PasswordSection config={config} tokens={tokens} />}
           {activeTab === "User" && <UserSection config={config} tokens={tokens} />}
           {activeTab === "MFA" && <MfaSection config={config} tokens={tokens} />}

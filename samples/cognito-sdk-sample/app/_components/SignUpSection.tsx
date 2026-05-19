@@ -4,13 +4,14 @@ import { useState } from "react";
 import { createCognitoClient } from "@vecrea/cognito-sdk/client";
 import type { AuthTokens } from "@vecrea/cognito-sdk/client";
 import { DemoCard, Field, Btn, ResultBox, useApiCall } from "./shared";
-import type { CognitoConfig } from "./shared";
+import type { CognitoConfig, Tokens } from "./shared";
 
 interface Props {
   config: CognitoConfig;
+  onTokens?: (t: Tokens) => void;
 }
 
-function SignUpFlowCard({ config }: Props) {
+function SignUpFlowCard({ config, onTokens }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -38,11 +39,17 @@ function SignUpFlowCard({ config }: Props) {
   function runConfirm() {
     confirmApi.run(async () => {
       const client = createCognitoClient(config);
-      return await client.confirmSignUp({
+      const tokens = await client.confirmSignUp({
         username,
         code,
         session: pendingSession,
       });
+      onTokens?.({
+        accessToken: tokens.accessToken,
+        idToken: tokens.idToken,
+        refreshToken: tokens.refreshToken,
+      });
+      return tokens;
     });
   }
 
@@ -139,10 +146,10 @@ function ResendConfirmationCodeCard({ config }: Props) {
   );
 }
 
-export function SignUpSection({ config }: Props) {
+export function SignUpSection({ config, onTokens }: Props) {
   return (
     <div className="flex flex-col gap-4">
-      <SignUpFlowCard config={config} />
+      <SignUpFlowCard config={config} onTokens={onTokens} />
       <ResendConfirmationCodeCard config={config} />
     </div>
   );
