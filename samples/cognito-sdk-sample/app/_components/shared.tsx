@@ -28,13 +28,7 @@ export interface AdminConfig {
 
 // ---- UI primitives ----
 
-export function ResultBox({
-  result,
-  error,
-}: {
-  result: unknown;
-  error: string | null;
-}) {
+export function ResultBox({ result, error }: { result: unknown; error: string | null }) {
   if (error === null && result === undefined) return null;
   if (error) {
     return (
@@ -132,6 +126,7 @@ export interface ApiCallState<T> {
   result: T | undefined;
   error: string | null;
   run: (fn: () => Promise<T>) => void;
+  reset: () => void;
 }
 
 export function useApiCall<T = unknown>(): ApiCallState<T> {
@@ -158,5 +153,10 @@ export function useApiCall<T = unknown>(): ApiCallState<T> {
       });
   }, []);
 
-  return { loading, result, error, run };
+  const reset = useCallback(() => {
+    setResult(undefined);
+    setError(null);
+  }, []);
+
+  return { loading, result, error, run, reset };
 }
