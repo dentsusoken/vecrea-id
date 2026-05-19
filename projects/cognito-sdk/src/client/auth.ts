@@ -9,7 +9,18 @@ import type { ChallengeNameType } from "@aws-sdk/client-cognito-identity-provide
 import { startAuthentication } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import type { AuthTokens, ChallengeHandlers } from "../shared/types.ts";
-import { wrapError } from "../shared/errors.ts";
+import { wrapError, CognitoError } from "../shared/errors.ts";
+
+function assertSecureContext(): void {
+  // globalThis.isSecureContext is false only in browsers on non-HTTPS non-localhost origins.
+  // Undefined in Node.js — skip the check there.
+  if ((globalThis as { isSecureContext?: boolean }).isSecureContext === false) {
+    throw new CognitoError(
+      "WebAuthnRequiresHTTPS",
+      "WebAuthn requires a secure context (HTTPS). Localhost is allowed for development.",
+    );
+  }
+}
 import { createSrpSession, srpAHex, computeSrpVerification } from "../shared/srp.ts";
 
 function tokensFromResult(result: {
@@ -288,6 +299,7 @@ export async function signInWithUserAuth(
           responses["SRP_A"] = srpAHex(srpSession);
         }
       } else if (challengeName === "WEB_AUTHN") {
+        assertSecureContext();
         const optionsJSON = JSON.parse(
           challengeParams["CREDENTIAL_REQUEST_OPTIONS_JSON"] ?? "{}",
         ) as PublicKeyCredentialRequestOptionsJSON;
