@@ -16,6 +16,9 @@ importers:
         specifier: ^3.1044.0
         version: 3.1044.0
     devDependencies:
+      '@simplewebauthn/browser':
+        specifier: ^13.3.0
+        version: 13.3.0
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
@@ -564,6 +567,9 @@ packages:
 
   '@rolldown/pluginutils@1.0.0-rc.18':
     resolution: {integrity: sha512-CUY5Mnhe64xQBGZEEXQ5WyZwsc1JU3vAZLIxtrsBt3LO6UOb+C8GunVKqe9sT8NeWb4lqSaoJtp2xo6GxT1MNw==}
+
+  '@simplewebauthn/browser@13.3.0':
+    resolution: {integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==}
 
   '@smithy/config-resolver@4.4.17':
     resolution: {integrity: sha512-TzDZcAnhTyAHbXVxWZo7/tEcrIeFq20IBk8So3OLOetWpR8EwY/yEqBMBFaJMeyEiREDq4NfEl+qO3OAUD+vbQ==}
@@ -1834,6 +1840,8 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.0-rc.18': {}
+
+  '@simplewebauthn/browser@13.3.0': {}
 
   '@smithy/config-resolver@4.4.17':
     dependencies:
