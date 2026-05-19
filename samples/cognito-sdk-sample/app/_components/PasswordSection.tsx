@@ -75,7 +75,12 @@ function ForgotPasswordCard({ config }: { config: CognitoConfig }) {
 
   return (
     <DemoCard title="forgotPassword" signature="client.forgotPassword({ username })">
-      <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
+      <Field
+        label="Username"
+        value={username}
+        onChange={setUsername}
+        placeholder="user@example.com"
+      />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run forgotPassword"}
       </Btn>

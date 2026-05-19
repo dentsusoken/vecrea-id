@@ -48,7 +48,7 @@ function AdminCreateUserCard({ adminConfig }: { adminConfig: AdminConfig }) {
         temporaryPassword: tmpPassword || undefined,
         attributes: email ? { email } : undefined,
         sendEmail,
-      })
+      }),
     );
   }
 
@@ -58,7 +58,12 @@ function AdminCreateUserCard({ adminConfig }: { adminConfig: AdminConfig }) {
       signature="admin.users.create({ username, temporaryPassword?, attributes?, sendEmail? })"
     >
       <div className="flex flex-col gap-2">
-        <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
+        <Field
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="user@example.com"
+        />
         <Field
           label="Temporary Password (optional)"
           value={tmpPassword}
@@ -99,7 +104,12 @@ function AdminGetUserCard({ adminConfig }: { adminConfig: AdminConfig }) {
 
   return (
     <DemoCard title="admin.users.get" signature="admin.users.get({ username })">
-      <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
+      <Field
+        label="Username"
+        value={username}
+        onChange={setUsername}
+        placeholder="user@example.com"
+      />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run admin.users.get"}
       </Btn>
@@ -154,7 +164,10 @@ function AdminEnableDisableCard({ adminConfig }: { adminConfig: AdminConfig }) {
           {disableApi.loading ? "Running..." : "Disable"}
         </Btn>
       </div>
-      <ResultBox result={enableApi.result ?? disableApi.result} error={enableApi.error ?? disableApi.error} />
+      <ResultBox
+        result={enableApi.result ?? disableApi.result}
+        error={enableApi.error ?? disableApi.error}
+      />
     </DemoCard>
   );
 }
@@ -168,10 +181,7 @@ function AdminConfirmSignUpCard({ adminConfig }: { adminConfig: AdminConfig }) {
   }
 
   return (
-    <DemoCard
-      title="admin.users.confirmSignUp"
-      signature="admin.users.confirmSignUp({ username })"
-    >
+    <DemoCard title="admin.users.confirmSignUp" signature="admin.users.confirmSignUp({ username })">
       <Field label="Username" value={username} onChange={setUsername} />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run admin.users.confirmSignUp"}
@@ -192,7 +202,7 @@ function AdminUpdateAttributesCard({ adminConfig }: { adminConfig: AdminConfig }
       adminUpdateAttributes(adminConfig, {
         username,
         attributes: { [attrKey]: attrValue },
-      })
+      }),
     );
   }
 
@@ -221,9 +231,7 @@ function AdminSetPasswordCard({ adminConfig }: { adminConfig: AdminConfig }) {
   const api = useApiCall();
 
   function run() {
-    api.run(async () =>
-      adminSetPassword(adminConfig, { username, password, permanent })
-    );
+    api.run(async () => adminSetPassword(adminConfig, { username, password, permanent }));
   }
 
   return (
@@ -233,7 +241,13 @@ function AdminSetPasswordCard({ adminConfig }: { adminConfig: AdminConfig }) {
     >
       <div className="flex flex-col gap-2">
         <Field label="Username" value={username} onChange={setUsername} />
-        <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+        <Field
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          type="password"
+          placeholder="••••••••"
+        />
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input
             type="checkbox"
@@ -260,10 +274,7 @@ function AdminResetPasswordCard({ adminConfig }: { adminConfig: AdminConfig }) {
   }
 
   return (
-    <DemoCard
-      title="admin.users.resetPassword"
-      signature="admin.users.resetPassword({ username })"
-    >
+    <DemoCard title="admin.users.resetPassword" signature="admin.users.resetPassword({ username })">
       <Field label="Username" value={username} onChange={setUsername} />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run admin.users.resetPassword"}
@@ -305,7 +316,7 @@ function AdminListUsersCard({ adminConfig }: { adminConfig: AdminConfig }) {
       adminListUsers(adminConfig, {
         filter: filter || undefined,
         limit: limit ? Number(limit) : undefined,
-      })
+      }),
     );
   }
 
@@ -340,7 +351,7 @@ function AdminCreateGroupCard({ adminConfig }: { adminConfig: AdminConfig }) {
 
   function run() {
     api.run(async () =>
-      adminCreateGroup(adminConfig, { groupName, description: description || undefined })
+      adminCreateGroup(adminConfig, { groupName, description: description || undefined }),
     );
   }
 
@@ -387,7 +398,7 @@ function AdminUpdateGroupCard({ adminConfig }: { adminConfig: AdminConfig }) {
 
   function run() {
     api.run(async () =>
-      adminUpdateGroup(adminConfig, { groupName, description: description || undefined })
+      adminUpdateGroup(adminConfig, { groupName, description: description || undefined }),
     );
   }
 
@@ -471,7 +482,9 @@ function AdminGroupUserCard({ adminConfig }: { adminConfig: AdminConfig }) {
         </Btn>
         <Btn
           onClick={() =>
-            removeApi.run(async () => adminRemoveUserFromGroup(adminConfig, { groupName, username }))
+            removeApi.run(async () =>
+              adminRemoveUserFromGroup(adminConfig, { groupName, username }),
+            )
           }
           disabled={removeApi.loading}
           variant="danger"
@@ -496,10 +509,7 @@ function AdminListGroupsForUserCard({ adminConfig }: { adminConfig: AdminConfig 
   }
 
   return (
-    <DemoCard
-      title="admin.groups.listForUser"
-      signature="admin.groups.listForUser({ username })"
-    >
+    <DemoCard title="admin.groups.listForUser" signature="admin.groups.listForUser({ username })">
       <Field label="Username" value={username} onChange={setUsername} />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run admin.groups.listForUser"}
@@ -518,10 +528,7 @@ function AdminListUsersInGroupCard({ adminConfig }: { adminConfig: AdminConfig }
   }
 
   return (
-    <DemoCard
-      title="admin.groups.listUsers"
-      signature="admin.groups.listUsers({ groupName })"
-    >
+    <DemoCard title="admin.groups.listUsers" signature="admin.groups.listUsers({ groupName })">
       <Field label="Group Name" value={groupName} onChange={setGroupName} />
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run admin.groups.listUsers"}
@@ -539,9 +546,7 @@ function AdminSignInCard({ adminConfig, clientId }: Props) {
   const api = useApiCall();
 
   function run() {
-    api.run(async () =>
-      adminSignIn(adminConfig, { clientId, username, password })
-    );
+    api.run(async () => adminSignIn(adminConfig, { clientId, username, password }));
   }
 
   return (
@@ -550,8 +555,19 @@ function AdminSignInCard({ adminConfig, clientId }: Props) {
       signature="admin.auth.signIn({ clientId, username, password })"
     >
       <div className="flex flex-col gap-2">
-        <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
-        <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+        <Field
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="user@example.com"
+        />
+        <Field
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          type="password"
+          placeholder="••••••••"
+        />
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Using clientId from config: <code>{clientId || "(not set)"}</code>
         </p>

@@ -46,8 +46,19 @@ function SignInCard({ config, onTokens }: Props) {
   return (
     <DemoCard title="signIn (SRP)" signature="client.signIn({ username, password, onChallenge? })">
       <div className="flex flex-col gap-2">
-        <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
-        <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+        <Field
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="user@example.com"
+        />
+        <Field
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          type="password"
+          placeholder="••••••••"
+        />
       </div>
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run signIn"}
@@ -92,8 +103,19 @@ function SignInWithPasswordCard({ config, onTokens }: Props) {
       signature="client.signInWithPassword({ username, password, onChallenge? })"
     >
       <div className="flex flex-col gap-2">
-        <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
-        <Field label="Password" value={password} onChange={setPassword} type="password" placeholder="••••••••" />
+        <Field
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="user@example.com"
+        />
+        <Field
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          type="password"
+          placeholder="••••••••"
+        />
       </div>
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run signInWithPassword"}
@@ -158,14 +180,14 @@ function SignInWithUserAuthCard({ config, onTokens }: Props) {
           },
           selectChallenge: async (available) => {
             const selected = window.prompt(
-              `Select challenge (available: ${available.join(", ")}):`
+              `Select challenge (available: ${available.join(", ")}):`,
             );
             return selected ?? available[0] ?? "";
           },
           webAuthn: async (options) => {
             if (!window.PublicKeyCredential) {
               throw new Error(
-                "WebAuthn not supported in this environment (requires HTTPS + compatible device)"
+                "WebAuthn not supported in this environment (requires HTTPS + compatible device)",
               );
             }
             const credential = await navigator.credentials.get({
@@ -179,11 +201,9 @@ function SignInWithUserAuthCard({ config, onTokens }: Props) {
               rawId: btoa(String.fromCharCode(...new Uint8Array(pk.rawId))),
               type: pk.type,
               response: {
-                clientDataJSON: btoa(
-                  String.fromCharCode(...new Uint8Array(resp.clientDataJSON))
-                ),
+                clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(resp.clientDataJSON))),
                 authenticatorData: btoa(
-                  String.fromCharCode(...new Uint8Array(resp.authenticatorData))
+                  String.fromCharCode(...new Uint8Array(resp.authenticatorData)),
                 ),
                 signature: btoa(String.fromCharCode(...new Uint8Array(resp.signature))),
                 userHandle: resp.userHandle
@@ -205,18 +225,19 @@ function SignInWithUserAuthCard({ config, onTokens }: Props) {
       signature="client.signInWithUserAuth({ username, preferredChallenge?, password?, onChallenge? })"
     >
       <div className="flex flex-col gap-2">
-        <Field label="Username" value={username} onChange={setUsername} placeholder="user@example.com" />
+        <Field
+          label="Username"
+          value={username}
+          onChange={setUsername}
+          placeholder="user@example.com"
+        />
         <label className="flex flex-col gap-1">
           <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
             Preferred Challenge
           </span>
           <select
             value={preferred}
-            onChange={(e) =>
-              setPreferred(
-                e.target.value as typeof preferred
-              )
-            }
+            onChange={(e) => setPreferred(e.target.value as typeof preferred)}
             className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm px-2.5 py-1.5 w-full max-w-xs"
           >
             <option value="">— none —</option>
@@ -238,8 +259,8 @@ function SignInWithUserAuthCard({ config, onTokens }: Props) {
         )}
         {preferred === "WEB_AUTHN" && (
           <p className="text-xs text-amber-600 dark:text-amber-400 max-w-xs">
-            Uses <code>navigator.credentials.get()</code> — requires HTTPS and a
-            WebAuthn-enabled device/browser.
+            Uses <code>navigator.credentials.get()</code> — requires HTTPS and a WebAuthn-enabled
+            device/browser.
           </p>
         )}
       </div>
@@ -328,10 +349,7 @@ function SignOutCard({ config, tokens }: Props) {
   }
 
   return (
-    <DemoCard
-      title="signOut"
-      signature="client.signOut({ accessToken, global?, refreshToken? })"
-    >
+    <DemoCard title="signOut" signature="client.signOut({ accessToken, global?, refreshToken? })">
       <div className="flex flex-col gap-2">
         <Field
           label="Access Token (blank = use stored)"

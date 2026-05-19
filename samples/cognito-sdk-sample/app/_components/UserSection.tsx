@@ -66,7 +66,12 @@ function UpdateUserAttributesCard({ config, tokens }: Props) {
           placeholder="auto-filled from signIn"
         />
         <Field label="Attribute Name" value={attrKey} onChange={setAttrKey} placeholder="name" />
-        <Field label="Attribute Value" value={attrValue} onChange={setAttrValue} placeholder="John Doe" />
+        <Field
+          label="Attribute Value"
+          value={attrValue}
+          onChange={setAttrValue}
+          placeholder="John Doe"
+        />
       </div>
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run updateUserAttributes"}
@@ -86,7 +91,10 @@ function DeleteUserAttributesCard({ config, tokens }: Props) {
       const client = createCognitoClient(config);
       await client.deleteUserAttributes({
         accessToken: accessToken || tokens.accessToken,
-        attributeNames: attributeNames.split(",").map((s) => s.trim()).filter(Boolean),
+        attributeNames: attributeNames
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
     });
   }
@@ -189,7 +197,12 @@ function VerifyAttributeCard({ config, tokens }: Props) {
           onChange={setAccessToken}
           placeholder="auto-filled from signIn"
         />
-        <Field label="Attribute Name" value={attributeName} onChange={setAttributeName} placeholder="email" />
+        <Field
+          label="Attribute Name"
+          value={attributeName}
+          onChange={setAttributeName}
+          placeholder="email"
+        />
         <Field label="Verification Code" value={code} onChange={setCode} placeholder="123456" />
       </div>
       <Btn onClick={run} disabled={api.loading}>
@@ -205,7 +218,8 @@ function DeleteUserCard({ config, tokens }: Props) {
   const api = useApiCall();
 
   function run() {
-    if (!window.confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to delete this user? This cannot be undone."))
+      return;
     api.run(async () => {
       const client = createCognitoClient(config);
       await client.deleteUser({ accessToken: accessToken || tokens.accessToken });

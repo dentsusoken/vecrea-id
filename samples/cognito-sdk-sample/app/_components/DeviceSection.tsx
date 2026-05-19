@@ -70,10 +70,7 @@ function GetDeviceCard({ config, tokens }: Props) {
   }
 
   return (
-    <DemoCard
-      title="getDevice"
-      signature="client.getDevice({ accessToken, deviceKey })"
-    >
+    <DemoCard title="getDevice" signature="client.getDevice({ accessToken, deviceKey })">
       <div className="flex flex-col gap-2">
         <Field
           label="Access Token (blank = use stored)"
@@ -81,7 +78,12 @@ function GetDeviceCard({ config, tokens }: Props) {
           onChange={setAccessToken}
           placeholder="auto-filled from signIn"
         />
-        <Field label="Device Key" value={deviceKey} onChange={setDeviceKey} placeholder="us-east-1_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        <Field
+          label="Device Key"
+          value={deviceKey}
+          onChange={setDeviceKey}
+          placeholder="us-east-1_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        />
       </div>
       <Btn onClick={run} disabled={api.loading}>
         {api.loading ? "Running..." : "Run getDevice"}
@@ -107,10 +109,7 @@ function ForgetDeviceCard({ config, tokens }: Props) {
   }
 
   return (
-    <DemoCard
-      title="forgetDevice"
-      signature="client.forgetDevice({ accessToken, deviceKey })"
-    >
+    <DemoCard title="forgetDevice" signature="client.forgetDevice({ accessToken, deviceKey })">
       <div className="flex flex-col gap-2">
         <Field
           label="Access Token (blank = use stored)"

@@ -40,7 +40,9 @@ function AssociateTotpTokenCard({ config, tokens }: Props) {
       </Btn>
       {api.result && (
         <div className="mt-2 p-2 rounded bg-zinc-100 dark:bg-zinc-700 text-xs font-mono break-all max-w-xs">
-          <div className="text-zinc-500 dark:text-zinc-400 mb-1">Secret Code (scan with authenticator app):</div>
+          <div className="text-zinc-500 dark:text-zinc-400 mb-1">
+            Secret Code (scan with authenticator app):
+          </div>
           <div className="text-zinc-900 dark:text-zinc-100 font-bold">{api.result.secretCode}</div>
         </div>
       )}
