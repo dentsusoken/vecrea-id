@@ -10,8 +10,9 @@ import { UserSection } from "./UserSection";
 import { MfaSection } from "./MfaSection";
 import { DeviceSection } from "./DeviceSection";
 import { AdminSection } from "./AdminSection";
+import { WebAuthnSection } from "./WebAuthnSection";
 
-const TABS = ["Auth", "Sign Up", "Password", "User", "MFA", "Device", "Admin"] as const;
+const TABS = ["Auth", "Sign Up", "Password", "User", "MFA", "WebAuthn", "Device", "Admin"] as const;
 type Tab = (typeof TABS)[number];
 
 const ENV_CONFIG: CognitoConfig = {
@@ -214,6 +215,7 @@ export function DemoApp() {
           {activeTab === "Password" && <PasswordSection config={config} tokens={tokens} />}
           {activeTab === "User" && <UserSection config={config} tokens={tokens} />}
           {activeTab === "MFA" && <MfaSection config={config} tokens={tokens} />}
+          {activeTab === "WebAuthn" && <WebAuthnSection config={config} tokens={tokens} />}
           {activeTab === "Device" && <DeviceSection config={config} tokens={tokens} />}
           {activeTab === "Admin" && (
             <AdminSection adminConfig={adminConfig} clientId={config.clientId} />
