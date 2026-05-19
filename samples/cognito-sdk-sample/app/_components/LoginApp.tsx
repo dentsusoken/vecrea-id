@@ -107,11 +107,13 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
     return new Promise((resolve) => {
       setOtp("");
       setOtpPending(true);
+      setLoading(false);
       setOtpResolve(() => resolve);
     });
   }
 
   function submitOtp() {
+    setLoading(true);
     setOtpPending(false);
     otpResolve?.(otp);
     setOtpResolve(null);
