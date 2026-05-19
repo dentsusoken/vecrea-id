@@ -43,14 +43,14 @@ function Input({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{label}</span>
+      <span className="text-sm font-medium text-zinc-700">{label}</span>
       <input
         type={type}
         value={value}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        className="rounded-lg border border-zinc-300 bg-white text-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full placeholder:text-zinc-400"
       />
     </label>
   );
@@ -69,15 +69,15 @@ function PrimaryBtn({
 }) {
   const cls: Record<string, string> = {
     primary: "bg-blue-600 hover:bg-blue-700 text-white",
-    secondary: "bg-zinc-800 hover:bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-100",
+    secondary: "bg-zinc-900 hover:bg-zinc-700 text-white",
     danger: "bg-red-600 hover:bg-red-700 text-white",
-    ghost: "border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200",
+    ghost: "border border-zinc-300 hover:bg-zinc-50 text-zinc-700",
   };
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full ${cls[variant]}`}
+      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-full ${cls[variant]}`}
     >
       {children}
     </button>
@@ -87,7 +87,7 @@ function PrimaryBtn({
 function ErrorMsg({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
-    <p className="text-sm text-red-600 dark:text-red-400 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2">
+    <p className="text-sm text-red-600 rounded-lg bg-red-50 border border-red-200 px-3 py-2">
       {msg}
     </p>
   );
@@ -152,9 +152,7 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
 
       {otpPending ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            メールに送信されたコードを入力してください。
-          </p>
+          <p className="text-sm text-zinc-500">メールに送信されたコードを入力してください。</p>
           <Input
             label="確認コード"
             value={otp}
@@ -226,9 +224,8 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
   if (step === "confirm") {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">{email}</span>{" "}
-          に確認コードを送信しました。
+        <p className="text-sm text-zinc-500">
+          <span className="font-medium text-zinc-800">{email}</span> に確認コードを送信しました。
         </p>
         <Input
           label="確認コード"
@@ -242,7 +239,7 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
         </PrimaryBtn>
         <button
           onClick={() => setStep("email")}
-          className="text-sm text-zinc-500 hover:underline text-center"
+          className="text-sm text-zinc-400 hover:text-zinc-600 hover:underline text-center"
         >
           ← メールアドレスを変更
         </button>
@@ -379,30 +376,30 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">パスキー</h3>
+        <h3 className="text-sm font-semibold text-zinc-700">パスキー</h3>
         <button
           onClick={fetchList}
           disabled={loadingList}
-          className="text-xs text-blue-500 hover:underline disabled:opacity-50"
+          className="text-xs text-blue-500 hover:underline disabled:opacity-40"
         >
           {loadingList ? "読み込み中..." : "更新"}
         </button>
       </div>
 
       {credentials !== null && credentials.length === 0 && (
-        <p className="text-sm text-zinc-400 dark:text-zinc-500">登録済みパスキーはありません。</p>
+        <p className="text-sm text-zinc-400">登録済みパスキーはありません。</p>
       )}
 
       {credentials?.map((c) => (
         <div
           key={c.credentialId}
-          className="flex items-start justify-between rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 gap-3"
+          className="flex items-start justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 gap-3"
         >
           <div className="min-w-0">
-            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
+            <p className="text-sm font-medium text-zinc-800 truncate">
               {c.friendlyName || "パスキー"}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5">
               {c.authenticatorAttachment === "platform" ? "デバイス内蔵" : c.authenticatorAttachment ?? "—"}
               {" · "}
               登録日: {c.createdAt.toLocaleDateString("ja-JP")}
@@ -411,7 +408,7 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
           <button
             onClick={() => handleDelete(c.credentialId)}
             disabled={deletingId === c.credentialId}
-            className="text-xs text-red-500 hover:underline disabled:opacity-50 shrink-0 mt-0.5"
+            className="text-xs text-red-500 hover:underline disabled:opacity-40 shrink-0 mt-0.5"
           >
             {deletingId === c.credentialId ? "削除中..." : "削除"}
           </button>
@@ -459,17 +456,17 @@ function PostAuthScreen({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50">
       {/* Header */}
-      <header className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3">
+      <header className="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <span className="text-sm font-medium text-zinc-700">
             {email || "サインイン済み"}
           </span>
           <button
             onClick={handleSignOut}
             disabled={signingOut}
-            className="text-sm text-red-500 hover:underline disabled:opacity-50"
+            className="text-sm text-red-500 hover:underline disabled:opacity-40"
           >
             {signingOut ? "サインアウト中..." : "サインアウト"}
           </button>
@@ -478,25 +475,23 @@ function PostAuthScreen({
 
       <main className="max-w-lg mx-auto px-4 py-6 flex flex-col gap-4">
         {/* User info */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 flex flex-col gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-4 flex flex-col gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1">
             ユーザー情報
           </h2>
           <div className="flex flex-col gap-1">
             <div className="flex gap-2 text-sm">
-              <span className="text-zinc-500 dark:text-zinc-400 w-16 shrink-0">メール</span>
-              <span className="text-zinc-800 dark:text-zinc-200 font-mono truncate">{email}</span>
+              <span className="text-zinc-400 w-16 shrink-0">メール</span>
+              <span className="text-zinc-800 font-mono truncate">{email}</span>
             </div>
             <div className="flex gap-2 text-sm">
-              <span className="text-zinc-500 dark:text-zinc-400 w-16 shrink-0">Sub</span>
-              <span className="text-zinc-800 dark:text-zinc-200 font-mono truncate text-xs">{sub}</span>
+              <span className="text-zinc-400 w-16 shrink-0">Sub</span>
+              <span className="text-zinc-700 font-mono truncate text-xs">{sub}</span>
             </div>
             {exp && (
               <div className="flex gap-2 text-sm">
-                <span className="text-zinc-500 dark:text-zinc-400 w-16 shrink-0">有効期限</span>
-                <span className="text-zinc-800 dark:text-zinc-200 text-xs">
-                  {exp.toLocaleString("ja-JP")}
-                </span>
+                <span className="text-zinc-400 w-16 shrink-0">有効期限</span>
+                <span className="text-zinc-700 text-xs">{exp.toLocaleString("ja-JP")}</span>
               </div>
             )}
           </div>
@@ -516,10 +511,8 @@ function PostAuthScreen({
                 ] as const
               ).map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-0.5">
-                    {label}
-                  </p>
-                  <p className="text-xs font-mono text-zinc-700 dark:text-zinc-300 break-all bg-zinc-50 dark:bg-zinc-800 rounded px-2 py-1">
+                  <p className="text-xs font-medium text-zinc-500 mb-0.5">{label}</p>
+                  <p className="text-xs font-mono text-zinc-700 break-all bg-zinc-50 border border-zinc-200 rounded px-2 py-1">
                     {value}
                   </p>
                 </div>
@@ -529,8 +522,8 @@ function PostAuthScreen({
         </div>
 
         {/* Passkey management */}
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-3">
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">
             パスキー管理
           </h2>
           <PasskeyManager accessToken={tokens.accessToken} />
@@ -554,23 +547,23 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
   const [tab, setTab] = useState<Tab>("signin");
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
       <div className="w-full max-w-sm flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 text-center">
+        <h1 className="text-2xl font-bold text-zinc-900 text-center tracking-tight">
           vecrea-id
         </h1>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden">
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
           {/* Tab bar */}
-          <div className="flex border-b border-zinc-200 dark:border-zinc-700">
+          <div className="flex border-b border-zinc-200">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   tab === t.id
-                    ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 -mb-px"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
+                    ? "text-blue-600 border-b-2 border-blue-600 -mb-px bg-white"
+                    : "text-zinc-400 hover:text-zinc-700 bg-zinc-50"
                 }`}
               >
                 {t.label}
@@ -586,7 +579,7 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
           </div>
         </div>
 
-        <p className="text-center text-xs text-zinc-400 dark:text-zinc-600">
+        <p className="text-center text-xs text-zinc-400">
           開発者ツールは{" "}
           <a href="/demo" className="text-blue-500 hover:underline">
             /demo
