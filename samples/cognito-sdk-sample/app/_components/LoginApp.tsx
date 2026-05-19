@@ -127,7 +127,17 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
         preferredChallenge,
         onChallenge: {
           emailOtp: () => askOtp(),
-          selectChallenge: async (available) => available[0] ?? "EMAIL_OTP",
+          selectChallenge: async (available) => {
+            if (preferredChallenge === "WEB_AUTHN") {
+              if (!available.includes("WEB_AUTHN")) {
+                throw new Error(
+                  "このアカウントにはパスキーが登録されていません。メールOTPでサインインしてください。",
+                );
+              }
+              return "WEB_AUTHN";
+            }
+            return "EMAIL_OTP";
+          },
         },
       });
       onSignIn(result);
