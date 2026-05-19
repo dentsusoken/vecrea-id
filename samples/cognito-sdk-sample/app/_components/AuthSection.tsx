@@ -184,34 +184,6 @@ function SignInWithUserAuthCard({ config, onTokens }: Props) {
             );
             return selected ?? available[0] ?? "";
           },
-          webAuthn: async (options) => {
-            if (!window.PublicKeyCredential) {
-              throw new Error(
-                "WebAuthn not supported in this environment (requires HTTPS + compatible device)",
-              );
-            }
-            const credential = await navigator.credentials.get({
-              publicKey: options as unknown as PublicKeyCredentialRequestOptions,
-            });
-            if (!credential) throw new Error("No credential returned from WebAuthn");
-            const pk = credential as PublicKeyCredential;
-            const resp = pk.response as AuthenticatorAssertionResponse;
-            return {
-              id: pk.id,
-              rawId: btoa(String.fromCharCode(...new Uint8Array(pk.rawId))),
-              type: pk.type,
-              response: {
-                clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(resp.clientDataJSON))),
-                authenticatorData: btoa(
-                  String.fromCharCode(...new Uint8Array(resp.authenticatorData)),
-                ),
-                signature: btoa(String.fromCharCode(...new Uint8Array(resp.signature))),
-                userHandle: resp.userHandle
-                  ? btoa(String.fromCharCode(...new Uint8Array(resp.userHandle)))
-                  : null,
-              },
-            };
-          },
         },
       });
       onTokens(result);

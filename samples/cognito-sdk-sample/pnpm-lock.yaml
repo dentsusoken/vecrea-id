@@ -15,9 +15,12 @@ importers:
       '@aws-sdk/client-cognito-identity-provider':
         specifier: ^3.1044.0
         version: 3.1044.0
+      '@simplewebauthn/browser':
+        specifier: ^13.3.0
+        version: 13.3.0
       '@vecrea/cognito-sdk':
         specifier: file:../../projects/cognito-sdk
-        version: file:../../projects/cognito-sdk
+        version: file:../../projects/cognito-sdk(@simplewebauthn/browser@13.3.0)
       next:
         specifier: 16.2.4
         version: 16.2.4(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -570,6 +573,9 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
+  '@simplewebauthn/browser@13.3.0':
+    resolution: {integrity: sha512-BE/UWv6FOToAdVk0EokzkqQQDOWtNydYlY6+OrmiZ5SCNmb41VehttboTetUM3T/fr6EAFYVXjz4My2wg230rQ==}
+
   '@smithy/config-resolver@4.4.17':
     resolution: {integrity: sha512-TzDZcAnhTyAHbXVxWZo7/tEcrIeFq20IBk8So3OLOetWpR8EwY/yEqBMBFaJMeyEiREDq4NfEl+qO3OAUD+vbQ==}
     engines: {node: '>=18.0.0'}
@@ -1020,6 +1026,11 @@ packages:
 
   '@vecrea/cognito-sdk@file:../../projects/cognito-sdk':
     resolution: {directory: ../../projects/cognito-sdk, type: directory}
+    peerDependencies:
+      '@simplewebauthn/browser': ^13.3.0
+    peerDependenciesMeta:
+      '@simplewebauthn/browser':
+        optional: true
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -3002,6 +3013,8 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
+  '@simplewebauthn/browser@13.3.0': {}
+
   '@smithy/config-resolver@4.4.17':
     dependencies:
       '@smithy/node-config-provider': 4.3.14
@@ -3518,9 +3531,11 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vecrea/cognito-sdk@file:../../projects/cognito-sdk':
+  '@vecrea/cognito-sdk@file:../../projects/cognito-sdk(@simplewebauthn/browser@13.3.0)':
     dependencies:
       '@aws-sdk/client-cognito-identity-provider': 3.1044.0
+    optionalDependencies:
+      '@simplewebauthn/browser': 13.3.0
     transitivePeerDependencies:
       - aws-crt
 
