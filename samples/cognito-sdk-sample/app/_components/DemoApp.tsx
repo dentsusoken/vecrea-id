@@ -14,51 +14,15 @@ import { AdminSection } from "./AdminSection";
 const TABS = ["Auth", "Sign Up", "Password", "User", "MFA", "Device", "Admin"] as const;
 type Tab = (typeof TABS)[number];
 
+const ENV_CONFIG: CognitoConfig = {
+  region: process.env.NEXT_PUBLIC_COGNITO_REGION ?? "",
+  userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
+  clientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ?? "",
+};
+
 // ---- Config Panels ----
 
-function ClientConfigPanel({
-  config,
-  onChange,
-}: {
-  config: CognitoConfig;
-  onChange: (c: CognitoConfig) => void;
-}) {
-  return (
-    <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 p-4">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-3">
-        Client Config
-      </h2>
-      <div className="flex flex-wrap gap-3">
-        <Field
-          label="Region"
-          value={config.region}
-          onChange={(v) => onChange({ ...config, region: v })}
-          placeholder="us-east-1"
-        />
-        <Field
-          label="User Pool ID"
-          value={config.userPoolId}
-          onChange={(v) => onChange({ ...config, userPoolId: v })}
-          placeholder="us-east-1_xxxxxxxxx"
-        />
-        <Field
-          label="Client ID"
-          value={config.clientId}
-          onChange={(v) => onChange({ ...config, clientId: v })}
-          placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxx"
-        />
-      </div>
-    </div>
-  );
-}
-
-function TokensPanel({
-  tokens,
-  onChange,
-}: {
-  tokens: Tokens;
-  onChange: (t: Tokens) => void;
-}) {
+function TokensPanel({ tokens, onChange }: { tokens: Tokens; onChange: (t: Tokens) => void }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -199,11 +163,7 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void 
 export function DemoApp() {
   const [activeTab, setActiveTab] = useState<Tab>("Auth");
 
-  const [config, setConfig] = useState<CognitoConfig>({
-    region: "",
-    userPoolId: "",
-    clientId: "",
-  });
+  const config = ENV_CONFIG;
 
   const [tokens, setTokens] = useState<Tokens>({
     accessToken: "",
@@ -237,10 +197,7 @@ export function DemoApp() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col gap-5">
         {/* Always-visible config panels */}
         {activeTab !== "Admin" ? (
-          <>
-            <ClientConfigPanel config={config} onChange={setConfig} />
-            <TokensPanel tokens={tokens} onChange={setTokens} />
-          </>
+          <TokensPanel tokens={tokens} onChange={setTokens} />
         ) : (
           <AdminConfigPanel adminConfig={adminConfig} onChange={setAdminConfig} />
         )}
