@@ -300,7 +300,8 @@ export async function signInWithUserAuth(
         }
       } else if (challengeName === "WEB_AUTHN") {
         assertSecureContext();
-        const raw = JSON.parse(challengeParams["CREDENTIAL_REQUEST_OPTIONS_JSON"] ?? "{}") as {
+        const rawStr = challengeParams["CREDENTIAL_REQUEST_OPTIONS"] ?? "{}";
+        const raw = JSON.parse(rawStr) as {
           publicKey?: PublicKeyCredentialRequestOptionsJSON;
         } & PublicKeyCredentialRequestOptionsJSON;
         // Cognito may wrap options in a `publicKey` envelope matching the browser API shape.
