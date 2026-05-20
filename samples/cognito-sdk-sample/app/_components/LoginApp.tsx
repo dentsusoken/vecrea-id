@@ -633,12 +633,12 @@ function PostAuthScreen({
 
 // ---- Pre-auth screen ----
 
-type Tab = "signin" | "signup" | "migrate";
+type Tab = "signin" | "signup" /* | "migrate" */;
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "signin", label: "サインイン" },
   { id: "signup", label: "新規登録" },
-  { id: "migrate", label: "ユーザー移行" },
+  // { id: "migrate", label: "ユーザー移行" },
 ];
 
 function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
@@ -673,7 +673,7 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
           <div className="p-5">
             {tab === "signin" && <SignInForm onSignIn={onSignIn} />}
             {tab === "signup" && <SignUpForm onSignIn={onSignIn} />}
-            {tab === "migrate" && <MigrateForm onSignIn={onSignIn} />}
+            {/* {tab === "migrate" && <MigrateForm onSignIn={onSignIn} />} */}
           </div>
         </div>
 
