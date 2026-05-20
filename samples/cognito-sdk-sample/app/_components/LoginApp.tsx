@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createCognitoClient } from "@vecrea/cognito-sdk/client";
 import type { AuthTokens, PasskeyInfo } from "@vecrea/cognito-sdk/client";
 import type { CognitoConfig } from "./shared";
@@ -12,6 +12,27 @@ const CONFIG: CognitoConfig = {
   userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID ?? "",
   clientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID ?? "",
 };
+
+// ---- Token persistence ----
+
+const TOKEN_STORAGE_KEY = "cognito_tokens";
+
+function loadStoredTokens(): AuthTokens | null {
+  try {
+    const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthTokens) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistTokens(tokens: AuthTokens) {
+  localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokens));
+}
+
+function clearStoredTokens() {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
 
 // ---- JWT helpers ----
 
@@ -672,9 +693,60 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
 
 export function LoginApp() {
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
+  const [restoring, setRestoring] = useState(true);
+
+  useEffect(() => {
+    async function restore() {
+      const saved = loadStoredTokens();
+      if (!saved) {
+        setRestoring(false);
+        return;
+      }
+
+      const claims = decodeIdToken(saved.idToken);
+      const exp = claims.exp as number | undefined;
+      const isExpired = !exp || exp * 1000 < Date.now();
+
+      if (!isExpired) {
+        setTokens(saved);
+        setRestoring(false);
+        return;
+      }
+
+      try {
+        const client = createCognitoClient(CONFIG);
+        const refreshed = await client.refreshTokens({ refreshToken: saved.refreshToken });
+        persistTokens(refreshed);
+        setTokens(refreshed);
+      } catch {
+        clearStoredTokens();
+      } finally {
+        setRestoring(false);
+      }
+    }
+    restore();
+  }, []);
+
+  function handleSignIn(t: AuthTokens) {
+    persistTokens(t);
+    setTokens(t);
+  }
+
+  function handleSignOut() {
+    clearStoredTokens();
+    setTokens(null);
+  }
+
+  if (restoring) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-100">
+        <p className="text-sm text-zinc-400">読み込み中...</p>
+      </div>
+    );
+  }
 
   if (!tokens) {
-    return <PreAuthScreen onSignIn={setTokens} />;
+    return <PreAuthScreen onSignIn={handleSignIn} />;
   }
-  return <PostAuthScreen tokens={tokens} onSignOut={() => setTokens(null)} />;
+  return <PostAuthScreen tokens={tokens} onSignOut={handleSignOut} />;
 }
