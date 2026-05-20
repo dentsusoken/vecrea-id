@@ -7,7 +7,7 @@ applications:
             - 'node --version'
             - 'npm install -g pnpm@11'
             - 'pnpm --version'
-            - 'cd ../../projects/cognito-sdk && pnpm install --frozen-lockfile && pnpm run build'
+            - 'cd ../../projects/cognito-sdk && pnpm install --frozen-lockfile && pnpm run build && cd -'
             - 'pnpm install --frozen-lockfile'
         build:
           commands:
