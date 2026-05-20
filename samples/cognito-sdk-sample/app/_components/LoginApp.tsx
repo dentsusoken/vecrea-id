@@ -479,13 +479,17 @@ function DeleteAccountSection({
             <button
               onClick={() => { setConfirming(false); setError(null); }}
               disabled={loading}
-              className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
+              className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition-colors"
             >
               キャンセル
             </button>
-            <PrimaryBtn onClick={handleDelete} disabled={loading} variant="danger">
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
               {loading ? "削除中..." : "削除する"}
-            </PrimaryBtn>
+            </button>
           </div>
         </div>
       )}
