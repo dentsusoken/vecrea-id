@@ -4,18 +4,18 @@ applications:
       phases:
         preBuild:
           commands:
-              - 'node --version'
-              - 'npm install -g pnpm@11'
-              - 'pnpm --version'
-              - 'cd $CODEBUILD_SRC_DIR/projects/cognito-sdk && pnpm install --frozen-lockfile && pnpm run build'
-              - 'cd $CODEBUILD_SRC_DIR/samples/cognito-sdk-sample && pnpm install --frozen-lockfile'
+            - 'node --version'
+            - 'npm install -g pnpm@11'
+            - 'pnpm --version'
+            - 'cd $CODEBUILD_SRC_DIR/projects/cognito-sdk && pnpm install --frozen-lockfile && pnpm run build'
+            - 'cd $CODEBUILD_SRC_DIR/samples/cognito-sdk-sample && pnpm install --frozen-lockfile'
         build:
           commands:
             - |
               set -e
               rm -f .env.production
               env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
-              cd $CODEBUILD_SRC_DIR/samples/cognito-sdk-sample && pnpm run build
+              pnpm run build
       artifacts:
         baseDirectory: .next
         files:
