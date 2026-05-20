@@ -648,7 +648,7 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
     <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <h1 className="text-2xl font-bold text-zinc-900 text-center tracking-tight">
-          vecrea-id
+          VeCrea
         </h1>
 
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
