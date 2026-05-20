@@ -436,6 +436,64 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
   );
 }
 
+// ---- Delete account ----
+
+function DeleteAccountSection({
+  accessToken,
+  onDeleted,
+}: {
+  accessToken: string;
+  onDeleted: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    setError(null);
+    setLoading(true);
+    try {
+      const client = createCognitoClient(CONFIG);
+      await client.deleteUser({ accessToken });
+      onDeleted();
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-red-200 bg-white shadow-sm p-4 flex flex-col gap-3">
+      <h2 className="text-xs font-bold uppercase tracking-widest text-red-400">危険な操作</h2>
+      {!confirming ? (
+        <PrimaryBtn onClick={() => setConfirming(true)} variant="danger">
+          アカウントを削除
+        </PrimaryBtn>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-zinc-600">
+            この操作は取り消せません。アカウントとすべてのデータが完全に削除されます。
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setConfirming(false); setError(null); }}
+              disabled={loading}
+              className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40"
+            >
+              キャンセル
+            </button>
+            <PrimaryBtn onClick={handleDelete} disabled={loading} variant="danger">
+              {loading ? "削除中..." : "削除する"}
+            </PrimaryBtn>
+          </div>
+        </div>
+      )}
+      <ErrorMsg msg={error} />
+    </div>
+  );
+}
+
 // ---- Post-auth screen ----
 
 function PostAuthScreen({
@@ -540,6 +598,9 @@ function PostAuthScreen({
           </h2>
           <PasskeyManager accessToken={tokens.accessToken} />
         </div>
+
+        {/* Danger zone */}
+        <DeleteAccountSection accessToken={tokens.accessToken} onDeleted={onSignOut} />
       </main>
     </div>
   );
