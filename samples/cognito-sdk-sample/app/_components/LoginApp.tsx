@@ -105,6 +105,42 @@ function PrimaryBtn({
   );
 }
 
+function formatCognitoError(e: unknown, context?: "migrate" | "passkey"): string {
+  // Custom JS errors (e.g. passkey-not-registered check in selectChallenge) — use as-is
+  if (e instanceof Error && !(e as { code?: string }).code) {
+    return e.message;
+  }
+
+  const code = (e as { code?: string }).code ?? "";
+
+  if (context === "migrate") {
+    if (code === "UserNotFoundException" || code === "NotAuthorizedException") {
+      return "ユーザー名またはパスワードが正しくありません";
+    }
+    if (code === "UserLambdaValidationException") {
+      return "ユーザー移行に失敗しました。入力内容をご確認ください";
+    }
+  }
+
+  const MESSAGES: Record<string, string> = {
+    UserNotFoundException:        "このメールアドレスは登録されていません",
+    NotAuthorizedException:       "認証に失敗しました。入力内容をご確認ください",
+    UserNotConfirmedException:    "メールアドレスの確認が完了していません",
+    CodeMismatchException:        "確認コードが正しくありません",
+    ExpiredCodeException:         "確認コードの有効期限が切れています。再度お試しください",
+    UsernameExistsException:      "このメールアドレスはすでに登録されています",
+    TooManyRequestsException:     "試行回数が多すぎます。しばらく時間をおいて再度お試しください",
+    LimitExceededException:       "試行回数の上限に達しました。しばらく時間をおいて再度お試しください",
+    PasswordResetRequiredException: "パスワードのリセットが必要です",
+    InvalidPasswordException:     "パスワードがポリシーを満たしていません",
+    InvalidParameterException:    "入力内容に誤りがあります",
+    UserLambdaValidationException: "処理に失敗しました。入力内容をご確認ください",
+    WebAuthnRequiresHTTPS:        "パスキーにはHTTPS接続が必要です（localhost は除く）",
+  };
+
+  return MESSAGES[code] ?? "エラーが発生しました。しばらく時間をおいて再度お試しください";
+}
+
 function ErrorMsg({ msg }: { msg: string | null }) {
   if (!msg) return null;
   return (
@@ -165,8 +201,7 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
       });
       onSignIn(result);
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
     } finally {
       setLoading(false);
     }
@@ -232,8 +267,7 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
       setSession(result.session);
       setStep("confirm");
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
     } finally {
       setLoading(false);
     }
@@ -247,8 +281,7 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
       const tokens = await client.confirmSignUp({ username: email, code, session });
       onSignIn(tokens);
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
     } finally {
       setLoading(false);
     }
@@ -315,8 +348,7 @@ function MigrateForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
       const result = await client.signInWithPassword({ username, password });
       onSignIn(result);
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e, "migrate"));
     } finally {
       setLoading(false);
     }
@@ -364,8 +396,7 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
       const result = await client.listPasskeys({ accessToken });
       setCredentials(result.credentials);
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
     } finally {
       setLoadingList(false);
     }
@@ -384,8 +415,7 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
       await client.registerPasskey({ accessToken });
       await fetchList();
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e, "passkey"));
     } finally {
       setLoadingReg(false);
     }
@@ -399,8 +429,7 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
       await client.deletePasskey({ accessToken, credentialId });
       setCredentials((prev) => prev?.filter((c) => c.credentialId !== credentialId) ?? null);
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
     } finally {
       setDeletingId(null);
     }
@@ -478,8 +507,7 @@ function DeleteAccountSection({
       await client.deleteUser({ accessToken });
       onDeleted();
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e));
       setLoading(false);
     }
   }
@@ -539,8 +567,7 @@ function PasskeyPromptScreen({
       await client.registerPasskey({ accessToken: tokens.accessToken });
       onContinue();
     } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setError(formatCognitoError(e, "passkey"));
       setLoading(false);
     }
   }
