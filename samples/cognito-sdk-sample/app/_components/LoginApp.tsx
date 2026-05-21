@@ -743,7 +743,7 @@ function PreAuthScreen({
           <div className="p-5">
             {tab === "signin" && <SignInForm onSignIn={onSignIn} />}
             {tab === "signup" && <SignUpForm onSignIn={onSignUp} />}
-            {tab === "migrate" && <MigrateForm onSignIn={onSignIn} />}
+            {tab === "migrate" && <MigrateForm onSignIn={onSignUp} />}
           </div>
         </div>
 
