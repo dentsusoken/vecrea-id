@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "@vecrea/cognito-sdk — Demo",
-  description: "Interactive explorer for all @vecrea/cognito-sdk APIs",
+  title: "VeCrea",
+  description: "VeCrea — powered by @vecrea/cognito-sdk",
 };
 
 export default function RootLayout({
