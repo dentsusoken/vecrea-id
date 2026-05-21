@@ -519,13 +519,240 @@ function DeleteAccountSection({
   );
 }
 
-// ---- Post-auth screen ----
+// ---- Passkey prompt (shown once after sign-up) ----
 
-function PostAuthScreen({
+function PasskeyPromptScreen({
   tokens,
+  onContinue,
+}: {
+  tokens: AuthTokens;
+  onContinue: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRegister() {
+    setError(null);
+    setLoading(true);
+    try {
+      const client = createCognitoClient(CONFIG);
+      await client.registerPasskey({ accessToken: tokens.accessToken });
+      onContinue();
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
+      <div className="w-full max-w-sm flex flex-col gap-6">
+        <div className="text-center flex flex-col gap-2">
+          <div className="text-5xl">🔑</div>
+          <h1 className="text-xl font-bold text-zinc-900">パスキーを登録しませんか？</h1>
+          <p className="text-sm text-zinc-500 leading-relaxed">
+            次回から指紋や顔認証でかんたんにサインインできます。
+            <br />
+            あとで設定画面からでも登録できます。
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-5 flex flex-col gap-3">
+          <ul className="flex flex-col gap-2 text-sm text-zinc-600 mb-1">
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> パスワード不要でサインイン
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> フィッシング耐性あり
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> 生体認証・PIN で本人確認
+            </li>
+          </ul>
+          <PrimaryBtn onClick={handleRegister} disabled={loading}>
+            {loading ? "登録中..." : "パスキーを登録する"}
+          </PrimaryBtn>
+          <PrimaryBtn onClick={onContinue} disabled={loading} variant="ghost">
+            あとで登録する
+          </PrimaryBtn>
+          <ErrorMsg msg={error} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Login modal ----
+
+type Tab = "signin" | "signup" | "migrate";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "signin", label: "サインイン" },
+  { id: "signup", label: "新規登録" },
+  { id: "migrate", label: "ユーザー移行" },
+];
+
+function LoginModal({
+  onClose,
+  onSignIn,
+  onSignUp,
+}: {
+  onClose: () => void;
+  onSignIn: (t: AuthTokens) => void;
+  onSignUp: (t: AuthTokens) => void;
+}) {
+  const [tab, setTab] = useState<Tab>("signin");
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-0">
+          <span className="text-base font-bold text-zinc-900">VeCrea</span>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-600 text-xl leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex border-b border-zinc-200 mt-3">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                tab === t.id
+                  ? "text-blue-600 border-b-2 border-blue-600 -mb-px bg-white"
+                  : "text-zinc-400 hover:text-zinc-700 bg-zinc-50"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div className="p-5">
+          {tab === "signin" && <SignInForm onSignIn={onSignIn} />}
+          {tab === "signup" && <SignUpForm onSignIn={onSignUp} />}
+          {tab === "migrate" && <MigrateForm onSignIn={onSignUp} />}
+        </div>
+
+        <p className="text-center text-xs text-zinc-400 pb-4">
+          開発者ツールは{" "}
+          <a href="/demo" className="text-blue-500 hover:underline">
+            /demo
+          </a>{" "}
+          で利用できます
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---- Home screen ----
+
+function HomeScreen({
+  tokens,
+  onLoginClick,
+  onAccountClick,
+  onSignOut,
+}: {
+  tokens: AuthTokens | null;
+  onLoginClick: () => void;
+  onAccountClick: () => void;
+  onSignOut: () => void;
+}) {
+  const email = tokens ? (decodeIdToken(tokens.idToken).email as string) ?? "" : "";
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      if (tokens) {
+        const client = createCognitoClient(CONFIG);
+        await client.signOut({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+      }
+    } catch {
+      // ignore
+    } finally {
+      onSignOut();
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-zinc-50">
+      <header className="bg-white border-b border-zinc-200 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <span className="text-lg font-bold text-zinc-900">VeCrea</span>
+          <div className="flex items-center gap-3">
+            {tokens ? (
+              <>
+                <span className="text-sm text-zinc-500 hidden sm:block">{email}</span>
+                <button
+                  onClick={onAccountClick}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  アカウント管理
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="text-sm text-zinc-500 hover:text-zinc-800 disabled:opacity-40 transition-colors"
+                >
+                  {signingOut ? "処理中..." : "サインアウト"}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={onLoginClick}
+                className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 transition-colors"
+              >
+                ログイン / 新規登録
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
+        <h1 className="text-3xl font-bold text-zinc-900">
+          {tokens ? `おかえりなさい、${email.split("@")[0]} さん` : "VeCrea へようこそ"}
+        </h1>
+        <p className="text-zinc-500 max-w-md">
+          {tokens
+            ? "アカウント管理からパスキーの登録・削除などができます。"
+            : "パスキーやメールOTPでかんたん・安全にサインインできます。"}
+        </p>
+        {!tokens && (
+          <button
+            onClick={onLoginClick}
+            className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 transition-colors"
+          >
+            はじめる
+          </button>
+        )}
+      </main>
+    </div>
+  );
+}
+
+// ---- Account screen ----
+
+function AccountScreen({
+  tokens,
+  onBack,
   onSignOut,
 }: {
   tokens: AuthTokens;
+  onBack: () => void;
   onSignOut: () => void;
 }) {
   const [signingOut, setSigningOut] = useState(false);
@@ -539,12 +766,9 @@ function PostAuthScreen({
     setSigningOut(true);
     try {
       const client = createCognitoClient(CONFIG);
-      await client.signOut({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      });
+      await client.signOut({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     } catch {
-      // ignore sign-out errors
+      // ignore
     } finally {
       onSignOut();
     }
@@ -552,12 +776,18 @@ function PostAuthScreen({
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      {/* Header */}
       <header className="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <span className="text-sm font-medium text-zinc-700">
-            {email || "サインイン済み"}
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
+            >
+              ← ホーム
+            </button>
+            <span className="text-zinc-300">|</span>
+            <span className="text-sm font-medium text-zinc-700">{email}</span>
+          </div>
           <button
             onClick={handleSignOut}
             disabled={signingOut}
@@ -631,139 +861,13 @@ function PostAuthScreen({
   );
 }
 
-// ---- Passkey prompt (shown once after sign-up) ----
-
-function PasskeyPromptScreen({
-  tokens,
-  onContinue,
-}: {
-  tokens: AuthTokens;
-  onContinue: () => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleRegister() {
-    setError(null);
-    setLoading(true);
-    try {
-      const client = createCognitoClient(CONFIG);
-      await client.registerPasskey({ accessToken: tokens.accessToken });
-      onContinue();
-    } catch (e) {
-      const err = e as { code?: string; message?: string };
-      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
-      <div className="w-full max-w-sm flex flex-col gap-6">
-        <div className="text-center flex flex-col gap-2">
-          <div className="text-5xl">🔑</div>
-          <h1 className="text-xl font-bold text-zinc-900">パスキーを登録しませんか？</h1>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            次回から指紋や顔認証でかんたんにサインインできます。
-            <br />
-            あとで設定画面からでも登録できます。
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-5 flex flex-col gap-3">
-          <ul className="flex flex-col gap-2 text-sm text-zinc-600 mb-1">
-            <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> パスワード不要でサインイン
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> フィッシング耐性あり
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> 生体認証・PIN で本人確認
-            </li>
-          </ul>
-          <PrimaryBtn onClick={handleRegister} disabled={loading}>
-            {loading ? "登録中..." : "パスキーを登録する"}
-          </PrimaryBtn>
-          <PrimaryBtn onClick={onContinue} disabled={loading} variant="ghost">
-            あとで登録する
-          </PrimaryBtn>
-          <ErrorMsg msg={error} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---- Pre-auth screen ----
-
-type Tab = "signin" | "signup" | "migrate";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "signin", label: "サインイン" },
-  { id: "signup", label: "新規登録" },
-  { id: "migrate", label: "ユーザー移行" },
-];
-
-function PreAuthScreen({
-  onSignIn,
-  onSignUp,
-}: {
-  onSignIn: (t: AuthTokens) => void;
-  onSignUp: (t: AuthTokens) => void;
-}) {
-  const [tab, setTab] = useState<Tab>("signin");
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
-      <div className="w-full max-w-sm flex flex-col gap-6">
-        <h1 className="text-2xl font-bold text-zinc-900 text-center tracking-tight">
-          VeCrea
-        </h1>
-
-        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-          {/* Tab bar */}
-          <div className="flex border-b border-zinc-200">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                  tab === t.id
-                    ? "text-blue-600 border-b-2 border-blue-600 -mb-px bg-white"
-                    : "text-zinc-400 hover:text-zinc-700 bg-zinc-50"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          <div className="p-5">
-            {tab === "signin" && <SignInForm onSignIn={onSignIn} />}
-            {tab === "signup" && <SignUpForm onSignIn={onSignUp} />}
-            {tab === "migrate" && <MigrateForm onSignIn={onSignUp} />}
-          </div>
-        </div>
-
-        <p className="text-center text-xs text-zinc-400">
-          開発者ツールは{" "}
-          <a href="/demo" className="text-blue-500 hover:underline">
-            /demo
-          </a>{" "}
-          で利用できます
-        </p>
-      </div>
-    </div>
-  );
-}
-
 // ---- Root ----
 
 export function LoginApp() {
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [view, setView] = useState<"home" | "account">("home");
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
@@ -801,11 +905,13 @@ export function LoginApp() {
   function handleSignIn(t: AuthTokens) {
     persistTokens(t);
     setShowPasskeyPrompt(false);
+    setModalOpen(false);
     setTokens(t);
   }
 
   function handleSignUp(t: AuthTokens) {
     persistTokens(t);
+    setModalOpen(false);
     setShowPasskeyPrompt(true);
     setTokens(t);
   }
@@ -813,22 +919,19 @@ export function LoginApp() {
   function handleSignOut() {
     clearStoredTokens();
     setShowPasskeyPrompt(false);
+    setView("home");
     setTokens(null);
   }
 
   if (restoring) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-100">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
         <p className="text-sm text-zinc-400">読み込み中...</p>
       </div>
     );
   }
 
-  if (!tokens) {
-    return <PreAuthScreen onSignIn={handleSignIn} onSignUp={handleSignUp} />;
-  }
-
-  if (showPasskeyPrompt) {
+  if (showPasskeyPrompt && tokens) {
     return (
       <PasskeyPromptScreen
         tokens={tokens}
@@ -837,5 +940,31 @@ export function LoginApp() {
     );
   }
 
-  return <PostAuthScreen tokens={tokens} onSignOut={handleSignOut} />;
+  if (view === "account" && tokens) {
+    return (
+      <AccountScreen
+        tokens={tokens}
+        onBack={() => setView("home")}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  return (
+    <>
+      <HomeScreen
+        tokens={tokens}
+        onLoginClick={() => setModalOpen(true)}
+        onAccountClick={() => setView("account")}
+        onSignOut={handleSignOut}
+      />
+      {modalOpen && !tokens && (
+        <LoginModal
+          onClose={() => setModalOpen(false)}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+        />
+      )}
+    </>
+  );
 }
