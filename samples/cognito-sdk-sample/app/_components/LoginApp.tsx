@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createCognitoClient } from "@vecrea/cognito-sdk/client";
 import type { AuthTokens, PasskeyInfo } from "@vecrea/cognito-sdk/client";
 import type { CognitoConfig } from "./shared";
@@ -671,10 +671,24 @@ function HomeScreen({
   onSignOut: () => void;
 }) {
   const email = tokens ? (decodeIdToken(tokens.idToken).email as string) ?? "" : "";
+  const initial = email ? email[0].toUpperCase() : "?";
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   async function handleSignOut() {
     setSigningOut(true);
+    setDropdownOpen(false);
     try {
       if (tokens) {
         const client = createCognitoClient(CONFIG);
@@ -694,22 +708,40 @@ function HomeScreen({
           <span className="text-lg font-bold text-zinc-900">VeCrea</span>
           <div className="flex items-center gap-3">
             {tokens ? (
-              <>
-                <span className="text-sm text-zinc-500 hidden sm:block">{email}</span>
+              <div className="relative" ref={dropdownRef}>
+                {/* Avatar button */}
                 <button
-                  onClick={onAccountClick}
-                  className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  onClick={() => setDropdownOpen((x) => !x)}
+                  className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center justify-center transition-colors"
+                  aria-label="アカウントメニュー"
                 >
-                  アカウント管理
+                  {initial}
                 </button>
-                <button
-                  onClick={handleSignOut}
-                  disabled={signingOut}
-                  className="text-sm text-zinc-500 hover:text-zinc-800 disabled:opacity-40 transition-colors"
-                >
-                  {signingOut ? "処理中..." : "サインアウト"}
-                </button>
-              </>
+
+                {/* Dropdown */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden z-20">
+                    <div className="px-4 py-3 border-b border-zinc-100">
+                      <p className="text-xs text-zinc-400">サインイン中</p>
+                      <p className="text-sm font-medium text-zinc-800 truncate mt-0.5">{email}</p>
+                    </div>
+                    <button
+                      onClick={() => { setDropdownOpen(false); onAccountClick(); }}
+                      className="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+                    >
+                      アカウント管理
+                    </button>
+                    <div className="border-t border-zinc-100" />
+                    <button
+                      onClick={handleSignOut}
+                      disabled={signingOut}
+                      className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                    >
+                      {signingOut ? "処理中..." : "サインアウト"}
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={onLoginClick}
