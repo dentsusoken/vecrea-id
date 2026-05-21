@@ -631,6 +631,70 @@ function PostAuthScreen({
   );
 }
 
+// ---- Passkey prompt (shown once after sign-up) ----
+
+function PasskeyPromptScreen({
+  tokens,
+  onContinue,
+}: {
+  tokens: AuthTokens;
+  onContinue: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRegister() {
+    setError(null);
+    setLoading(true);
+    try {
+      const client = createCognitoClient(CONFIG);
+      await client.registerPasskey({ accessToken: tokens.accessToken });
+      onContinue();
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      setError(err.code ? `[${err.code}] ${err.message}` : String(e));
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-100 px-4">
+      <div className="w-full max-w-sm flex flex-col gap-6">
+        <div className="text-center flex flex-col gap-2">
+          <div className="text-5xl">🔑</div>
+          <h1 className="text-xl font-bold text-zinc-900">パスキーを登録しませんか？</h1>
+          <p className="text-sm text-zinc-500 leading-relaxed">
+            次回から指紋や顔認証でかんたんにサインインできます。
+            <br />
+            あとで設定画面からでも登録できます。
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-5 flex flex-col gap-3">
+          <ul className="flex flex-col gap-2 text-sm text-zinc-600 mb-1">
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> パスワード不要でサインイン
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> フィッシング耐性あり
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-green-500">✓</span> 生体認証・PIN で本人確認
+            </li>
+          </ul>
+          <PrimaryBtn onClick={handleRegister} disabled={loading}>
+            {loading ? "登録中..." : "パスキーを登録する"}
+          </PrimaryBtn>
+          <PrimaryBtn onClick={onContinue} disabled={loading} variant="ghost">
+            あとで登録する
+          </PrimaryBtn>
+          <ErrorMsg msg={error} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---- Pre-auth screen ----
 
 type Tab = "signin" | "signup" /* | "migrate" */;
@@ -641,7 +705,13 @@ const TABS: { id: Tab; label: string }[] = [
   // { id: "migrate", label: "ユーザー移行" },
 ];
 
-function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
+function PreAuthScreen({
+  onSignIn,
+  onSignUp,
+}: {
+  onSignIn: (t: AuthTokens) => void;
+  onSignUp: (t: AuthTokens) => void;
+}) {
   const [tab, setTab] = useState<Tab>("signin");
 
   return (
@@ -672,7 +742,7 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
           {/* Tab content */}
           <div className="p-5">
             {tab === "signin" && <SignInForm onSignIn={onSignIn} />}
-            {tab === "signup" && <SignUpForm onSignIn={onSignIn} />}
+            {tab === "signup" && <SignUpForm onSignIn={onSignUp} />}
             {/* {tab === "migrate" && <MigrateForm onSignIn={onSignIn} />} */}
           </div>
         </div>
@@ -693,6 +763,7 @@ function PreAuthScreen({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
 
 export function LoginApp() {
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
   const [restoring, setRestoring] = useState(true);
 
   useEffect(() => {
@@ -729,11 +800,19 @@ export function LoginApp() {
 
   function handleSignIn(t: AuthTokens) {
     persistTokens(t);
+    setShowPasskeyPrompt(false);
+    setTokens(t);
+  }
+
+  function handleSignUp(t: AuthTokens) {
+    persistTokens(t);
+    setShowPasskeyPrompt(true);
     setTokens(t);
   }
 
   function handleSignOut() {
     clearStoredTokens();
+    setShowPasskeyPrompt(false);
     setTokens(null);
   }
 
@@ -746,7 +825,17 @@ export function LoginApp() {
   }
 
   if (!tokens) {
-    return <PreAuthScreen onSignIn={handleSignIn} />;
+    return <PreAuthScreen onSignIn={handleSignIn} onSignUp={handleSignUp} />;
   }
+
+  if (showPasskeyPrompt) {
+    return (
+      <PasskeyPromptScreen
+        tokens={tokens}
+        onContinue={() => setShowPasskeyPrompt(false)}
+      />
+    );
+  }
+
   return <PostAuthScreen tokens={tokens} onSignOut={handleSignOut} />;
 }
