@@ -754,27 +754,111 @@ function HomeScreen({
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
-        <h1 className="text-3xl font-bold text-zinc-900">
-          {tokens ? `おかえりなさい、${email.split("@")[0]} さん` : "VeCrea へようこそ"}
-        </h1>
-        <p className="text-zinc-500 max-w-md">
-          {tokens
-            ? "アカウント管理からパスキーの登録・削除などができます。"
-            : "パスキーやメールOTPでかんたん・安全にサインインできます。"}
-        </p>
-        {!tokens && (
-          <button
-            onClick={onLoginClick}
-            className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 transition-colors"
-          >
-            はじめる
-          </button>
-        )}
+      <main>
+        {/* Hero */}
+        <div className="bg-zinc-900 text-white">
+          <div className="max-w-5xl mx-auto px-4 py-20 flex flex-col gap-5">
+            <p className="text-xs font-semibold tracking-widest text-zinc-400 uppercase">
+              2026 Summer Collection
+            </p>
+            <h2 className="text-4xl sm:text-5xl font-bold leading-tight">
+              あたらしい季節の<br />スタイルを見つけよう
+            </h2>
+            <p className="text-zinc-400 max-w-md text-sm leading-relaxed">
+              上質な素材と洗練されたデザイン。日常をワンランク上げる新作が揃いました。
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={tokens ? undefined : onLoginClick}
+                className="rounded-lg bg-white text-zinc-900 hover:bg-zinc-100 font-semibold text-sm px-6 py-3 transition-colors"
+              >
+                {tokens ? "新作をみる" : "ログインして購入する"}
+              </button>
+              <button className="rounded-lg border border-zinc-600 hover:border-zinc-400 text-white text-sm font-medium px-6 py-3 transition-colors">
+                コレクションを見る
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="border-b border-zinc-200 bg-white">
+          <div className="max-w-5xl mx-auto px-4 flex gap-6 overflow-x-auto text-sm font-medium text-zinc-600">
+            {["すべて", "レディース", "メンズ", "アクセサリー", "シューズ", "セール"].map((cat, i) => (
+              <button
+                key={cat}
+                className={`py-4 shrink-0 border-b-2 transition-colors ${
+                  i === 0
+                    ? "border-zinc-900 text-zinc-900"
+                    : "border-transparent hover:text-zinc-900"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Products */}
+        <div className="max-w-5xl mx-auto px-4 py-10">
+          {tokens && (
+            <p className="text-sm text-zinc-500 mb-6">
+              おかえりなさい、<span className="font-medium text-zinc-800">{email.split("@")[0]}</span> さん
+            </p>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+            {MOCK_PRODUCTS.map((p) => (
+              <div key={p.id} className="group flex flex-col gap-2">
+                <div className={`relative aspect-[3/4] rounded-xl overflow-hidden ${p.bg}`}>
+                  <div className="absolute inset-0 flex items-center justify-center text-5xl">
+                    {p.emoji}
+                  </div>
+                  {p.tag && (
+                    <span className={`absolute top-3 left-3 text-xs font-bold px-2 py-0.5 rounded-full ${
+                      p.tag === "SALE"
+                        ? "bg-red-500 text-white"
+                        : "bg-zinc-900 text-white"
+                    }`}>
+                      {p.tag}
+                    </span>
+                  )}
+                  <button
+                    onClick={tokens ? undefined : onLoginClick}
+                    className="absolute bottom-3 inset-x-3 bg-white/90 hover:bg-white text-zinc-900 text-xs font-semibold py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    {tokens ? "カートに追加" : "ログインして購入"}
+                  </button>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-800 truncate">{p.name}</p>
+                  <p className="text-sm text-zinc-500">{p.price}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="border-t border-zinc-200 bg-white mt-10">
+          <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+            <span className="font-bold text-zinc-900">VeCrea</span>
+            <span>© 2026 VeCrea. このサイトはデモ用サンプルです。</span>
+            <a href="/demo" className="text-blue-500 hover:underline">開発者ツール (/demo)</a>
+          </div>
+        </footer>
       </main>
     </div>
   );
 }
+
+const MOCK_PRODUCTS = [
+  { id: 1, name: "クラシックレザーバッグ", price: "¥28,600", bg: "bg-stone-100", emoji: "👜", tag: "NEW" },
+  { id: 2, name: "ウールブレンドコート", price: "¥54,800", bg: "bg-zinc-100", emoji: "🧥" },
+  { id: 3, name: "キャンバススニーカー", price: "¥18,700", bg: "bg-blue-50", emoji: "👟", tag: "SALE" },
+  { id: 4, name: "リネンシャツ", price: "¥12,100", bg: "bg-amber-50", emoji: "👔" },
+  { id: 5, name: "デニムジャケット", price: "¥32,400", bg: "bg-indigo-50", emoji: "🫥", tag: "NEW" },
+  { id: 6, name: "レザーウォレット", price: "¥15,800", bg: "bg-orange-50", emoji: "👛" },
+];
 
 // ---- Account screen ----
 
