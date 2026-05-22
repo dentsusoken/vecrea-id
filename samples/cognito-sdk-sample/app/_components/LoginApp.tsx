@@ -672,13 +672,7 @@ function LoginModal({
           {tab === "migrate" && <MigrateForm onSignIn={onSignUp} />}
         </div>
 
-        <p className="text-center text-xs text-zinc-400 pb-4">
-          開発者ツールは{" "}
-          <a href="/demo" className="text-blue-500 hover:underline">
-            /demo
-          </a>{" "}
-          で利用できます
-        </p>
+
       </div>
     </div>
   );
@@ -870,7 +864,6 @@ function HomeScreen({
           <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
             <span className="font-bold text-zinc-900">VeCrea</span>
             <span>© 2026 VeCrea. このサイトはデモ用サンプルです。</span>
-            <a href="/demo" className="text-blue-500 hover:underline">開発者ツール (/demo)</a>
           </div>
         </footer>
       </main>
