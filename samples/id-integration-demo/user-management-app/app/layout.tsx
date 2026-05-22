@@ -1,19 +1,16 @@
-import type { Metadata } from 'next';
-import { Source_Sans_3 } from 'next/font/google';
-import { ConfigureAmplify } from '@/components/ConfigureAmplify';
-import { AppNav } from './components/AppNav';
-import { AppProviders } from './app-providers';
-import './globals.css';
+import type { Metadata } from "next";
+import { Geist } from "next/font/google";
+import "./globals.css";
+import AmplifyProvider from "@/components/amplify-provider";
 
-const sourceSans = Source_Sans_3({
-  subsets: ['latin'],
-  weight: ['400', '600'],
-  variable: '--font-source-sans',
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: 'User management',
-  description: 'Manage users via the management API',
+  title: "User Management Console",
+  description: "IdP User Management Console",
 };
 
 export default function RootLayout({
@@ -22,13 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sourceSans.variable} h-full`}>
-      <body className={`min-h-full flex flex-col font-sans antialiased`}>
-        <AppProviders>
-          <ConfigureAmplify />
-          <AppNav />
-          <main className="flex-1 bg-white text-um-text">{children}</main>
-        </AppProviders>
+    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+      <body className="min-h-full bg-white text-gray-900">
+        <AmplifyProvider>{children}</AmplifyProvider>
       </body>
     </html>
   );

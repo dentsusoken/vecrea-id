@@ -1,17 +1,17 @@
-import { managementApiFetch } from '@/lib/management-api';
-import { bffError, forwardResponse } from '@/lib/bff-response';
+import { apiFetch } from '@/lib/api-client'
+import { type NextRequest } from 'next/server'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.text();
-    const upstream = await managementApiFetch('/users/batch-delete', {
+    const body = await request.json()
+    const res = await apiFetch('/users/batch-delete', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
-    return forwardResponse(upstream);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return bffError(msg, 502);
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    return Response.json(data, { status: res.status })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal error'
+    return Response.json({ error: message }, { status: 500 })
   }
 }
