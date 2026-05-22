@@ -11,11 +11,11 @@ This web application lets you manage users registered in an Amazon Cognito User 
 1. [Sign In / Sign Out](#1-sign-in--sign-out)
 2. [User List](#2-user-list)
 3. [Create a New User](#3-create-a-new-user)
-4. [User Detail & Edit](#4-user-detail--edit)
+4. [Edit a User](#4-edit-a-user)
 5. [Delete a User](#5-delete-a-user)
 6. [CSV Import](#6-csv-import)
-7. [Import Staging (Review)](#7-import-staging-review)
-8. [Data Reset (Admin Only)](#8-data-reset-admin-only)
+7. [Staging](#7-staging)
+8. [Data Reset](#8-data-reset)
 9. [User Status Reference](#9-user-status-reference)
 
 ---
@@ -27,7 +27,7 @@ This web application lets you manage users registered in an Amazon Cognito User 
 This app uses **email OTP authentication** — no password required.
 
 1. Open the app URL in your browser. If you are not signed in, you will be redirected to the sign-in page automatically.
-2. Enter your registered email address in the **Email** field and click **Send code**.
+2. Enter your registered email address in the **Email address** field and click **Send code**.
 3. A 6-digit one-time code will be sent to that address.
 4. Enter the code in the **One-time code** field and click **Sign in**.
 5. On success, you will be taken to the user list.
@@ -36,7 +36,7 @@ This app uses **email OTP authentication** — no password required.
 
 ### Sign Out
 
-Click the **Sign out** button next to your email address in the top-right navigation bar. You will be redirected to the sign-in page and see "You are signed out."
+Click the **Sign out** button at the bottom of the sidebar. You will be redirected to the sign-in page.
 
 ---
 
@@ -50,25 +50,18 @@ The first screen after signing in. Displays all users registered in the Cognito 
 
 | Column | Description |
 | --- | --- |
-| User ID (sub) | Unique ID issued by Cognito (UUID) |
 | Username | Sign-in identifier |
 | Email | Email address |
+| Name | Full name (family_name + given_name) |
 | Status | Account status ([see §9](#9-user-status-reference)) |
 | Enabled | Whether the account is active |
-| Phone | Phone number |
-
-### Filtering
-
-Type a keyword in the **Filter (this page)** field to filter the current page by username, email, or User ID.
-
-> **Note:** Filtering is client-side and applies only to the current page. Changing the filter resets pagination to the first page.
 
 ### Pagination
 
-Cognito returns up to 60 users per page.
+Up to 20 users are shown per page.
 
-- **Next page** — go to the next page.
-- **Previous page** — go to the previous page.
+- **Previous** — go to the previous page.
+- **Next** — go to the next page.
 
 ---
 
@@ -84,42 +77,29 @@ Click the **+ New user** button on the user list to open this page.
 
 | Field | Description |
 | --- | --- |
-| Username | Cognito sign-in identifier. Also used in API paths. Cannot be changed after creation. |
+| Username | Cognito sign-in identifier. Cannot be changed after creation. |
 
-#### Contact (optional)
+#### Optional
 
 | Field | Description |
 | --- | --- |
+| Family name / Given name | Profile attributes |
 | Email | Email address |
 | Phone number | Phone number in E.164 format (e.g. `+819012345678`) |
-| Set email_verified to true | Check to mark the email as verified at creation time |
-
-#### Profile (optional)
-
-| Field | Description |
-| --- | --- |
-| Given name | First name |
-| Family name | Last name |
-| Full name | Full name |
-
-#### Sign-up Options (optional)
-
-| Field | Description |
-| --- | --- |
-| Temporary password | A temporary password that the user must change on first sign-in. Must be at least 8 characters and include uppercase, lowercase, a number, and a symbol. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
-| Suppress invitation message | Check to suppress the Cognito invitation email. |
+| Temporary password | If omitted, Cognito auto-generates one. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
+| Suppress invitation email | Check to suppress the Cognito invitation email. |
 
 ### Create
 
-Click **Create**. On success, you will be taken to the new user's detail page.
+Click **Create**. On success, you will be taken to the user list.
 
 ---
 
-## 4. User Detail & Edit
+## 4. Edit a User
 
-**URL:** `/users/{username}`
+**URL:** `/users/{userId}`
 
-Click a row or the **View** link in the user list to open this page.
+Click the **Edit** link in the user list to open this page.
 
 ### Read-only Info
 
@@ -127,49 +107,34 @@ The following information is shown at the top of the page.
 
 | Field | Description |
 | --- | --- |
-| User ID (sub) | Unique ID issued by Cognito |
+| User ID | Unique ID issued by Cognito (UUID) |
 | Status | Account status |
-| Enabled | Enabled / Disabled |
-| Created | Creation timestamp |
-| Last modified | Last updated timestamp |
 
 ### Edit Form
 
-Edit the fields below and click **Save changes** to save.
+Edit the fields below and click **Save** to save. On success, you will be taken to the user list.
 
 | Field | Description |
 | --- | --- |
-| Email | Email address (set to null when cleared) |
+| Family name / Given name | Profile attributes |
+| Email | Email address |
+| Mark email as verified | Check to set the email verification flag to true |
 | Phone number | Phone number in E.164 format |
-| Email verified | Email verification flag |
-| Phone verified | Phone verification flag |
-| Enabled | Uncheck to disable the user |
-| Given name / Family name / Full name | Profile attributes |
-| Other attributes | Additional attributes such as `custom:`. Use **Add attribute** to add a row and **Remove** to delete a row. Note: removing a row does not delete the attribute from Cognito — it only overwrites the value. |
-
-> **Note:** If you try to leave the page with unsaved changes, a confirmation dialog will appear.
-
-### MFA (read-only)
-
-If the user has MFA configured, an expandable **MFA (read-only)** section is shown. MFA settings cannot be changed from this page.
-
-### All Cognito Attributes (JSON)
-
-Expand **All Cognito attributes (JSON)** to view all attributes stored in Cognito as a JSON object.
+| Account enabled | Uncheck to disable the user |
 
 ---
 
 ## 5. Delete a User
 
-Click the **Delete user** button on the user detail page. Deletion requires two confirmation steps.
+Click the **Delete user** button on the user edit page.
 
 ### Steps
 
 1. Click **Delete user**.
-2. A confirmation dialog (Step 1) appears. Review the details and click **Continue**.
-3. A second confirmation dialog (Step 2) appears. Type the exact **Username** of the user in the text field. Use the **Copy** button next to the username to copy it to your clipboard.
-4. Click **Delete permanently** once it becomes active.
-5. When deletion is complete, you are automatically redirected to the user list where a "User deleted" notification is shown.
+2. A confirmation dialog appears. Click **OK** to confirm.
+3. When deletion is complete, you are redirected to the user list.
+
+You can also select multiple users with checkboxes on the user list and delete them in bulk.
 
 > **Warning:** Deletion is permanent and cannot be undone.
 
@@ -177,9 +142,9 @@ Click the **Delete user** button on the user detail page. Deletion requires two 
 
 ## 6. CSV Import
 
-**URL:** `/import`
+**URL:** `/users/import`
 
-Click the **Import** button on the user list to open this page. You can bulk-register multiple users into the staging table by uploading a CSV file.
+Click the **Import CSV** button on the user list to open this page. You can bulk-register multiple users into the staging table by uploading a CSV file.
 
 ### Preparing a Test CSV
 
@@ -223,13 +188,14 @@ The generated CSV is saved to `data/generate-<random>.csv` and the corresponding
 
 ### Steps
 
-1. Select a `.csv` file in the **CSV file** field. Files must be 5 MB or smaller.
-2. Click **Upload**.
-3. After a successful upload, you will be automatically redirected to the staging review page (`/import/staging`).
+1. Click the file selection area and choose a `.csv` file.
+2. Click **Import**.
+3. The import result (success / failure counts) is displayed on the same page.
+4. Imported data can be reviewed on the staging page (`/staging`).
 
 ### CSV Format
 
-The first row must be a header row. Prepare a CSV with the columns below. Column order does not matter. Note that this format differs from the standard Cognito import format.
+The first row must be a header row. Prepare a CSV with the columns below. Column order does not matter.
 
 ```
 cognito:username,name,given_name,family_name,middle_name,nickname,preferred_username,profile,picture,website,email,email_verified,gender,birthdate,zoneinfo,locale,phone_number,phone_number_verified,address,updated_at,cognito:mfa_enabled,password_hash
@@ -264,51 +230,58 @@ cognito:username,name,given_name,family_name,middle_name,nickname,preferred_user
 
 ---
 
-## 7. Import Staging (Review)
+## 7. Staging
 
-**URL:** `/import/staging`
+**URL:** `/staging`
 
-Accessible automatically after a CSV upload, or directly from the navigation.
+Click **Staging** in the sidebar to access this page. You can review and delete data temporarily stored after a CSV import.
 
 ### Columns
 
 | Column | Description |
 | --- | --- |
-| id | Unique ID of the staging row |
-| Batch | Import batch ID |
-| Imported | Migration complete flag (yes / no) |
-| Verified | Verified flag from the CSV |
-| Data (preview) | Preview of username and email |
-| Import error | Error message if import failed |
+| ID (username) | Unique ID of the staging row |
+| Status | Import status (see below) |
+
+### Status Values
+
+| Display | Description |
+| --- | --- |
+| Imported | Migration to a Cognito user is complete |
+| Awaiting first login | Migration is not yet complete |
+| Error | An error occurred during import processing |
+
+### Bulk Delete
+
+Select rows with checkboxes and click the **Delete 〇** button to delete the selected staging entries.
 
 ---
 
-## 8. Data Reset (Admin Only)
+## 8. Data Reset
 
-**URL:** `/admin/data-init`
+**URL:** `/settings`
 
-> **Warning:** This feature is for demo environments only. It permanently deletes all rows in the staging table and all users in the Cognito User Pool. Never use this in production.
+Click **Settings** in the sidebar to access this page.
+
+> **Warning:** This feature is for demo environments only. It permanently deletes all users and all staging data. This action cannot be undone.
 
 ### Steps
 
-1. In the **Current scope** section, confirm the number of records to be deleted (staging rows and Cognito users).
-2. Check the "I understand that staging and Cognito users in this project will be permanently deleted." checkbox.
-3. Type `DELETE ALL` in the text field.
-4. Click **Run data reset** once it becomes active.
-5. Click **Delete all** in the final confirmation dialog.
-6. When the operation is complete, you will be returned to the user list.
+1. Type `RESET` in the text field.
+2. Click **Reset all data** once it becomes active.
+3. When complete, the number of deleted users and staging entries is shown on the page.
 
 ---
 
 ## 9. User Status Reference
 
-| Status | Description |
-| --- | --- |
-| `CONFIRMED` | Normal account with verified email |
-| `UNCONFIRMED` | Account that has not yet been confirmed |
-| `FORCE_CHANGE_PASSWORD` | Temporary password set; user must change it on first sign-in |
-| `RESET_REQUIRED` | Password reset required |
-| `COMPROMISED` | Account disabled due to a security concern |
-| `EXTERNAL_PROVIDER` | Account created via federation (external IdP) |
-| `ARCHIVED` | Archived account |
-| `UNKNOWN` | Unknown status |
+| Status | Display | Description |
+| --- | --- | --- |
+| `CONFIRMED` | Confirmed | Normal account with verified email |
+| `UNCONFIRMED` | Unconfirmed | Account that has not yet been confirmed |
+| `FORCE_CHANGE_PASSWORD` | Force change password | Temporary password set; user must change it on first sign-in |
+| `RESET_REQUIRED` | Reset required | Password reset required |
+| `COMPROMISED` | — | Account disabled due to a security concern |
+| `EXTERNAL_PROVIDER` | — | Account created via federation (external IdP) |
+| `ARCHIVED` | — | Archived account |
+| `UNKNOWN` | — | Unknown status |
