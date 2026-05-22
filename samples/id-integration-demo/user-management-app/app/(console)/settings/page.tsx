@@ -21,7 +21,7 @@ export default function SettingsPage() {
       setResult(data)
       setInput('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'リセットに失敗しました')
+      setError(err instanceof Error ? err.message : 'Reset failed')
     } finally {
       setLoading(false)
     }
@@ -31,23 +31,23 @@ export default function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-xl font-semibold text-gray-900 mb-8">設定</h1>
+      <h1 className="text-xl font-semibold text-gray-900 mb-8">Settings</h1>
 
       <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
         <div className="px-6 py-4 bg-red-50 border-b border-red-200">
-          <h2 className="text-sm font-semibold text-red-800">危険な操作</h2>
+          <h2 className="text-sm font-semibold text-red-800">Danger zone</h2>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">データリセット</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">Data reset</h3>
             <p className="text-sm text-gray-500">
-              全ユーザーとステージングデータを削除します。この操作は取り消せません。
+              Permanently deletes all users and staging data. This action cannot be undone.
             </p>
           </div>
 
           {result && (
             <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-              リセット完了 — ユーザー {result.usersDeleted} 件、ステージング {result.stagingDeleted} 件を削除しました
+              Reset complete — deleted {result.usersDeleted} user(s) and {result.stagingDeleted} staging entry(s)
             </div>
           )}
 
@@ -59,7 +59,7 @@ export default function SettingsPage() {
 
           <div>
             <label className="block text-sm text-gray-600 mb-1">
-              確認のため <code className="bg-gray-100 px-1 rounded font-mono text-xs">{CONFIRM_WORD}</code> と入力してください
+              Type <code className="bg-gray-100 px-1 rounded font-mono text-xs">{CONFIRM_WORD}</code> to confirm
             </label>
             <input
               type="text"
@@ -76,7 +76,7 @@ export default function SettingsPage() {
             disabled={!canReset}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
           >
-            {loading ? '削除中...' : '全データをリセット'}
+            {loading ? 'Resetting...' : 'Reset all data'}
           </button>
         </div>
       </div>

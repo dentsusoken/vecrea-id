@@ -38,7 +38,7 @@ export default function UsersPage() {
       setUsers(body.items ?? [])
       setPaginationToken(body.paginationToken)
     } catch {
-      setError('ユーザーの取得に失敗しました')
+      setError('Failed to load users')
     } finally {
       setLoading(false)
     }
@@ -63,7 +63,7 @@ export default function UsersPage() {
   }
 
   async function handleBatchDelete() {
-    if (!confirm(`選択した ${selected.size} 件のユーザーを削除しますか？`)) return
+    if (!confirm(`Delete ${selected.size} selected user(s)?`)) return
     setDeleting(true)
     try {
       const res = await fetch('/api/users/batch-delete', {
@@ -75,7 +75,7 @@ export default function UsersPage() {
       setSelected(new Set())
       await fetchUsers()
     } catch {
-      alert('削除に失敗しました')
+      alert('Failed to delete users')
     } finally {
       setDeleting(false)
     }
@@ -97,16 +97,16 @@ export default function UsersPage() {
   }
 
   const statusLabel: Record<string, string> = {
-    CONFIRMED: '確認済み',
-    UNCONFIRMED: '未確認',
-    FORCE_CHANGE_PASSWORD: 'パスワード変更待ち',
-    RESET_REQUIRED: 'リセット必要',
+    CONFIRMED: 'Confirmed',
+    UNCONFIRMED: 'Unconfirmed',
+    FORCE_CHANGE_PASSWORD: 'Force change password',
+    RESET_REQUIRED: 'Reset required',
   }
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">ユーザー管理</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Users</h1>
         <div className="flex gap-2">
           {selected.size > 0 && (
             <button
@@ -114,20 +114,20 @@ export default function UsersPage() {
               disabled={deleting}
               className="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg"
             >
-              {deleting ? '削除中...' : `${selected.size} 件削除`}
+              {deleting ? 'Deleting...' : `Delete ${selected.size}`}
             </button>
           )}
           <Link
             href="/users/import"
             className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg"
           >
-            CSVインポート
+            Import CSV
           </Link>
           <Link
             href="/users/new"
             className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            ユーザーを追加
+            + New user
           </Link>
         </div>
       </div>
@@ -150,11 +150,11 @@ export default function UsersPage() {
                   className="rounded border-gray-300"
                 />
               </th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">ユーザー名</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">メール</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">氏名</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">ステータス</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">有効</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Username</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Email</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Name</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">Enabled</th>
               <th className="w-16 px-4 py-3"></th>
             </tr>
           </thead>
@@ -162,13 +162,13 @@ export default function UsersPage() {
             {loading ? (
               <tr>
                 <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                  読み込み中...
+                  Loading...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                  ユーザーが見つかりません
+                  No users found
                 </td>
               </tr>
             ) : (
@@ -204,7 +204,7 @@ export default function UsersPage() {
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-gray-100 text-gray-500'
                     }`}>
-                      {user.enabled ? '有効' : '無効'}
+                      {user.enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -212,7 +212,7 @@ export default function UsersPage() {
                       href={`/users/${user.userId}`}
                       className="text-blue-600 hover:text-blue-800 text-xs"
                     >
-                      編集
+                      Edit
                     </Link>
                   </td>
                 </tr>
@@ -228,14 +228,14 @@ export default function UsersPage() {
           disabled={prevTokens.length === 0}
           className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
         >
-          前へ
+          Previous
         </button>
         <button
           onClick={nextPage}
           disabled={!paginationToken}
           className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
         >
-          次へ
+          Next
         </button>
       </div>
     </div>

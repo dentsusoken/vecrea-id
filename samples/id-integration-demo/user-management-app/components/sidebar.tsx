@@ -6,9 +6,9 @@ import { signOut } from 'aws-amplify/auth'
 import { useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/users', label: 'ユーザー管理' },
-  { href: '/staging', label: 'ステージング' },
-  { href: '/settings', label: '設定' },
+  { href: '/users', label: 'Users' },
+  { href: '/staging', label: 'Staging' },
+  { href: '/settings', label: 'Settings' },
 ]
 
 export default function Sidebar() {
@@ -23,7 +23,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-gray-200 bg-white">
       <div className="h-16 flex items-center px-5 border-b border-gray-200">
-        <span className="font-semibold text-gray-900 text-sm">ユーザー管理コンソール</span>
+        <span className="font-semibold text-gray-900 text-sm">User Management Console</span>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
@@ -48,7 +48,7 @@ export default function Sidebar() {
           onClick={handleSignOut}
           className="w-full flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          ログアウト
+          Sign out
         </button>
       </div>
     </aside>

@@ -46,7 +46,7 @@ export default function UserDetailPage() {
           enabled: data.enabled,
         })
       })
-      .catch(() => setError('ユーザーの取得に失敗しました'))
+      .catch(() => setError('Failed to load user'))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -76,37 +76,37 @@ export default function UserDetailPage() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || `エラー: ${res.status}`)
+      if (!res.ok) throw new Error(data.message || `Error: ${res.status}`)
       router.push('/users')
     } catch (err) {
-      setError(err instanceof Error ? err.message : '更新に失敗しました')
+      setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    if (!confirm('このユーザーを削除しますか？この操作は取り消せません。')) return
+    if (!confirm('Delete this user? This action cannot be undone.')) return
     setDeleting(true)
     try {
       const res = await fetch(`/api/users/${id}`, { method: 'DELETE' })
       if (!res.ok && res.status !== 204) throw new Error()
       router.push('/users')
     } catch {
-      setError('削除に失敗しました')
+      setError('Failed to delete user')
       setDeleting(false)
     }
   }
 
   if (loading) {
-    return <div className="p-8 text-gray-400 text-sm">読み込み中...</div>
+    return <div className="p-8 text-gray-400 text-sm">Loading...</div>
   }
 
   if (!user) {
     return (
       <div className="p-8">
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error || 'ユーザーが見つかりません'}
+          {error || 'User not found'}
         </div>
       </div>
     )
@@ -116,31 +116,31 @@ export default function UserDetailPage() {
     <div className="p-8 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Link href="/users" className="text-sm text-gray-500 hover:text-gray-700">
-          ユーザー管理
+          Users
         </Link>
         <span className="text-gray-400">/</span>
         <span className="text-sm text-gray-900 font-mono">{user.username}</span>
       </div>
 
       <div className="flex items-start justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">ユーザー編集</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Edit user</h1>
         <button
           onClick={handleDelete}
           disabled={deleting}
           className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 rounded-lg disabled:opacity-50"
         >
-          {deleting ? '削除中...' : 'ユーザーを削除'}
+          {deleting ? 'Deleting...' : 'Delete user'}
         </button>
       </div>
 
       <div className="mb-4 bg-gray-50 rounded-lg p-4 text-sm space-y-1">
         <div><span className="text-gray-500">User ID: </span><span className="font-mono text-xs">{user.userId}</span></div>
-        <div><span className="text-gray-500">ステータス: </span>{user.status}</div>
+        <div><span className="text-gray-500">Status: </span>{user.status}</div>
       </div>
 
       <form onSubmit={handleSave} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
         <div className="grid grid-cols-2 gap-4">
-          <Field label="姓" htmlFor="family_name">
+          <Field label="Family name" htmlFor="family_name">
             <input
               id="family_name"
               type="text"
@@ -149,7 +149,7 @@ export default function UserDetailPage() {
               className={inputCls}
             />
           </Field>
-          <Field label="名" htmlFor="given_name">
+          <Field label="Given name" htmlFor="given_name">
             <input
               id="given_name"
               type="text"
@@ -160,7 +160,7 @@ export default function UserDetailPage() {
           </Field>
         </div>
 
-        <Field label="メールアドレス" htmlFor="email">
+        <Field label="Email" htmlFor="email">
           <input
             id="email"
             type="email"
@@ -175,11 +175,11 @@ export default function UserDetailPage() {
               onChange={(e) => set('emailVerified', e.target.checked)}
               className="rounded border-gray-300"
             />
-            メール確認済みにする
+            Mark email as verified
           </label>
         </Field>
 
-        <Field label="電話番号" htmlFor="phoneNumber">
+        <Field label="Phone number" htmlFor="phoneNumber">
           <input
             id="phoneNumber"
             type="tel"
@@ -197,7 +197,7 @@ export default function UserDetailPage() {
             onChange={(e) => set('enabled', e.target.checked)}
             className="rounded border-gray-300"
           />
-          アカウントを有効にする
+          Account enabled
         </label>
 
         {error && (
@@ -212,13 +212,13 @@ export default function UserDetailPage() {
             disabled={saving}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg"
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
           <Link
             href="/users"
             className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm rounded-lg"
           >
-            キャンセル
+            Cancel
           </Link>
         </div>
       </form>

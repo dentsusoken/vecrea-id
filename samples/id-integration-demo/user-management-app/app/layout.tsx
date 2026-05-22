@@ -9,8 +9,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "ユーザー管理コンソール",
-  description: "IdP ユーザー管理コンソール",
+  title: "User Management Console",
+  description: "IdP User Management Console",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full bg-white text-gray-900">
         <AmplifyProvider>{children}</AmplifyProvider>
       </body>

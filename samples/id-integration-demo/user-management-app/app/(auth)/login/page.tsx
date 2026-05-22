@@ -34,7 +34,7 @@ export default function LoginPage() {
         router.push('/users')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'エラーが発生しました')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -50,7 +50,7 @@ export default function LoginPage() {
         router.push('/users')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '認証コードが無効です')
+      setError(err instanceof Error ? err.message : 'Invalid code')
     } finally {
       setLoading(false)
     }
@@ -60,9 +60,9 @@ export default function LoginPage() {
     <div className="w-full max-w-sm">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 px-8 py-10">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-gray-900">ユーザー管理コンソール</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">User Management Console</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {step === 'email' ? 'メールアドレスを入力してください' : '認証コードを入力してください'}
+            {step === 'email' ? 'Enter your email address' : 'Enter your one-time code'}
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス
+                Email address
               </label>
               <input
                 id="email"
@@ -89,17 +89,17 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              {loading ? '送信中...' : '認証コードを送信'}
+              {loading ? 'Sending...' : 'Send code'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleOtpSubmit} className="space-y-4">
             <p className="text-sm text-gray-600 bg-blue-50 rounded-lg px-3 py-2">
-              <span className="font-medium">{email}</span> に認証コードを送信しました
+              A code was sent to <span className="font-medium">{email}</span>
             </p>
             <div>
               <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-                認証コード
+                One-time code
               </label>
               <input
                 id="otp"
@@ -120,14 +120,14 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
             >
-              {loading ? '確認中...' : 'ログイン'}
+              {loading ? 'Verifying...' : 'Sign in'}
             </button>
             <button
               type="button"
               onClick={() => { setStep('email'); setOtp(''); setError('') }}
               className="w-full text-sm text-gray-500 hover:text-gray-700"
             >
-              メールアドレスを変更
+              Use a different email
             </button>
           </form>
         )}

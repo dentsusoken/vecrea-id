@@ -47,11 +47,11 @@ export default function NewUserPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        throw new Error(data.message || `エラー: ${res.status}`)
+        throw new Error(data.message || `Error: ${res.status}`)
       }
       router.push('/users')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ユーザーの作成に失敗しました')
+      setError(err instanceof Error ? err.message : 'Failed to create user')
     } finally {
       setLoading(false)
     }
@@ -61,39 +61,37 @@ export default function NewUserPage() {
     <div className="p-8 max-w-2xl">
       <div className="flex items-center gap-2 mb-6">
         <Link href="/users" className="text-sm text-gray-500 hover:text-gray-700">
-          ユーザー管理
+          Users
         </Link>
         <span className="text-gray-400">/</span>
-        <span className="text-sm text-gray-900">新規作成</span>
+        <span className="text-sm text-gray-900">New user</span>
       </div>
 
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">ユーザーを追加</h1>
+      <h1 className="text-xl font-semibold text-gray-900 mb-6">New user</h1>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
         <div className="grid grid-cols-2 gap-4">
-          <Field label="姓" htmlFor="family_name">
+          <Field label="Family name" htmlFor="family_name">
             <input
               id="family_name"
               type="text"
               value={form.family_name}
               onChange={(e) => set('family_name', e.target.value)}
               className={inputCls}
-              placeholder="田中"
             />
           </Field>
-          <Field label="名" htmlFor="given_name">
+          <Field label="Given name" htmlFor="given_name">
             <input
               id="given_name"
               type="text"
               value={form.given_name}
               onChange={(e) => set('given_name', e.target.value)}
               className={inputCls}
-              placeholder="太郎"
             />
           </Field>
         </div>
 
-        <Field label="ユーザー名" htmlFor="username" required>
+        <Field label="Username" htmlFor="username" required>
           <input
             id="username"
             type="text"
@@ -105,18 +103,18 @@ export default function NewUserPage() {
           />
         </Field>
 
-        <Field label="メールアドレス" htmlFor="email">
+        <Field label="Email" htmlFor="email">
           <input
             id="email"
             type="email"
             value={form.email}
             onChange={(e) => set('email', e.target.value)}
             className={inputCls}
-            placeholder="taro@example.com"
+            placeholder="user@example.com"
           />
         </Field>
 
-        <Field label="電話番号" htmlFor="phone_number">
+        <Field label="Phone number" htmlFor="phone_number">
           <input
             id="phone_number"
             type="tel"
@@ -127,14 +125,14 @@ export default function NewUserPage() {
           />
         </Field>
 
-        <Field label="初期パスワード" htmlFor="temporaryPassword">
+        <Field label="Temporary password" htmlFor="temporaryPassword">
           <input
             id="temporaryPassword"
             type="password"
             value={form.temporaryPassword}
             onChange={(e) => set('temporaryPassword', e.target.value)}
             className={inputCls}
-            placeholder="省略時はCognitoが自動生成"
+            placeholder="Leave blank to auto-generate"
           />
         </Field>
 
@@ -145,7 +143,7 @@ export default function NewUserPage() {
             onChange={(e) => set('suppressInvitation', e.target.checked)}
             className="rounded border-gray-300"
           />
-          招待メールを送信しない
+          Suppress invitation email
         </label>
 
         {error && (
@@ -160,13 +158,13 @@ export default function NewUserPage() {
             disabled={loading}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg"
           >
-            {loading ? '作成中...' : '作成'}
+            {loading ? 'Creating...' : 'Create'}
           </button>
           <Link
             href="/users"
             className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm rounded-lg"
           >
-            キャンセル
+            Cancel
           </Link>
         </div>
       </form>
