@@ -115,30 +115,30 @@ function formatCognitoError(e: unknown, context?: "migrate" | "passkey"): string
 
   if (context === "migrate") {
     if (code === "UserNotFoundException" || code === "NotAuthorizedException") {
-      return "ユーザー名またはパスワードが正しくありません";
+      return "Incorrect username or password";
     }
     if (code === "UserLambdaValidationException") {
-      return "ユーザー移行に失敗しました。入力内容をご確認ください";
+      return "User migration failed. Please check your input";
     }
   }
 
   const MESSAGES: Record<string, string> = {
-    UserNotFoundException:        "このメールアドレスは登録されていません",
-    NotAuthorizedException:       "認証に失敗しました。入力内容をご確認ください",
-    UserNotConfirmedException:    "メールアドレスの確認が完了していません",
-    CodeMismatchException:        "確認コードが正しくありません",
-    ExpiredCodeException:         "確認コードの有効期限が切れています。再度お試しください",
-    UsernameExistsException:      "このメールアドレスはすでに登録されています",
-    TooManyRequestsException:     "試行回数が多すぎます。しばらく時間をおいて再度お試しください",
-    LimitExceededException:       "試行回数の上限に達しました。しばらく時間をおいて再度お試しください",
-    PasswordResetRequiredException: "パスワードのリセットが必要です",
-    InvalidPasswordException:     "パスワードがポリシーを満たしていません",
-    InvalidParameterException:    "入力内容に誤りがあります",
-    UserLambdaValidationException: "処理に失敗しました。入力内容をご確認ください",
-    WebAuthnRequiresHTTPS:        "パスキーにはHTTPS接続が必要です（localhost は除く）",
+    UserNotFoundException:          "This email address is not registered",
+    NotAuthorizedException:         "Authentication failed. Please check your credentials",
+    UserNotConfirmedException:      "Email address verification is not complete",
+    CodeMismatchException:          "Verification code is incorrect",
+    ExpiredCodeException:           "Verification code has expired. Please try again",
+    UsernameExistsException:        "This email address is already registered",
+    TooManyRequestsException:       "Too many attempts. Please try again later",
+    LimitExceededException:         "Attempt limit exceeded. Please try again later",
+    PasswordResetRequiredException: "Password reset is required",
+    InvalidPasswordException:       "Password does not meet the policy requirements",
+    InvalidParameterException:      "Invalid input",
+    UserLambdaValidationException:  "Processing failed. Please check your input",
+    WebAuthnRequiresHTTPS:          "Passkeys require HTTPS (localhost is exempt)",
   };
 
-  return MESSAGES[code] ?? "エラーが発生しました。しばらく時間をおいて再度お試しください";
+  return MESSAGES[code] ?? "An error occurred. Please try again later";
 }
 
 function ErrorMsg({ msg }: { msg: string | null }) {
@@ -190,7 +190,7 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
             if (preferredChallenge === "WEB_AUTHN") {
               if (!available.includes("WEB_AUTHN")) {
                 throw new Error(
-                  "このアカウントにはパスキーが登録されていません。メールOTPでサインインしてください。",
+                  "No passkey registered for this account. Please sign in with Email OTP.",
                 );
               }
               return "WEB_AUTHN";
@@ -210,7 +210,7 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <Input
-        label="メールアドレス"
+        label="Email"
         type="email"
         value={email}
         onChange={setEmail}
@@ -220,25 +220,25 @@ function SignInForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
 
       {otpPending ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-zinc-500">メールに送信されたコードを入力してください。</p>
+          <p className="text-sm text-zinc-500">Enter the code sent to your email.</p>
           <Input
-            label="確認コード"
+            label="Verification code"
             value={otp}
             onChange={setOtp}
             placeholder="123456"
             autoComplete="one-time-code"
           />
           <PrimaryBtn onClick={submitOtp} disabled={!otp || loading}>
-            確認
+            Confirm
           </PrimaryBtn>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           <PrimaryBtn onClick={() => run("WEB_AUTHN")} disabled={!email || loading} variant="secondary">
-            {loading ? "処理中..." : "🔑 パスキーでサインイン"}
+            {loading ? "Processing..." : "🔑 Sign in with Passkey"}
           </PrimaryBtn>
           <PrimaryBtn onClick={() => run("EMAIL_OTP")} disabled={!email || loading} variant="ghost">
-            {loading ? "処理中..." : "✉ メールOTPでサインイン"}
+            {loading ? "Processing..." : "✉ Sign in with Email OTP"}
           </PrimaryBtn>
         </div>
       )}
@@ -291,23 +291,23 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-zinc-500">
-          <span className="font-medium text-zinc-800">{email}</span> に確認コードを送信しました。
+          Verification code sent to <span className="font-medium text-zinc-800">{email}</span>.
         </p>
         <Input
-          label="確認コード"
+          label="Verification code"
           value={code}
           onChange={setCode}
           placeholder="123456"
           autoComplete="one-time-code"
         />
         <PrimaryBtn onClick={runConfirm} disabled={!code || loading}>
-          {loading ? "処理中..." : "登録を完了"}
+          {loading ? "Processing..." : "Complete registration"}
         </PrimaryBtn>
         <button
           onClick={() => setStep("email")}
           className="text-sm text-zinc-400 hover:text-zinc-600 hover:underline text-center"
         >
-          ← メールアドレスを変更
+          ← Change email
         </button>
         <ErrorMsg msg={error} />
       </div>
@@ -317,7 +317,7 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <Input
-        label="メールアドレス"
+        label="Email"
         type="email"
         value={email}
         onChange={setEmail}
@@ -325,7 +325,7 @@ function SignUpForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
         autoComplete="email"
       />
       <PrimaryBtn onClick={runSignUp} disabled={!email || loading}>
-        {loading ? "処理中..." : "確認コードを送信"}
+        {loading ? "Processing..." : "Send verification code"}
       </PrimaryBtn>
       <ErrorMsg msg={error} />
     </div>
@@ -357,14 +357,14 @@ function MigrateForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <Input
-        label="ユーザー名 / メールアドレス"
+        label="Username / Email"
         value={username}
         onChange={setUsername}
         placeholder="user@example.com"
         autoComplete="username"
       />
       <Input
-        label="パスワード"
+        label="Password"
         type="password"
         value={password}
         onChange={setPassword}
@@ -372,7 +372,7 @@ function MigrateForm({ onSignIn }: { onSignIn: (t: AuthTokens) => void }) {
         autoComplete="current-password"
       />
       <PrimaryBtn onClick={run} disabled={!username || !password || loading}>
-        {loading ? "処理中..." : "サインイン（移行）"}
+        {loading ? "Processing..." : "Sign in (migrate)"}
       </PrimaryBtn>
       <ErrorMsg msg={error} />
     </div>
@@ -438,18 +438,18 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-zinc-700">パスキー</h3>
+        <h3 className="text-sm font-semibold text-zinc-700">Passkeys</h3>
         <button
           onClick={fetchList}
           disabled={loadingList}
           className="text-xs text-blue-500 hover:underline disabled:opacity-40"
         >
-          {loadingList ? "読み込み中..." : "更新"}
+          {loadingList ? "Loading..." : "Refresh"}
         </button>
       </div>
 
       {credentials !== null && credentials.length === 0 && (
-        <p className="text-sm text-zinc-400">登録済みパスキーはありません。</p>
+        <p className="text-sm text-zinc-400">No passkeys registered.</p>
       )}
 
       {credentials?.map((c) => (
@@ -459,12 +459,12 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
         >
           <div className="min-w-0">
             <p className="text-sm font-medium text-zinc-800 truncate">
-              {c.friendlyName || "パスキー"}
+              {c.friendlyName || "Passkey"}
             </p>
             <p className="text-xs text-zinc-400 mt-0.5">
-              {c.authenticatorAttachment === "platform" ? "デバイス内蔵" : c.authenticatorAttachment ?? "—"}
+              {c.authenticatorAttachment === "platform" ? "Platform" : c.authenticatorAttachment ?? "—"}
               {" · "}
-              登録日: {c.createdAt.toLocaleDateString("ja-JP")}
+              Registered: {c.createdAt.toLocaleDateString("en-US")}
             </p>
           </div>
           <button
@@ -472,13 +472,13 @@ function PasskeyManager({ accessToken }: { accessToken: string }) {
             disabled={deletingId === c.credentialId}
             className="text-xs text-red-500 hover:underline disabled:opacity-40 shrink-0 mt-0.5"
           >
-            {deletingId === c.credentialId ? "削除中..." : "削除"}
+            {deletingId === c.credentialId ? "Deleting..." : "Delete"}
           </button>
         </div>
       ))}
 
       <PrimaryBtn onClick={handleRegister} disabled={loadingReg} variant="ghost">
-        {loadingReg ? "登録中..." : "+ パスキーを登録"}
+        {loadingReg ? "Registering..." : "+ Add passkey"}
       </PrimaryBtn>
 
       <ErrorMsg msg={error} />
@@ -514,15 +514,15 @@ function DeleteAccountSection({
 
   return (
     <div className="rounded-xl border border-red-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-red-400">危険な操作</h2>
+      <h2 className="text-xs font-bold uppercase tracking-widest text-red-400">Danger zone</h2>
       {!confirming ? (
         <PrimaryBtn onClick={() => setConfirming(true)} variant="danger">
-          アカウントを削除
+          Delete account
         </PrimaryBtn>
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-zinc-600">
-            この操作は取り消せません。アカウントとすべてのデータが完全に削除されます。
+            This action cannot be undone. Your account and all data will be permanently deleted.
           </p>
           <div className="flex gap-2">
             <button
@@ -530,14 +530,14 @@ function DeleteAccountSection({
               disabled={loading}
               className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 transition-colors"
             >
-              キャンセル
+              Cancel
             </button>
             <button
               onClick={handleDelete}
               disabled={loading}
               className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "削除中..." : "削除する"}
+              {loading ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>
@@ -577,31 +577,31 @@ function PasskeyPromptScreen({
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center flex flex-col gap-2">
           <div className="text-5xl">🔑</div>
-          <h1 className="text-xl font-bold text-zinc-900">パスキーを登録しませんか？</h1>
+          <h1 className="text-xl font-bold text-zinc-900">Add a passkey?</h1>
           <p className="text-sm text-zinc-500 leading-relaxed">
-            次回から指紋や顔認証でかんたんにサインインできます。
+            Sign in quickly next time with fingerprint or face recognition.
             <br />
-            あとで設定画面からでも登録できます。
+            You can also add one later from settings.
           </p>
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-5 flex flex-col gap-3">
           <ul className="flex flex-col gap-2 text-sm text-zinc-600 mb-1">
             <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> パスワード不要でサインイン
+              <span className="text-green-500">✓</span> Sign in without a password
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> フィッシング耐性あり
+              <span className="text-green-500">✓</span> Phishing-resistant
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-green-500">✓</span> 生体認証・PIN で本人確認
+              <span className="text-green-500">✓</span> Verified with biometrics or PIN
             </li>
           </ul>
           <PrimaryBtn onClick={handleRegister} disabled={loading}>
-            {loading ? "登録中..." : "パスキーを登録する"}
+            {loading ? "Registering..." : "Add passkey"}
           </PrimaryBtn>
           <PrimaryBtn onClick={onContinue} disabled={loading} variant="ghost">
-            あとで登録する
+            Skip for now
           </PrimaryBtn>
           <ErrorMsg msg={error} />
         </div>
@@ -615,9 +615,9 @@ function PasskeyPromptScreen({
 type Tab = "signin" | "signup" | "migrate";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "signin", label: "サインイン" },
-  { id: "signup", label: "新規登録" },
-  { id: "migrate", label: "ユーザー移行" },
+  { id: "signin", label: "Sign in" },
+  { id: "signup", label: "Sign up" },
+  { id: "migrate", label: "Migrate" },
 ];
 
 function LoginModal({
@@ -734,7 +734,7 @@ function HomeScreen({
                 <button
                   onClick={() => setDropdownOpen((x) => !x)}
                   className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center justify-center transition-colors"
-                  aria-label="アカウントメニュー"
+                  aria-label="Account menu"
                 >
                   {initial}
                 </button>
@@ -743,14 +743,14 @@ function HomeScreen({
                 {dropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-zinc-200 overflow-hidden z-20">
                     <div className="px-4 py-3 border-b border-zinc-100">
-                      <p className="text-xs text-zinc-400">サインイン中</p>
+                      <p className="text-xs text-zinc-400">Signed in as</p>
                       <p className="text-sm font-medium text-zinc-800 truncate mt-0.5">{email}</p>
                     </div>
                     <button
                       onClick={() => { setDropdownOpen(false); onAccountClick(); }}
                       className="w-full text-left px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
                     >
-                      アカウント管理
+                      Account
                     </button>
                     <div className="border-t border-zinc-100" />
                     <button
@@ -758,7 +758,7 @@ function HomeScreen({
                       disabled={signingOut}
                       className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
                     >
-                      {signingOut ? "処理中..." : "サインアウト"}
+                      {signingOut ? "Signing out..." : "Sign out"}
                     </button>
                   </div>
                 )}
@@ -768,7 +768,7 @@ function HomeScreen({
                 onClick={onLoginClick}
                 className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 transition-colors"
               >
-                ログイン / 新規登録
+                Sign in / Sign up
               </button>
             )}
           </div>
@@ -783,20 +783,20 @@ function HomeScreen({
               2026 Summer Collection
             </p>
             <h2 className="text-4xl sm:text-5xl font-bold leading-tight">
-              あたらしい季節の<br />スタイルを見つけよう
+              Discover Your New<br />Season Style
             </h2>
             <p className="text-zinc-400 max-w-md text-sm leading-relaxed">
-              上質な素材と洗練されたデザイン。日常をワンランク上げる新作が揃いました。
+              Premium materials and refined design. New arrivals to elevate your everyday look.
             </p>
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={tokens ? undefined : onLoginClick}
                 className="rounded-lg bg-white text-zinc-900 hover:bg-zinc-100 font-semibold text-sm px-6 py-3 transition-colors"
               >
-                {tokens ? "新作をみる" : "ログインして購入する"}
+                {tokens ? "Browse New Arrivals" : "Sign in to shop"}
               </button>
               <button className="rounded-lg border border-zinc-600 hover:border-zinc-400 text-white text-sm font-medium px-6 py-3 transition-colors">
-                コレクションを見る
+                View collection
               </button>
             </div>
           </div>
@@ -805,7 +805,7 @@ function HomeScreen({
         {/* Categories */}
         <div className="border-b border-zinc-200 bg-white">
           <div className="max-w-5xl mx-auto px-4 flex gap-6 overflow-x-auto text-sm font-medium text-zinc-600">
-            {["すべて", "レディース", "メンズ", "アクセサリー", "シューズ", "セール"].map((cat, i) => (
+            {["All", "Women", "Men", "Accessories", "Shoes", "Sale"].map((cat, i) => (
               <button
                 key={cat}
                 className={`py-4 shrink-0 border-b-2 transition-colors ${
@@ -824,7 +824,7 @@ function HomeScreen({
         <div className="max-w-5xl mx-auto px-4 py-10">
           {tokens && (
             <p className="text-sm text-zinc-500 mb-6">
-              おかえりなさい、<span className="font-medium text-zinc-800">{email.split("@")[0]}</span> さん
+              Welcome back, <span className="font-medium text-zinc-800">{email.split("@")[0]}</span>
             </p>
           )}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
@@ -847,7 +847,7 @@ function HomeScreen({
                     onClick={tokens ? undefined : onLoginClick}
                     className="absolute bottom-3 inset-x-3 bg-white/90 hover:bg-white text-zinc-900 text-xs font-semibold py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    {tokens ? "カートに追加" : "ログインして購入"}
+                    {tokens ? "Add to cart" : "Sign in to buy"}
                   </button>
                 </div>
                 <div>
@@ -863,7 +863,7 @@ function HomeScreen({
         <footer className="border-t border-zinc-200 bg-white mt-10">
           <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
             <span className="font-bold text-zinc-900">VeCrea</span>
-            <span>© 2026 VeCrea. このサイトはデモ用サンプルです。</span>
+            <span>© 2026 VeCrea. This site is a demo.</span>
           </div>
         </footer>
       </main>
@@ -872,12 +872,12 @@ function HomeScreen({
 }
 
 const MOCK_PRODUCTS = [
-  { id: 1, name: "クラシックレザーバッグ", price: "¥28,600", bg: "bg-stone-100", emoji: "👜", tag: "NEW" },
-  { id: 2, name: "ウールブレンドコート", price: "¥54,800", bg: "bg-zinc-100", emoji: "🧥" },
-  { id: 3, name: "キャンバススニーカー", price: "¥18,700", bg: "bg-blue-50", emoji: "👟", tag: "SALE" },
-  { id: 4, name: "リネンシャツ", price: "¥12,100", bg: "bg-amber-50", emoji: "👔" },
-  { id: 5, name: "デニムジャケット", price: "¥32,400", bg: "bg-indigo-50", emoji: "🫥", tag: "NEW" },
-  { id: 6, name: "レザーウォレット", price: "¥15,800", bg: "bg-orange-50", emoji: "👛" },
+  { id: 1, name: "Classic Leather Bag", price: "¥28,600", bg: "bg-stone-100", emoji: "👜", tag: "NEW" },
+  { id: 2, name: "Wool Blend Coat", price: "¥54,800", bg: "bg-zinc-100", emoji: "🧥" },
+  { id: 3, name: "Canvas Sneakers", price: "¥18,700", bg: "bg-blue-50", emoji: "👟", tag: "SALE" },
+  { id: 4, name: "Linen Shirt", price: "¥12,100", bg: "bg-amber-50", emoji: "👔" },
+  { id: 5, name: "Denim Jacket", price: "¥32,400", bg: "bg-indigo-50", emoji: "🫥", tag: "NEW" },
+  { id: 6, name: "Leather Wallet", price: "¥15,800", bg: "bg-orange-50", emoji: "👛" },
 ];
 
 // ---- Account screen ----
@@ -919,7 +919,7 @@ function AccountScreen({
               onClick={onBack}
               className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
             >
-              ← ホーム
+              ← Home
             </button>
             <span className="text-zinc-300">|</span>
             <span className="text-sm font-medium text-zinc-700">{email}</span>
@@ -929,7 +929,7 @@ function AccountScreen({
             disabled={signingOut}
             className="text-sm text-red-500 hover:underline disabled:opacity-40"
           >
-            {signingOut ? "サインアウト中..." : "サインアウト"}
+            {signingOut ? "Signing out..." : "Sign out"}
           </button>
         </div>
       </header>
@@ -938,11 +938,11 @@ function AccountScreen({
         {/* User info */}
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-4 flex flex-col gap-2">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-1">
-            ユーザー情報
+            User info
           </h2>
           <div className="flex flex-col gap-1">
             <div className="flex gap-2 text-sm">
-              <span className="text-zinc-400 w-16 shrink-0">メール</span>
+              <span className="text-zinc-400 w-16 shrink-0">Email</span>
               <span className="text-zinc-800 font-mono truncate">{email}</span>
             </div>
             <div className="flex gap-2 text-sm">
@@ -951,8 +951,8 @@ function AccountScreen({
             </div>
             {exp && (
               <div className="flex gap-2 text-sm">
-                <span className="text-zinc-400 w-16 shrink-0">有効期限</span>
-                <span className="text-zinc-700 text-xs">{exp.toLocaleString("ja-JP")}</span>
+                <span className="text-zinc-400 w-16 shrink-0">Expires</span>
+                <span className="text-zinc-700 text-xs">{exp.toLocaleString("en-US")}</span>
               </div>
             )}
           </div>
@@ -960,7 +960,7 @@ function AccountScreen({
             onClick={() => setShowTokens((x) => !x)}
             className="text-xs text-blue-500 hover:underline self-start mt-1"
           >
-            {showTokens ? "トークンを隠す" : "トークンを表示"}
+            {showTokens ? "Hide tokens" : "Show tokens"}
           </button>
           {showTokens && (
             <div className="flex flex-col gap-2 mt-1">
@@ -985,7 +985,7 @@ function AccountScreen({
         {/* Passkey management */}
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm p-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-3">
-            パスキー管理
+            Passkeys
           </h2>
           <PasskeyManager accessToken={tokens.accessToken} />
         </div>
@@ -1062,7 +1062,7 @@ export function LoginApp() {
   if (restoring) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <p className="text-sm text-zinc-400">読み込み中...</p>
+        <p className="text-sm text-zinc-400">Loading...</p>
       </div>
     );
   }
