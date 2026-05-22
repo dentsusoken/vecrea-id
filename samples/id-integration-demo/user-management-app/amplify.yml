@@ -1,0 +1,32 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - 'node --version'
+            - 'npm install -g pnpm@11'
+            - 'pnpm --version'
+            - 'pnpm install --frozen-lockfile'
+        build:
+          commands:
+            - |
+              set -e
+              rm -f .env.production
+              echo "API_BASE_URL=$API_BASE_URL" >> .env.production
+              echo "OAUTH_TOKEN_ENDPOINT=$OAUTH_TOKEN_ENDPOINT" >> .env.production
+              echo "OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID" >> .env.production
+              echo "OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET" >> .env.production
+              echo "OAUTH_SCOPE=$OAUTH_SCOPE" >> .env.production
+              env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
+              env | grep -e '^NEXT_PUBLIC_' >> .env.production || true
+              pnpm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - .next/cache/**/*
+          - node_modules/**/*
+    appRoot: samples/id-integration-demo/user-management-app
