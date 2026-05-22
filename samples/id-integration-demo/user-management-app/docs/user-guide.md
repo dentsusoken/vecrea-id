@@ -27,7 +27,7 @@ This web application lets you manage users registered in an Amazon Cognito User 
 This app uses **email OTP authentication** — no password required.
 
 1. Open the app URL in your browser. If you are not signed in, you will be redirected to the sign-in page automatically.
-2. Enter your registered email address in the **Email** field and click **Send code**.
+2. Enter your registered email address in the **Email address** field and click **Send code**.
 3. A 6-digit one-time code will be sent to that address.
 4. Enter the code in the **One-time code** field and click **Sign in**.
 5. On success, you will be taken to the user list.
@@ -36,7 +36,7 @@ This app uses **email OTP authentication** — no password required.
 
 ### Sign Out
 
-Click the **ログアウト** button at the bottom of the sidebar. You will be redirected to the sign-in page.
+Click the **Sign out** button at the bottom of the sidebar. You will be redirected to the sign-in page.
 
 ---
 
@@ -50,18 +50,18 @@ The first screen after signing in. Displays all users registered in the Cognito 
 
 | Column | Description |
 | --- | --- |
-| ユーザー名 | Sign-in identifier (username) |
-| メール | Email address |
-| 氏名 | Full name (family_name + given_name) |
-| ステータス | Account status ([see §9](#9-user-status-reference)) |
-| 有効 | Whether the account is active |
+| Username | Sign-in identifier |
+| Email | Email address |
+| Name | Full name (family_name + given_name) |
+| Status | Account status ([see §9](#9-user-status-reference)) |
+| Enabled | Whether the account is active |
 
 ### Pagination
 
 Up to 20 users are shown per page.
 
-- **前へ** — go to the previous page.
-- **次へ** — go to the next page.
+- **Previous** — go to the previous page.
+- **Next** — go to the next page.
 
 ---
 
@@ -69,7 +69,7 @@ Up to 20 users are shown per page.
 
 **URL:** `/users/new`
 
-Click the **ユーザーを追加** button on the user list to open this page.
+Click the **+ New user** button on the user list to open this page.
 
 ### Fields
 
@@ -77,21 +77,21 @@ Click the **ユーザーを追加** button on the user list to open this page.
 
 | Field | Description |
 | --- | --- |
-| ユーザー名 | Cognito sign-in identifier. Cannot be changed after creation. |
+| Username | Cognito sign-in identifier. Cannot be changed after creation. |
 
 #### Optional
 
 | Field | Description |
 | --- | --- |
-| 姓 / 名 | Family name / Given name (profile attributes) |
-| メールアドレス | Email address |
-| 電話番号 | Phone number in E.164 format (e.g. `+819012345678`) |
-| 初期パスワード | Temporary password. If omitted, Cognito auto-generates one. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
-| 招待メールを送信しない | Check to suppress the Cognito invitation email. |
+| Family name / Given name | Profile attributes |
+| Email | Email address |
+| Phone number | Phone number in E.164 format (e.g. `+819012345678`) |
+| Temporary password | If omitted, Cognito auto-generates one. Setting this puts the account in `FORCE_CHANGE_PASSWORD` status. |
+| Suppress invitation email | Check to suppress the Cognito invitation email. |
 
 ### Create
 
-Click **作成**. On success, you will be taken to the user list.
+Click **Create**. On success, you will be taken to the user list.
 
 ---
 
@@ -99,7 +99,7 @@ Click **作成**. On success, you will be taken to the user list.
 
 **URL:** `/users/{userId}`
 
-Click the **編集** link in the user list to open this page.
+Click the **Edit** link in the user list to open this page.
 
 ### Read-only Info
 
@@ -108,29 +108,29 @@ The following information is shown at the top of the page.
 | Field | Description |
 | --- | --- |
 | User ID | Unique ID issued by Cognito (UUID) |
-| ステータス | Account status |
+| Status | Account status |
 
 ### Edit Form
 
-Edit the fields below and click **保存** to save. On success, you will be taken to the user list.
+Edit the fields below and click **Save** to save. On success, you will be taken to the user list.
 
 | Field | Description |
 | --- | --- |
-| 姓 / 名 | Family name / Given name (profile attributes) |
-| メールアドレス | Email address |
-| メール確認済みにする | Check to set the email verification flag to true |
-| 電話番号 | Phone number in E.164 format |
-| アカウントを有効にする | Uncheck to disable the user |
+| Family name / Given name | Profile attributes |
+| Email | Email address |
+| Mark email as verified | Check to set the email verification flag to true |
+| Phone number | Phone number in E.164 format |
+| Account enabled | Uncheck to disable the user |
 
 ---
 
 ## 5. Delete a User
 
-Click the **ユーザーを削除** button on the user edit page.
+Click the **Delete user** button on the user edit page.
 
 ### Steps
 
-1. Click **ユーザーを削除**.
+1. Click **Delete user**.
 2. A confirmation dialog appears. Click **OK** to confirm.
 3. When deletion is complete, you are redirected to the user list.
 
@@ -144,7 +144,7 @@ You can also select multiple users with checkboxes on the user list and delete t
 
 **URL:** `/users/import`
 
-Click the **CSVインポート** button on the user list to open this page. You can bulk-register multiple users into the staging table by uploading a CSV file.
+Click the **Import CSV** button on the user list to open this page. You can bulk-register multiple users into the staging table by uploading a CSV file.
 
 ### Preparing a Test CSV
 
@@ -189,7 +189,7 @@ The generated CSV is saved to `data/generate-<random>.csv` and the corresponding
 ### Steps
 
 1. Click the file selection area and choose a `.csv` file.
-2. Click **インポート実行**.
+2. Click **Import**.
 3. The import result (success / failure counts) is displayed on the same page.
 4. Imported data can be reviewed on the staging page (`/staging`).
 
@@ -234,26 +234,26 @@ cognito:username,name,given_name,family_name,middle_name,nickname,preferred_user
 
 **URL:** `/staging`
 
-Click **ステージング** in the sidebar to access this page. You can review and delete data temporarily stored after a CSV import.
+Click **Staging** in the sidebar to access this page. You can review and delete data temporarily stored after a CSV import.
 
 ### Columns
 
 | Column | Description |
 | --- | --- |
 | ID (username) | Unique ID of the staging row |
-| ステータス | Import status (see below) |
+| Status | Import status (see below) |
 
 ### Status Values
 
 | Display | Description |
 | --- | --- |
-| インポート済み | Migration to a Cognito user is complete |
-| 初回ログイン待機中 | Migration is not yet complete |
-| エラー | An error occurred during import processing |
+| Imported | Migration to a Cognito user is complete |
+| Awaiting first login | Migration is not yet complete |
+| Error | An error occurred during import processing |
 
 ### Bulk Delete
 
-Select rows with checkboxes and click the **〇 件削除** button to delete the selected staging entries.
+Select rows with checkboxes and click the **Delete 〇** button to delete the selected staging entries.
 
 ---
 
@@ -261,14 +261,14 @@ Select rows with checkboxes and click the **〇 件削除** button to delete the
 
 **URL:** `/settings`
 
-Click **設定** in the sidebar to access this page.
+Click **Settings** in the sidebar to access this page.
 
 > **Warning:** This feature is for demo environments only. It permanently deletes all users and all staging data. This action cannot be undone.
 
 ### Steps
 
 1. Type `RESET` in the text field.
-2. Click **全データをリセット** once it becomes active.
+2. Click **Reset all data** once it becomes active.
 3. When complete, the number of deleted users and staging entries is shown on the page.
 
 ---
@@ -277,10 +277,10 @@ Click **設定** in the sidebar to access this page.
 
 | Status | Display | Description |
 | --- | --- | --- |
-| `CONFIRMED` | 確認済み | Normal account with verified email |
-| `UNCONFIRMED` | 未確認 | Account that has not yet been confirmed |
-| `FORCE_CHANGE_PASSWORD` | パスワード変更待ち | Temporary password set; user must change it on first sign-in |
-| `RESET_REQUIRED` | リセット必要 | Password reset required |
+| `CONFIRMED` | Confirmed | Normal account with verified email |
+| `UNCONFIRMED` | Unconfirmed | Account that has not yet been confirmed |
+| `FORCE_CHANGE_PASSWORD` | Force change password | Temporary password set; user must change it on first sign-in |
+| `RESET_REQUIRED` | Reset required | Password reset required |
 | `COMPROMISED` | — | Account disabled due to a security concern |
 | `EXTERNAL_PROVIDER` | — | Account created via federation (external IdP) |
 | `ARCHIVED` | — | Archived account |
