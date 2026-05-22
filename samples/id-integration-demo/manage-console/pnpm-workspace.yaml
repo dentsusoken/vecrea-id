@@ -1,0 +1,14 @@
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+overrides:
+  tailwindcss: "4.2.4"
+  "@tailwindcss/postcss": "4.2.4"
+  # These versions lost provenance attestation (trustPolicy: no-downgrade)
+  semver: "7.7.2"
+  eslint-import-resolver-typescript: "3.10.0"
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
