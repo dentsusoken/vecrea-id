@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 
 interface StagingUser {
   id: string
-  email?: string
-  given_name?: string
-  family_name?: string
-  status?: string
+  imported: boolean
+  verified: boolean
+  error?: string
+  errorMessage?: string
+  data?: object
 }
 
 interface StagingResponse {
@@ -131,21 +132,19 @@ export default function StagingPage() {
                 />
               </th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">ID (username)</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">メール</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">氏名</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">ステータス</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={3} className="px-4 py-12 text-center text-gray-400">
                   読み込み中...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={3} className="px-4 py-12 text-center text-gray-400">
                   ステージングデータがありません
                 </td>
               </tr>
@@ -161,11 +160,15 @@ export default function StagingPage() {
                     />
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-700">{user.id}</td>
-                  <td className="px-4 py-3 text-gray-700">{user.email ?? '-'}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {[user.family_name, user.given_name].filter(Boolean).join(' ') || '-'}
+                  <td className="px-4 py-3 text-xs">
+                    {user.error !== undefined ? (
+                      <span className="text-red-600">エラー</span>
+                    ) : user.imported ? (
+                      <span className="text-green-600">インポート済み</span>
+                    ) : (
+                      <span className="text-gray-500">初回ログイン待機中</span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{user.status ?? '-'}</td>
                 </tr>
               ))
             )}
